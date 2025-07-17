@@ -46,123 +46,121 @@ Viaggia.Backend/
 ### Modelo do Banco de Dados
 ```mermaid
 erDiagram
-    USUARIO {
-        int id
-        string nome
-        string email
-        string senha_hash
-        string telefone
-        string documento
-        string tipo
-        datetime criado_em
-        datetime atualizado_em
-    }
 
-    PACOTE {
-        int id
-        string titulo
-        string descricao
-        string destino
-        int duracao_dias
-        decimal valor
-        string status
-        int criado_por
-        datetime criado_em
-        datetime atualizado_em
-    }
+USUARIO {
+  int id PK
+  string nome
+  string email
+  string senha_hash
+  string telefone
+  datetime criado_em
+  boolean is_admin
+}
 
-    PACOTE_DATA {
-        int id
-        int pacote_id
-        date data_disponivel
-        int vagas_disponiveis
-    }
+DESTINO {
+  int id PK
+  string nome
+  string descricao
+  string imagem_url
+  string cidade
+  string estado
+  string pais
+}
 
-    PACOTE_MIDIA {
-        int id
-        int pacote_id
-        string url
-        string tipo
-        boolean is_principal
-    }
+PACOTE {
+  int id PK
+  string nome
+  string descricao
+  decimal preco_base
+  string imagem_url
+  boolean eh_fechado
+  int destino_id FK
+}
 
-    RESERVA {
-        int id
-        int cliente_id
-        int pacote_id
-        int pacote_data_id
-        string status
-        decimal valor_total
-        string numero_reserva
-        datetime criado_em
-    }
+PACOTE_DATA {
+  int id PK
+  int pacote_id FK
+  date data_inicio
+  date data_fim
+}
 
-    RESERVA_VIAJANTE {
-        int id
-        int reserva_id
-        string nome
-        string documento
-        date data_nascimento
-    }
+TIPO_QUARTO {
+  int id PK
+  string nome
+  int capacidade
+  decimal valor_extra
+}
 
-    PAGAMENTO {
-        int id
-        int reserva_id
-        string metodo
-        decimal valor_pago
-        string status
-        string comprovante_url
-        string transacao_id
-        datetime data_pagamento
-    }
+PACOTE_DATA_QUARTO {
+  int id PK
+  int pacote_data_id FK
+  int tipo_quarto_id FK
+  int vagas
+}
 
-    AVALIACAO {
-        int id
-        int cliente_id
-        int pacote_id
-        int reserva_id
-        int nota
-        string comentario
-        string status
-        datetime criado_em
-    }
+RESERVA {
+  int id PK
+  int usuario_id FK
+  int pacote_data_quarto_id FK
+  int numero_pessoas
+  decimal valor_total
+  datetime data_reserva
+  string status
+}
 
-    PACOTE_HISTORICO {
-        int id
-        int pacote_id
-        int alterado_por
-        string campo_alterado
-        string valor_antigo
-        string valor_novo
-        datetime data_alteracao
-    }
+ACOMPANHANTE {
+  int id PK
+  int reserva_id FK
+  string nome
+  string documento
+  date data_nascimento
+}
 
-    HISTORICO_COMPRA {
-        int id
-        int cliente_id
-        int reserva_id
-        decimal valor_pago
-        string metodo_pagamento
-        string status_pagamento
-        datetime data_compra
-    }
+PAGAMENTO {
+  int id PK
+  int reserva_id FK
+  decimal valor_pago
+  string metodo_pagamento
+  string status
+  datetime data_pagamento
+  string comprovante_url
+}
 
-    USUARIO ||--o{ RESERVA : faz
-    USUARIO ||--o{ AVALIACAO : escreve
-    USUARIO ||--o{ PACOTE : cria
+HISTORICO_COMPRA {
+  int id PK
+  int usuario_id FK
+  int reserva_id FK
+  datetime data_visualizacao
+  string observacao
+}
 
-    PACOTE ||--o{ PACOTE_DATA : tem
-    PACOTE ||--o{ PACOTE_MIDIA : possui
-    PACOTE ||--o{ RESERVA : reservado_em
-    PACOTE ||--o{ AVALIACAO : avaliado_por
-    PACOTE ||--o{ PACOTE_HISTORICO : tem_historico
+AVALIACAO {
+  int id PK
+  int usuario_id FK
+  int pacote_id FK
+  int nota
+  string comentario
+  datetime data_avaliacao
+}
 
-    RESERVA ||--o{ PAGAMENTO : possui
-    RESERVA ||--o{ RESERVA_VIAJANTE : inclui
-    RESERVA ||--o{ AVALIACAO : origem
-    RESERVA ||--o{ HISTORICO_COMPRA : tem_compra
 
-    PACOTE_HISTORICO ||--|| USUARIO : alterado_por
+USUARIO ||--o{ RESERVA : realiza
+USUARIO ||--o{ AVALIACAO : escreve
+USUARIO ||--o{ HISTORICO_COMPRA : possui
+
+DESTINO ||--o{ PACOTE : contem
+
+PACOTE ||--o{ PACOTE_DATA : possui
+PACOTE ||--o{ AVALIACAO : recebe
+
+PACOTE_DATA ||--o{ PACOTE_DATA_QUARTO : possui
+PACOTE_DATA_QUARTO }o--|| TIPO_QUARTO : utiliza
+
+PACOTE_DATA_QUARTO ||--o{ RESERVA : permite
+
+RESERVA ||--|{ ACOMPANHANTE : inclui
+RESERVA ||--o{ PAGAMENTO : possui
+RESERVA ||--o{ HISTORICO_COMPRA : referenciada
 ```
 
 ---
