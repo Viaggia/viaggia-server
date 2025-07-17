@@ -14,31 +14,56 @@ Este repositório contém o **back-end** do sistema **Viaggia**, desenvolvido co
 
 ## 📁 Estrutura de Pastas
 ```
-Viaggia.Backend/
-├── Viaggia.API/
-│   ├── Controllers/
-│   ├── Middlewares/
-│   └── Program.cs
+/Viaggia
 │
-├── Viaggia.Application/
-│   ├── DTOs/
-│   ├── Interfaces/
-│   └── Services/
+├── Controllers/             # APIs expostas (camada de entrada)
+│   └── UsuarioController.cs
+│   └── PacoteController.cs
+│   └── ReservaController.cs
 │
-├── Viaggia.Domain/
-│   ├── Entities/
-│   ├── Enums/
-│   └── ValueObjects/
+├── Services/                # Lógica de negócio (camada de serviço)
+│   └── UsuarioService.cs
+│   └── PacoteService.cs
+│   └── ReservaService.cs
 │
-├── Viaggia.Infrastructure/
-│   ├── Data/
-│   ├── Repositories/
-│   └── ExternalServices/
+├── Interfaces/              # Contratos para injeção de dependência
+│   └── IUsuarioService.cs
+│   └── IPacoteService.cs
+│   └── IReservaService.cs
 │
-├── Viaggia.Tests/
+├── Repositories/            # Acesso ao banco de dados
+│   └── UsuarioRepository.cs
+│   └── PacoteRepository.cs
+│   └── ReservaRepository.cs
 │
-├── Viaggia.sln
-└── README.md
+├── Models/                  # Entidades principais que refletem o banco
+│   └── Usuario.cs
+│   └── Pacote.cs
+│   └── Reserva.cs
+│   └── Pagamento.cs
+│
+├── DTOs/                    # Objetos de transferência de dados (entrada/saída)
+│   └── UsuarioDTO.cs
+│   └── ReservaRequestDTO.cs
+│   └── ReservaResponseDTO.cs
+│
+├── Enums/                   # Enums utilizados no sistema
+│   └── TipoUsuario.cs
+│   └── TipoQuarto.cs
+│
+├── Context/                 # DbContext
+│   └── AppDbContext.cs
+│
+├── Mappings/                # AutoMapper Profiles
+│   └── UsuarioProfile.cs
+│   └── ReservaProfile.cs
+│
+├── Middlewares/             # Middlewares personalizados (ex: tratamento de erros)
+│   └── ExceptionMiddleware.cs
+│
+├── Program.cs               # Ponto de entrada da aplicação
+├── appsettings.json         # Configurações gerais do projeto
+
 ```
 
 ---
@@ -54,7 +79,7 @@ USUARIO {
   string senha_hash
   string telefone
   datetime criado_em
-  boolean is_admin
+  boolean tipo_usuario
 }
 
 DESTINO {
