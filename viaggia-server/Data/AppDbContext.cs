@@ -1,7 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using Microsoft.EntityFrameworkCore;
+using System.Collections.Generic;
 using System.Data;
 using System.Reflection.Emit;
-using Microsoft.EntityFrameworkCore;
+using viaggia_server.Models.Destination;
+using viaggia_server.Models.Package;
 using viaggia_server.Models.User;
 
 namespace viaggia_server.Data
@@ -12,16 +14,17 @@ namespace viaggia_server.Data
         public DbSet<User> Usuarios { get; set; }
         public DbSet<Role> Roles { get; set; }
         public DbSet<UserRole> UsuarioRoles { get; set; }
-        //public DbSet<Destino> Destinos { get; set; }
-        //public DbSet<Pacote> Pacotes { get; set; }
-        //public DbSet<PacoteData> PacoteDatas { get; set; }
+        public DbSet<Destination> Destinations { get; set; }
+
+        public DbSet<Package> Packages { get; set; }
+        public DbSet<PackageDate> PackageDates { get; set; }
         //public DbSet<PacoteMidia> PacoteMidias { get; set; }
         //public DbSet 
-        //public DbSet<TipoQuarto> TiposQuarto { get; set; }
-        //public DbSet<PacoteDataQuarto> PacoteDataQuartos { get; set; }
+        public DbSet<RoomType> RoomTypes { get; set; }
+        public DbSet<PackageDateRoomType> PackageDateRoomTypes { get; set; }
         //public DbSet<Reserva> Reservas { get; set; }
         //public DbSet<Acompanhante> Acompanhantes { get; set; }
-        //public DbSet<Pagamento> Pagamentos { get; set; }
+        //public DbSet<Pagamento> Pagamentos { get; set; }  
         //public DbSet<HistoricoCompra> HistoricoCompras { get; set; }
         //public DbSet<Avaliacao> Avaliacoes { get; set; }
 
@@ -43,26 +46,25 @@ namespace viaggia_server.Data
                 .WithMany(r => r.UserRoles)
                 .HasForeignKey(ur => ur.RoleId);
 
-            //// Relacionamentos principais
-            //modelBuilder.Entity<Pacote>()
-            //    .HasOne(p => p.Destino)
-            //    .WithMany(d => d.Pacotes)
-            //    .HasForeignKey(p => p.DestinoId);
+            modelBuilder.Entity<Package>()
+                .HasOne(p => p.Destination)
+                .WithMany(d => d.Packages)
+                .HasForeignKey(p => p.DestinationId);
 
-            //modelBuilder.Entity<PacoteData>()
-            //    .HasOne(pd => pd.Pacote)
-            //    .WithMany(p => p.PacoteDatas)
-            //    .HasForeignKey(pd => pd.PacoteId);
+            modelBuilder.Entity<PackageDate>()
+                .HasOne(pd => pd.Package)
+                .WithMany(p => p.PackageDates)
+                .HasForeignKey(pd => pd.PackageId);
 
-            //modelBuilder.Entity<PacoteDataQuarto>()
-            //    .HasOne(pq => pq.PacoteData)
-            //    .WithMany(pd => pd.PacoteDataQuartos)
-            //    .HasForeignKey(pq => pq.PacoteDataId);
+            modelBuilder.Entity<PackageDateRoomType>()
+                .HasOne(pq => pq.PackageDate)
+                .WithMany(pd => pd.PackageDateRoomTypes)
+                .HasForeignKey(pq => pq.PackageDateId);
 
-            //modelBuilder.Entity<PacoteDataQuarto>()
-            //    .HasOne(pq => pq.TipoQuarto)
-            //    .WithMany(tq => tq.PacoteDataQuartos)
-            //    .HasForeignKey(pq => pq.TipoQuartoId);
+            modelBuilder.Entity<PackageDateRoomType>()
+                .HasOne(pq => pq.RoomType)
+                .WithMany(tq => tq.PackageDateRooms)
+                .HasForeignKey(pq => pq.RoomTypeId);
 
             //modelBuilder.Entity<Reserva>()
             //    .HasOne(r => r.Usuario)
