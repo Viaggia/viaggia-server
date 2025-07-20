@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("viaggia-server")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+5f8f21a34fe9c82db5881e8ed3a819de1627ecf8")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+0a4c089dfea73a9a6b1ff9faa8ef329e87c2888e")]
 [assembly: System.Reflection.AssemblyProductAttribute("viaggia-server")]
 [assembly: System.Reflection.AssemblyTitleAttribute("viaggia-server")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

@@ -1,7 +1,9 @@
 ﻿using System.Security.Claims;
 using System.Text;
 using Microsoft.AspNetCore.Identity.Data;
+using Microsoft.EntityFrameworkCore;
 using viaggia_server.Data;
+using viaggia_server.Models.User;
 
 namespace viaggia_server.Repositories.Auth
 {
@@ -18,24 +20,24 @@ namespace viaggia_server.Repositories.Auth
 
         public async Task<string> LoginAsync(string email, string senha)
         {
-            var usuario = await _context.Usuarios
-                .Include(u => u.UsuarioRoles)
+            var usuario = await _context.Users
+                .Include(u => u.UserRoles)
                     .ThenInclude(ur => ur.Role)
                 .SingleOrDefaultAsync(u => u.Email == email);
 
-            if (usuario == null || !BCrypt.Net.BCrypt.Verify(senha, usuario.Senha))
+            if (usuario == null || !BCrypt.Net.BCrypt.Verify(senha, usuario.Password))
                 throw new UnauthorizedAccessException("Credenciais inválidas");
 
             var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, usuario.Id.ToString()),
-                new Claim(ClaimTypes.Name, usuario.Nome),
+                new Claim(ClaimTypes.Name, usuario.Name),
                 new Claim(ClaimTypes.Email, usuario.Email)
             };
 
-            foreach (var role in usuario.UsuarioRoles)
+            foreach (var role in usuario.UserRoles)
             {
-                claims.Add(new Claim(ClaimTypes.Role, role.Role.Nome));
+                claims.Add(new Claim(ClaimTypes.Role, role.Role.Name));
             }
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
@@ -51,14 +53,14 @@ namespace viaggia_server.Repositories.Auth
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
 
-        public async Task<Usuario> RegisterAsync(RegisterRequest request)
+        public async Task<User> RegisterAsync(RegisterRequest request)
         {
-            if (await _context.Usuarios.AnyAsync(u => u.Email == request.Email))
+            if (await _context.Users.AnyAsync(u => u.Email == request.Email))
                 throw new Exception("Email já cadastrado.");
 
-            var usuario = new Usuario
+            var usuario = new User
             {
-                Nome = request.Nome,
+                Name= request.Nome,
                 Email = request.Email,
                 Telefone = request.Telefone,
                 Senha = BCrypt.Net.BCrypt.HashPassword(request.Senha),
