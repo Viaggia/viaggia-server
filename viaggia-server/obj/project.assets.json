@@ -4209,23 +4209,23 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\r.marques.farias\\.nuget\\packages\\": {},
+    "C:\\Users\\r.freitas.dos.anjos\\.nuget\\packages\\": {},
     "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\r.marques.farias\\OneDrive - Avanade\\Documents\\Impacta\\csharp\\Viaggia\\viaggia-server\\viaggia-server\\viaggia-server.csproj",
+      "projectUniqueName": "C:\\Users\\r.freitas.dos.anjos\\OneDrive - Avanade\\Documents\\workspace\\viaggia-server\\viaggia-server\\viaggia-server.csproj",
       "projectName": "viaggia-server",
-      "projectPath": "C:\\Users\\r.marques.farias\\OneDrive - Avanade\\Documents\\Impacta\\csharp\\Viaggia\\viaggia-server\\viaggia-server\\viaggia-server.csproj",
-      "packagesPath": "C:\\Users\\r.marques.farias\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\r.marques.farias\\OneDrive - Avanade\\Documents\\Impacta\\csharp\\Viaggia\\viaggia-server\\viaggia-server\\obj\\",
+      "projectPath": "C:\\Users\\r.freitas.dos.anjos\\OneDrive - Avanade\\Documents\\workspace\\viaggia-server\\viaggia-server\\viaggia-server.csproj",
+      "packagesPath": "C:\\Users\\r.freitas.dos.anjos\\.nuget\\packages\\",
+      "outputPath": "C:\\Users\\r.freitas.dos.anjos\\OneDrive - Avanade\\Documents\\workspace\\viaggia-server\\viaggia-server\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
       ],
       "configFilePaths": [
-        "C:\\Users\\r.marques.farias\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Users\\r.freitas.dos.anjos\\AppData\\Roaming\\NuGet\\NuGet.Config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
