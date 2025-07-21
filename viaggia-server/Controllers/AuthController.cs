@@ -11,9 +11,9 @@ namespace viaggia_server.Controllers
     [Route("api/[controller]")]
     public class AuthController : ControllerBase
     {
-        private readonly IAuthService _authService;
+        private readonly IAuthRepository _authService;
 
-        public AuthController(IAuthService authService)
+        public AuthController(IAuthRepository authService)
         {
             _authService = authService;
         }
@@ -30,44 +30,6 @@ namespace viaggia_server.Controllers
             {
                 return Unauthorized(new { Message = "Email ou senha incorretos." });
             }
-        }
-
-        [HttpPost("register")]
-        public async Task<IActionResult> Register([FromBody] RegisterRequest request)
-        {
-            try
-            {
-                var usuario = await _authService.RegisterAsync(request);
-                return Ok(new
-                {
-                    usuario.Id,
-                    usuario.Nome,
-                    usuario.Email,
-                    usuario.Telefone,
-                    Roles = usuario.UsuarioRoles.Select(r => r.Role.Nome).ToList()
-                });
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new { Message = ex.Message });
-            }
-        }
-
-        [HttpGet("usuarios")]
-        public async Task<IActionResult> GetUsuarios()
-        {
-            var usuarios = await _authService.GetAllUsersAsync();
-
-            var response = usuarios.Select(u => new UserResponse
-            {
-                Id = u.Id,
-                Name = u.Name,
-                Email = u.Email,
-                PhoneNumber = u.PhoneNumber,
-                Roles = u.UserRoles.Select(r => r.Role.Name).ToList()
-            }).ToList();
-
-            return Ok(response);
         }
     }
 

@@ -1,12 +1,10 @@
 ﻿namespace viaggia_server.DTOs.User
 {
-    public class UserResponse
+    public class CreateClientRequest
     {
-        public int Id { get; set; }
         public string Name { get; set; } = null!;
         public string Email { get; set; } = null!;
+        public string Password { get; set; } = null!;
         public string PhoneNumber { get; set; } = null!;
-        public string? CompanyName { get; set; }
-        public List<string> Roles { get; set; } = new();
     }
 }
