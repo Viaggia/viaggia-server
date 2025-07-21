@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using viaggia_server.DTOs;
 using viaggia_server.DTOs.Auth;
 using viaggia_server.DTOs.User;
-using viaggia_server.Repositories.Auth;
+using viaggia_server.Repositories.Interfaces;
 
 namespace viaggia_server.Controllers
 {
