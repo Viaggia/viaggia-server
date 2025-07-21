@@ -20,8 +20,8 @@ namespace viaggia_server.Models.Package
         public string? Image { get; set; }
         public bool IsClosed { get; set; }
        
-        public ICollection<PackageDate>? PackageDates { get; set; } // Relacionamento: 1 Pacote → N Pacote_Data
+        public ICollection<PackageDate>? PackageDates { get; set; } = new List<PackageDate>();  // Relacionamento: 1 Pacote → N Pacote_Data
 
-        
+
     }
 }

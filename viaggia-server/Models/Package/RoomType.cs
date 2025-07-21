@@ -17,6 +17,6 @@ namespace viaggia_server.Models.Package
         [Required]
         public decimal ExtraValue { get; set; }
 
-        public ICollection<PackageDateRoomType>? PackageDateRooms { get; set; } // Relacionamento: 1 TipoQuarto → N Pacote_Data_TipoQuarto
+        public ICollection<PackageDateRoomType>? PackageDateRooms { get; set; } = new List<PackageDateRoomType>();// Relacionamento: 1 TipoQuarto → N Pacote_Data_TipoQuarto
     }
 }

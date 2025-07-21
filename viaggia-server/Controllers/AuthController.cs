@@ -4,6 +4,7 @@ using viaggia_server.DTOs;
 using viaggia_server.DTOs.Auth;
 using viaggia_server.DTOs.User;
 using viaggia_server.Repositories.Interfaces;
+using viaggia_server.Services.Auth;
 
 namespace viaggia_server.Controllers
 {
@@ -11,9 +12,9 @@ namespace viaggia_server.Controllers
     [Route("api/[controller]")]
     public class AuthController : ControllerBase
     {
-        private readonly IAuthService _authService;
+        private readonly AuthService _authService;
 
-        public AuthController(IAuthService authService)
+        public AuthController(AuthService authService)
         {
             _authService = authService;
         }
@@ -41,10 +42,10 @@ namespace viaggia_server.Controllers
                 return Ok(new
                 {
                     usuario.Id,
-                    usuario.Nome,
+                    usuario.Name,
                     usuario.Email,
-                    usuario.Telefone,
-                    Roles = usuario.UsuarioRoles.Select(r => r.Role.Nome).ToList()
+                    usuario.PhoneNumber,
+                    Roles = usuario.UserRoles.Select(r => r.Role.Name).ToList()
                 });
             }
             catch (Exception ex)

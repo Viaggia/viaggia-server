@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace viaggia_server.Models.Package
 {
@@ -16,9 +17,11 @@ namespace viaggia_server.Models.Package
         public DateTime EndDate { get; set; }
 
         public int PackageId { get; set; } // Chave estrangeira para o Pacote
+
+        [ForeignKey("PackageId")]
         public Package? Package { get; set; } // Relacionamento: 1 Pacote_Data → 1 Pacote
 
-        public ICollection<PackageDateRoomType>? PackageDateRoomTypes { get; set; } // Relacionamento: 1 Pacote_Data → N Pacote_Data_TipoQuarto
+        public ICollection<PackageDateRoomType>? PackageDateRoomTypes { get; set; } = new List<PackageDateRoomType>(); // Relacionamento: 1 Pacote_Data → N Pacote_Data_TipoQuarto
 
     }
 }
