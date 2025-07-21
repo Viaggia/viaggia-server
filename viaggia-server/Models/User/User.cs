@@ -7,8 +7,8 @@
         public string Email { get; set; } = null!;
         public string Password { get; set; } = null!;
         public string PhoneNumber { get; set; } = null!;
-        public DateTime CreateData { get; set; } = DateTime.UtcNow;
+        public DateTime CreateDate { get; set; } = DateTime.UtcNow;
 
-        public ICollection<UserRole> UserRoles { get; set; } = new List<UsuarioRole>();
+        public ICollection<UserRole> UserRoles { get; set; } = new List<UserRole>();
     }
 }

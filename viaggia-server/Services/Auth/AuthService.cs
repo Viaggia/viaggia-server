@@ -1,11 +1,16 @@
-﻿using System.Security.Claims;
+﻿using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 using System.Text;
-using Microsoft.AspNetCore.Identity.Data;
+using viaggia_server.DTOs;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using viaggia_server.Data;
+using viaggia_server.Models.User;
+using viaggia_server.Repositories.Interfaces;
 
-namespace viaggia_server.Repositories.Auth
+namespace viaggia_server.Services.Auth
 {
-    public class AuthService : IAuthService
+    public class AuthService : IAuthRepository
     {
         private readonly AppDbContext _context;
         private readonly IConfiguration _configuration;
@@ -19,23 +24,23 @@ namespace viaggia_server.Repositories.Auth
         public async Task<string> LoginAsync(string email, string senha)
         {
             var usuario = await _context.Usuarios
-                .Include(u => u.UsuarioRoles)
+                .Include(u => u.UserRoles)
                     .ThenInclude(ur => ur.Role)
                 .SingleOrDefaultAsync(u => u.Email == email);
 
-            if (usuario == null || !BCrypt.Net.BCrypt.Verify(senha, usuario.Senha))
+            if (usuario == null || !BCrypt.Net.BCrypt.Verify(senha, usuario.Password))
                 throw new UnauthorizedAccessException("Credenciais inválidas");
 
             var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, usuario.Id.ToString()),
-                new Claim(ClaimTypes.Name, usuario.Nome),
+                new Claim(ClaimTypes.Name, usuario.Name),
                 new Claim(ClaimTypes.Email, usuario.Email)
             };
 
-            foreach (var role in usuario.UsuarioRoles)
+            foreach (var role in usuario.UserRoles)
             {
-                claims.Add(new Claim(ClaimTypes.Role, role.Role.Nome));
+                claims.Add(new Claim(ClaimTypes.Role, role.Role.Name));
             }
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
@@ -51,32 +56,32 @@ namespace viaggia_server.Repositories.Auth
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
 
-        public async Task<Usuario> RegisterAsync(RegisterRequest request)
+        public async Task<User> RegisterAsync(RegisterRequest request)
         {
             if (await _context.Usuarios.AnyAsync(u => u.Email == request.Email))
                 throw new Exception("Email já cadastrado.");
 
-            var usuario = new Usuario
+            var usuario = new User
             {
-                Nome = request.Nome,
+                Name = request.Name,
                 Email = request.Email,
-                Telefone = request.Telefone,
-                Senha = BCrypt.Net.BCrypt.HashPassword(request.Senha),
-                CriadoEm = DateTime.UtcNow
+                PhoneNumber = request.PhoneNumber,
+                Password = BCrypt.Net.BCrypt.HashPassword(request.Password),
+                CreateDate = DateTime.UtcNow
             };
 
             // Pega role pelo nome
-            var role = await _context.Roles.SingleOrDefaultAsync(r => r.Nome == request.RoleNome);
+            var role = await _context.Roles.SingleOrDefaultAsync(r => r.Name == request.RoleNome);
             if (role == null)
                 throw new Exception("Role inválida.");
 
-            var usuarioRole = new UsuarioRole
+            var usuarioRole = new UserRole
             {
-                Usuario = usuario,
+                User = usuario,
                 Role = role
             };
 
-            usuario.UsuarioRoles.Add(usuarioRole);
+            usuario.UserRoles.Add(usuarioRole);
 
             _context.Usuarios.Add(usuario);
             await _context.SaveChangesAsync();
@@ -84,14 +89,12 @@ namespace viaggia_server.Repositories.Auth
             return usuario;
         }
 
-        public async Task<List<Usuario>> GetAllUsersAsync()
+        public async Task<List<User>> GetAllUsersAsync()
         {
             return await _context.Usuarios
-                .Include(u => u.UsuarioRoles)
+                .Include(u => u.UserRoles)
                     .ThenInclude(ur => ur.Role)
                 .ToListAsync();
         }
-
-
     }
 }
