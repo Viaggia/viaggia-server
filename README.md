@@ -109,6 +109,15 @@ PACOTE_DATA {
   date data_fim
 }
 
+PACOTE_MIDIA {
+  int id PK
+  string url
+  string tipo
+  string descricao
+  datetime criado_em
+  int pacote_id FK
+}
+
 TIPO_QUARTO {
   int id PK
   string nome
@@ -180,6 +189,7 @@ PACOTE ||--o{ AVALIACAO : recebe
 
 PACOTE_DATA ||--o{ PACOTE_DATA_QUARTO : possui
 PACOTE_DATA_QUARTO }o--|| TIPO_QUARTO : utiliza
+PACOTE ||--o{ MIDIA : possui
 
 PACOTE_DATA_QUARTO ||--o{ RESERVA : permite
 
