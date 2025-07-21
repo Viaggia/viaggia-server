@@ -5,6 +5,6 @@
         public int Id { get; set; }
         public string Name { get; set; } = null!; // ADMIN, CLIENTE, etc
 
-        public ICollection<UserRole> UserRoles { get; set; } = new List<UsuarioRole>();
+        public ICollection<UserRole> UserRoles { get; set; } = new List<UserRole>();
     }
 }

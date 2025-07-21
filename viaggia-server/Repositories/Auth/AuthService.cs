@@ -1,6 +1,7 @@
 ﻿using System.Security.Claims;
 using System.Text;
 using Microsoft.AspNetCore.Identity.Data;
+using Microsoft.EntityFrameworkCore;
 using viaggia_server.Data;
 
 namespace viaggia_server.Repositories.Auth
@@ -19,11 +20,11 @@ namespace viaggia_server.Repositories.Auth
         public async Task<string> LoginAsync(string email, string senha)
         {
             var usuario = await _context.Usuarios
-                .Include(u => u.UsuarioRoles)
+                .Include(u => u.UserRoles)
                     .ThenInclude(ur => ur.Role)
                 .SingleOrDefaultAsync(u => u.Email == email);
 
-            if (usuario == null || !BCrypt.Net.BCrypt.Verify(senha, usuario.Senha))
+            if (usuario == null || !BCrypt.Net.BCrypt.Verify(Password, usuario.Senha))
                 throw new UnauthorizedAccessException("Credenciais inválidas");
 
             var claims = new List<Claim>

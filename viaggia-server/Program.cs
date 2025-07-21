@@ -1,6 +1,18 @@
+using Microsoft.EntityFrameworkCore;
+using viaggia_server.Data;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+
+// Pega a string de conexão do appsettings.json
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+
+// Adiciona o AppDbContext ao container de serviços.
+// Isso permite que ele seja injetado em outras partes da aplicação (como os controllers).
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseSqlServer(connectionString));
+
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle

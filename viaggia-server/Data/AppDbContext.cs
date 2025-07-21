@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Reflection.Emit;
-using viaggia_server.Models.Destination;
 using viaggia_server.Models.Package;
 using viaggia_server.Models.User;
 
@@ -14,8 +13,7 @@ namespace viaggia_server.Data
         public DbSet<User> Usuarios { get; set; }
         public DbSet<Role> Roles { get; set; }
         public DbSet<UserRole> UsuarioRoles { get; set; }
-        public DbSet<Destination> Destinations { get; set; }
-
+  
         public DbSet<Package> Packages { get; set; }
         public DbSet<PackageDate> PackageDates { get; set; }
         //public DbSet<PacoteMidia> PacoteMidias { get; set; }
@@ -45,11 +43,6 @@ namespace viaggia_server.Data
                 .HasOne(ur => ur.Role)
                 .WithMany(r => r.UserRoles)
                 .HasForeignKey(ur => ur.RoleId);
-
-            modelBuilder.Entity<Package>()
-                .HasOne(p => p.Destination)
-                .WithMany(d => d.Packages)
-                .HasForeignKey(p => p.DestinationId);
 
             modelBuilder.Entity<PackageDate>()
                 .HasOne(pd => pd.Package)
