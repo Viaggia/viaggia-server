@@ -14,56 +14,96 @@ Este repositório contém o **back-end** do sistema **Viaggia**, desenvolvido co
 
 ## 📁 Estrutura de Pastas
 ```
-/Viaggia
+/viaggia_server
 │
-├── Controllers/             # APIs expostas (camada de entrada)
-│   └── UsuarioController.cs
-│   └── PacoteController.cs
-│   └── ReservaController.cs
+├── Controllers/                 # APIs expostas (camada de entrada)
+│   ├── HotelsController.cs      # Controlador para hotéis
+│   ├── ReviewsController.cs     # Controlador para avaliações
+│   ├── UsersController.cs       # Controlador para usuários
+│   ├── PackagesController.cs    # Controlador para pacotes
 │
-├── Services/                # Lógica de negócio (camada de serviço)
-│   └── UsuarioService.cs
-│   └── PacoteService.cs
-│   └── ReservaService.cs
+├── Services/                    # Lógica de negócio (camada de serviço)
+│   ├── Hotels/
+│   │   ├── IHotelService.cs     # Interface do serviço de hotéis
+│   │   ├── HotelService.cs      # Implementação do serviço de hotéis
+│   ├── Reviews/
+│   │   ├── IReviewService.cs    # Interface do serviço de avaliações
+│   │   ├── ReviewService.cs     # Implementação do serviço de avaliações
+│   ├── Users/
+│   │   ├── IUserService.cs      # Interface do serviço de usuários
+│   │   ├── UserService.cs       # Implementação do serviço de usuários
 │
-├── Interfaces/              # Contratos para injeção de dependência
-│   └── IUsuarioService.cs
-│   └── IPacoteService.cs
-│   └── IReservaService.cs
+├── Repositories/                # Acesso ao banco de dados
+│   ├── IRepository.cs           # Interface genérica do repositório
+│   ├── Repository.cs            # Implementação genérica do repositório
+│   ├── Hotels/
+│   │   ├── IHotelRepository.cs  # Interface do repositório de hotéis
+│   │   ├── HotelRepository.cs   # Implementação do repositório de hotéis
+│   ├── Reviews/
+│   │   ├── IReviewRepository.cs # Interface do repositório de avaliações
+│   │   ├── ReviewRepository.cs  # Implementação do repositório de avaliações
+│   ├── Users/
+│   │   ├── IUserRepository.cs   # Interface do repositório de usuários
+│   │   ├── UserRepository.cs    # Implementação do repositório de usuários
+│   ├── Packages/
+│   │   ├── IPackageRepository.cs # Interface do repositório de pacotes
+│   │   ├── PackageRepository.cs  # Implementação do repositório de pacotes
 │
-├── Repositories/            # Acesso ao banco de dados
-│   └── UsuarioRepository.cs
-│   └── PacoteRepository.cs
-│   └── ReservaRepository.cs
+├── Models/                      # Entidades principais que refletem o banco
+│   ├── ISoftDeletable.cs        # Interface para exclusão lógica
+│   ├── Hotels/
+│   │   ├── Hotel.cs             # Modelo de hotel
+|   |   ├── HotelRoomType.cs     # Modelo de tipo de quarto
+|   |   ├── HotelDate.cs         # Modelo de datas de disponibilidade
+│   ├── Packages/
+│   │   ├── Package.cs           # Modelo de pacote
+│   │   ├── PackageDate.cs       # Modelo de datas do pacote
+│   ├── Medias/
+│   │   ├── Media.cs             # Modelo de mídia
+│   ├── Reservations/
+│   │   ├── Reservation.cs       # Modelo de reserva
+│   ├── Payments/
+│   │   ├── Payment.cs           # Modelo de pagamento
+│   ├── Reviews/
+│   │   ├── Review.cs            # Modelo de avaliação
+│   ├── Users/
+│   │   ├── User.cs              # Modelo de usuário
+│   │   ├── Role.cs              # Modelo de papel
+│   │   ├── UserRole.cs          # Modelo de relação usuário-papel
 │
-├── Models/                  # Entidades principais que refletem o banco
-│   └── Usuario.cs
-│   └── Pacote.cs
-│   └── Reserva.cs
-│   └── Pagamento.cs
+├── DTOs/                        # Objetos de transferência de dados
+│   ├── ApiResponse.cs           # Resposta padrão da API
+│   ├── Hotels/
+│   │   ├── HotelDTO.cs          # DTO para leitura de hotéis
+│   │   ├── CreateHotelDTO.cs    # DTO para criação de hotéis
+│   │   ├── HotelRoomTypeDTO.cs  # DTO para tipo de quarto
+│   │   ├── HotelDateDTO.cs      # DTO para datas de disponibilidade
+│   ├── Reviews/
+│   │   ├── ReviewDTO.cs         # DTO para leitura de avaliações
+│   │   ├── CreateReviewDTO.cs   # DTO para criação de avaliações
+│   ├── Users/
+│   │   ├── UserDTO.cs           # DTO para leitura de usuários
+│   │   ├── CreateClientDTO.cs   # DTO para criação de clientes
+│   │   ├── CreateServiceProviderDTO.cs # DTO para criação de prestadores de serviço
+│   │   ├── CreateAttendantDTO.cs # DTO para criação de atendentes
+│   ├── Packages/
+│   │   ├── PackageDTO.cs        # DTO para leitura de pacotes
+│   │   ├── PackageCreateDTO.cs  # DTO para criação de pacotes
+│   │   ├── PackageUpdateDTO.cs  # DTO para atualização de pacotes
+│   │   ├── PackageDateDTO.cs    # DTO para datas de pacotes
+│   │   ├── MediaDTO.cs          # DTO para mídia
 │
-├── DTOs/                    # Objetos de transferência de dados (entrada/saída)
-│   └── UsuarioDTO.cs
-│   └── ReservaRequestDTO.cs
-│   └── ReservaResponseDTO.cs
+├── Data/                        # DbContext
+│   ├── AppDbContext.cs          # Contexto do banco de dados
 │
-├── Enums/                   # Enums utilizados no sistema
-│   └── TipoUsuario.cs
-│   └── TipoQuarto.cs
+├── wwwroot/                     # Arquivos estáticos (ex.: imagens)
+│   ├── Uploads/
+│   │   ├── Hotels/              # Mídias de hotéis
+|   |   ├── Pacotes/             # Mídias de pactoes
 │
-├── Context/                 # DbContext
-│   └── AppDbContext.cs
-│
-├── Mappings/                # AutoMapper Profiles
-│   └── UsuarioProfile.cs
-│   └── ReservaProfile.cs
-│
-├── Middlewares/             # Middlewares personalizados (ex: tratamento de erros)
-│   └── ExceptionMiddleware.cs
-│
-├── Program.cs               # Ponto de entrada da aplicação
-├── appsettings.json         # Configurações gerais do projeto
-
+├── Program.cs                   # Ponto de entrada da aplicação
+├── appsettings.json             # Configurações gerais do projeto
+├── appsettings.Development.json # Configurações específicas para desenvolvimento
 ```
 
 ---
@@ -72,130 +112,154 @@ Este repositório contém o **back-end** do sistema **Viaggia**, desenvolvido co
 ```mermaid
 erDiagram
 
-USUARIO {
-  int id PK
-  string nome
-  string email
-  string senha_hash
-  string telefone
-  datetime criado_em
-  boolean tipo_usuario
+USER {
+  int UserId PK
+  string Name
+  string Email
+  string Password
+  bool IsActive
 }
 
-DESTINO {
-  int id PK
-  string nome
-  string descricao
-  string imagem_url
-  string cidade
-  string estado
-  string pais
+ROLE {
+  int RoleId PK
+  string Name
 }
 
-PACOTE {
-  int id PK
-  string nome
-  string descricao
-  decimal preco_base
-  string imagem_url
-  boolean eh_fechado
-  int destino_id FK
+USER_ROLE {
+  int UserId PK, FK
+  int RoleId PK, FK
 }
 
-PACOTE_DATA {
-  int id PK
-  int pacote_id FK
-  date data_inicio
-  date data_fim
+HOTEL {
+  int HotelId PK
+  string Name
+  string Street
+  string City
+  string State
+  string ZipCode
+  string Description
+  int StarRating
+  bool HasParking
+  bool HasBreakfast
+  bool HasSpa
+  bool HasPool
+  bool HasGym
+  bool HasWiFi
+  bool IsPetFriendly
+  string CheckInTime
+  string CheckOutTime
+  string ContactPhone
+  string ContactEmail
+  bool IsActive
 }
 
-PACOTE_MIDIA {
-  int id PK
-  string url
-  string tipo
-  string descricao
-  datetime criado_em
-  int pacote_id FK
+HOTEL_ROOM_TYPE {
+  int RoomTypeId PK
+  string Name
+  string Description
+  decimal Price
+  int Capacity
+  string BedType
+  int HotelId FK
+  bool IsActive
 }
 
-TIPO_QUARTO {
-  int id PK
-  string nome
-  int capacidade
-  decimal valor_extra
+HOTEL_DATE {
+  int HotelDateId PK
+  datetime StartDate
+  datetime EndDate
+  int AvailableRooms
+  int RoomTypeId FK
+  int HotelId FK
+  bool IsActive
 }
 
-PACOTE_DATA_QUARTO {
-  int id PK
-  int pacote_data_id FK
-  int tipo_quarto_id FK
-  int vagas
+PACKAGE {
+  int PackageId PK
+  string Name
+  string Description
+  decimal Price
+  bool IsActive
 }
 
-RESERVA {
-  int id PK
-  int usuario_id FK
-  int pacote_data_quarto_id FK
-  int numero_pessoas
-  decimal valor_total
-  datetime data_reserva
-  string status
+PACKAGE_DATE {
+  int PackageDateId PK
+  datetime StartDate
+  datetime EndDate
+  int PackageId FK
+  bool IsActive
 }
 
-ACOMPANHANTE {
-  int id PK
-  int reserva_id FK
-  string nome
-  string documento
-  date data_nascimento
+RESERVATION {
+  int ReservationId PK
+  int UserId FK
+  int PackageId FK
+  int HotelId FK
+  int RoomTypeId FK
+  datetime StartDate
+  datetime EndDate
+  decimal TotalPrice
+  int NumberOfGuests
+  string Status
+  bool IsActive
 }
 
-PAGAMENTO {
-  int id PK
-  int reserva_id FK
-  decimal valor_pago
-  string metodo_pagamento
-  string status
-  datetime data_pagamento
-  string comprovante_url
+PAYMENT {
+  int PaymentId PK
+  int UserId FK
+  int ReservationId FK
+  decimal Amount
+  datetime PaymentDate
+  string PaymentMethod
+  string Status
+  bool IsActive
 }
 
-HISTORICO_COMPRA {
-  int id PK
-  int usuario_id FK
-  int reserva_id FK
-  datetime data_visualizacao
-  string observacao
+MEDIA {
+  int MediaId PK
+  string MediaUrl
+  string MediaType
+  int PackageId FK
+  int HotelId FK
+  bool IsActive
 }
 
-AVALIACAO {
-  int id PK
-  int usuario_id FK
-  int pacote_id FK
-  int nota
-  string comentario
-  datetime data_avaliacao
+REVIEW {
+  int ReviewId PK
+  int UserId FK
+  string ReviewType
+  int HotelId FK
+  int Rating
+  string Comment
+  datetime CreatedAt
+  bool IsActive
 }
 
+USER ||--o{ USER_ROLE : possui
+ROLE ||--o{ USER_ROLE : possui
+USER ||--o{ RESERVATION : realiza
+USER ||--o{ PAYMENT : realiza
+USER ||--o{ REVIEW : escreve
 
-USUARIO ||--o{ RESERVA : realiza
-USUARIO ||--o{ AVALIACAO : escreve
-USUARIO ||--o{ HISTORICO_COMPRA : possui
+HOTEL ||--o{ HOTEL_ROOM_TYPE : possui
+HOTEL ||--o{ HOTEL_DATE : possui
+HOTEL ||--o{ RESERVATION : possui
+HOTEL ||--o{ MEDIA : possui
+HOTEL ||--o{ REVIEW : recebe
 
-DESTINO ||--o{ PACOTE : contem
+HOTEL_ROOM_TYPE ||--o{ HOTEL_DATE : possui
+HOTEL_ROOM_TYPE ||--o{ RESERVATION : possui
 
-PACOTE ||--o{ PACOTE_DATA : possui
-PACOTE ||--o{ AVALIACAO : recebe
+PACKAGE ||--o{ PACKAGE_DATE : possui
+PACKAGE ||--o{ RESERVATION : possui
+PACKAGE ||--o{ MEDIA : possui
 
-PACOTE_DATA ||--o{ PACOTE_DATA_QUARTO : possui
-PACOTE_DATA_QUARTO }o--|| TIPO_QUARTO : utiliza
-PACOTE ||--o{ MIDIA : possui
+RESERVATION ||--o{ PAYMENT : possui
 
-PACOTE_DATA_QUARTO ||--o{ RESERVA : permite
+MEDIA ||--o{ HOTEL : associada
+MEDIA ||--o{ PACKAGE : associada
 
-RESERVA ||--|{ ACOMPANHANTE : inclui
-RESERVA ||--o{ PAGAMENTO : possui
-RESERVA ||--o{ HISTORICO_COMPRA : referenciada
+REVIEW ||--o{ HOTEL : avalia
 ```
 
 ---
