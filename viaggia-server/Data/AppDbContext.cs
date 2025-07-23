@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using viaggia_server.Models.Companions;
 using viaggia_server.Models.HotelDates;
 using viaggia_server.Models.HotelRoomTypes;
 using viaggia_server.Models.Hotels;
@@ -30,6 +31,7 @@ namespace viaggia_server.Data
         public DbSet<Payment> Payments { get; set; }
         public DbSet<Media> Medias { get; set; }
         public DbSet<Review> Reviews { get; set; }
+        public DbSet<Companion> Companions { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -145,6 +147,13 @@ namespace viaggia_server.Data
                 .HasOne(r => r.User)
                 .WithMany()
                 .HasForeignKey(r => r.UserId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            // Configuração de Companion
+            modelBuilder.Entity<Companion>()
+                .HasOne(c => c.Reservation)
+                .WithMany(r => r.Companions)
+                .HasForeignKey(c => c.ReservationId)
                 .OnDelete(DeleteBehavior.NoAction);
 
             // Configuração de Media

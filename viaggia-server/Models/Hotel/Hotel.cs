@@ -41,6 +41,8 @@ namespace viaggia_server.Models.Hotels
 
         public bool HasParking { get; set; }
         public bool HasBreakfast { get; set; }
+        public bool HasLunch { get; set; }
+        public bool HasDinner { get; set; }
         public bool HasSpa { get; set; }
         public bool HasPool { get; set; }
         public bool HasGym { get; set; }

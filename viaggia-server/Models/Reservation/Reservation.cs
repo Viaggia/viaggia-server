@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using viaggia_server.Models.Companions;
 using viaggia_server.Models.HotelRoomTypes;
 using viaggia_server.Models.Hotels;
 using viaggia_server.Models.Packages;
@@ -57,5 +58,6 @@ namespace viaggia_server.Models.Reservations
         public bool IsActive { get; set; } = true;
 
         public virtual ICollection<Payment> Payments { get; set; } = new List<Payment>();
+        public virtual ICollection<Companion> Companions { get; set; } = new List<Companion>();
     }
 }
