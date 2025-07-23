@@ -1,16 +1,13 @@
 ﻿using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using viaggia_server.DTOs;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using viaggia_server.Data;
-using viaggia_server.Models.User;
-using viaggia_server.Repositories.Interfaces;
 
 namespace viaggia_server.Services.Auth
 {
-    public class AuthService : IAuthRepository
+    public class AuthService : IAuthService
     {
         private readonly AppDbContext _context;
         private readonly IConfiguration _configuration;
@@ -23,7 +20,7 @@ namespace viaggia_server.Services.Auth
 
         public async Task<string> LoginAsync(string email, string senha)
         {
-            var usuario = await _context.Usuarios
+            var usuario = await _context.Users
                 .Include(u => u.UserRoles)
                     .ThenInclude(ur => ur.Role)
                 .SingleOrDefaultAsync(u => u.Email == email);
@@ -54,47 +51,6 @@ namespace viaggia_server.Services.Auth
                 signingCredentials: creds);
 
             return new JwtSecurityTokenHandler().WriteToken(token);
-        }
-
-        public async Task<User> RegisterAsync(RegisterRequest request)
-        {
-            if (await _context.Usuarios.AnyAsync(u => u.Email == request.Email))
-                throw new Exception("Email já cadastrado.");
-
-            var usuario = new User
-            {
-                Name = request.Name,
-                Email = request.Email,
-                PhoneNumber = request.PhoneNumber,
-                Password = BCrypt.Net.BCrypt.HashPassword(request.Password),
-                CreateDate = DateTime.UtcNow
-            };
-
-            // Pega role pelo nome
-            var role = await _context.Roles.SingleOrDefaultAsync(r => r.Name == request.RoleNome);
-            if (role == null)
-                throw new Exception("Role inválida.");
-
-            var usuarioRole = new UserRole
-            {
-                User = usuario,
-                Role = role
-            };
-
-            usuario.UserRoles.Add(usuarioRole);
-
-            _context.Usuarios.Add(usuario);
-            await _context.SaveChangesAsync();
-
-            return usuario;
-        }
-
-        public async Task<List<User>> GetAllUsersAsync()
-        {
-            return await _context.Usuarios
-                .Include(u => u.UserRoles)
-                    .ThenInclude(ur => ur.Role)
-                .ToListAsync();
         }
     }
 }

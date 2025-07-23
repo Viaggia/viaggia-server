@@ -1,9 +1,6 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using viaggia_server.DTOs;
+﻿using Microsoft.AspNetCore.Mvc;
 using viaggia_server.DTOs.Auth;
-using viaggia_server.DTOs.User;
-using viaggia_server.Repositories.Interfaces;
+using viaggia_server.Services.Auth;
 
 namespace viaggia_server.Controllers
 {
@@ -11,9 +8,9 @@ namespace viaggia_server.Controllers
     [Route("api/[controller]")]
     public class AuthController : ControllerBase
     {
-        private readonly IAuthRepository _authService;
+        private readonly IAuthService _authService;
 
-        public AuthController(IAuthRepository authService)
+        public AuthController(IAuthService authService)
         {
             _authService = authService;
         }
@@ -32,5 +29,4 @@ namespace viaggia_server.Controllers
             }
         }
     }
-
 }
