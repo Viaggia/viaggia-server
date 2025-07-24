@@ -55,6 +55,7 @@ namespace viaggia_server.Repositories
 
         public async Task<T?> GetByIdAsync(int id)
         {
+
             var entityType = typeof(T);
             var primaryKey = _context.Model.FindEntityType(entityType)
                 ?.FindPrimaryKey()
@@ -83,6 +84,13 @@ namespace viaggia_server.Repositories
 
             return await _context.Set<T2>()
                 .FirstOrDefaultAsync(e => EF.Property<int>(e, primaryKey) == id && e.IsActive);
+
+            var entity = await _context.Set<T>().FindAsync(id);
+            if (entity == null || !entity.IsActive)
+                return null;
+
+            return entity;
+
         }
 
         public async Task<IEnumerable<T>> GetAllAsync()

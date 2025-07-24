@@ -17,7 +17,12 @@ namespace viaggia_server.Repositories
         public async Task<IEnumerable<PackageDate>> GetPackageDatesAsync(int packageId)
         {
             return await _context.PackageDates
+
                 .Where(pd => pd.PackageId == packageId && pd.IsActive)
+
+                .IgnoreQueryFilters() // Ignora o filtro global
+                .Where(pd => pd.PackageId == packageId)
+
                 .ToListAsync();
         }
 
@@ -25,6 +30,14 @@ namespace viaggia_server.Repositories
         {
             return await _context.PackageDates
                 .FirstOrDefaultAsync(pd => pd.PackageDateId == packageDateId && pd.IsActive);
+        }
+
+        public async Task<PackageDate> AddPackageDateAsync(PackageDate packageDate)
+        {
+            packageDate.IsActive = true; // Garante que está ativo
+            await _context.PackageDates.AddAsync(packageDate);
+            await _context.SaveChangesAsync(); // Persiste no banco
+            return packageDate;
         }
 
         public async Task<IEnumerable<Media>> GetPackageMediasAsync(int packageId)

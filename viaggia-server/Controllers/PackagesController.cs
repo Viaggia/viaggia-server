@@ -134,9 +134,11 @@ namespace viaggia_server.Controllers
 
             try
             {
+
                 var hotel = await _genericRepository.GetByIdAsync<Hotel>(packageDTO.HotelId);
                 if (hotel == null || !hotel.IsActive)
                     return BadRequest(new ApiResponse<PackageDTO>(false, $"Hotel with ID {packageDTO.HotelId} not found or inactive."));
+
 
                 var package = new Package
                 {
@@ -150,8 +152,13 @@ namespace viaggia_server.Controllers
                     {
                         StartDate = pd.StartDate,
                         EndDate = pd.EndDate
+
                     }).ToList(),
                     Medias = new List<Media>()
+
+
+                    }).ToList()
+
                 };
 
                 var uploadPath = Path.Combine(_environment.WebRootPath, "Uploads", "Packages");
