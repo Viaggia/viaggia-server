@@ -46,3 +46,6 @@ Thumbs.db
 /viaggia-server/obj/
 /viaggia-server/appsettings.json
 /viaggia-server/appsettings.*.json
+/viaggia-server/appsettings.Development.json
+/viaggia-server/Migrations/20250723022958_CreateInitial.cs
+/viaggia-server/Migrations/AppDbContextModelSnapshot.cs
