@@ -8,6 +8,7 @@
         Task<T> UpdateAsync(T entity);
         Task<bool> SoftDeleteAsync(int id);
         Task<bool> SaveChangesAsync();
-        Task<bool> SoftDeleteAsync<T1>(int id) where T1 : class, ISoftDeletable;
+        Task<T2?> GetByIdAsync<T2>(int id) where T2 : class, ISoftDeletable;
+        Task<bool> SoftDeleteAsync<T2>(int id) where T2 : class, ISoftDeletable; // New method for cross-entity soft delete
     }
 }

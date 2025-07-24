@@ -3,7 +3,6 @@ using System.ComponentModel.DataAnnotations.Schema;
 using viaggia_server.Models.Hotels;
 using viaggia_server.Models.Packages;
 using viaggia_server.Repositories;
-using ViaggiaServer.Models.Packages;
 
 namespace viaggia_server.Models.Medias
 {

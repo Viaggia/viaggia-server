@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using viaggia_server.Models.Addresses;
 using viaggia_server.Models.Reservations;
 using viaggia_server.Models.Users;
 using viaggia_server.Repositories;
@@ -37,6 +38,12 @@ namespace viaggia_server.Models.Payments
         [Required(ErrorMessage = "Status is required.")]
         [StringLength(20, ErrorMessage = "Status cannot exceed 20 characters.")]
         public string Status { get; set; } = null!; // Ex.: "Completed", "Pending"
+
+        [Required(ErrorMessage = "Address is required.")]
+        public int BillingAddressId { get; set; }
+
+        [ForeignKey("BillingAddressId")]
+        public virtual BillingAddress BillingAddress { get; set; } = null!;
 
         public bool IsActive { get; set; } = true;
     }
