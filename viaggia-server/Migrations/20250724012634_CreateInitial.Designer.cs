@@ -12,7 +12,7 @@ using viaggia_server.Data;
 namespace viaggia_server.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250723022958_CreateInitial")]
+    [Migration("20250724012634_CreateInitial")]
     partial class CreateInitial
     {
         /// <inheritdoc />
@@ -53,6 +53,40 @@ namespace viaggia_server.Migrations
                     b.HasKey("PackageId");
 
                     b.ToTable("Packages");
+                });
+
+            modelBuilder.Entity("viaggia_server.Models.Companions.Companion", b =>
+                {
+                    b.Property<int>("CompanionId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("CompanionId"));
+
+                    b.Property<DateTime>("BirthDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CPF")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int>("ReservationId")
+                        .HasColumnType("int");
+
+                    b.HasKey("CompanionId");
+
+                    b.HasIndex("ReservationId");
+
+                    b.ToTable("Companions");
                 });
 
             modelBuilder.Entity("viaggia_server.Models.HotelDates.HotelDate", b =>
@@ -167,7 +201,13 @@ namespace viaggia_server.Migrations
                     b.Property<bool>("HasBreakfast")
                         .HasColumnType("bit");
 
+                    b.Property<bool>("HasDinner")
+                        .HasColumnType("bit");
+
                     b.Property<bool>("HasGym")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("HasLunch")
                         .HasColumnType("bit");
 
                     b.Property<bool>("HasParking")
@@ -514,6 +554,17 @@ namespace viaggia_server.Migrations
                     b.ToTable("Users");
                 });
 
+            modelBuilder.Entity("viaggia_server.Models.Companions.Companion", b =>
+                {
+                    b.HasOne("viaggia_server.Models.Reservations.Reservation", "Reservation")
+                        .WithMany("Companions")
+                        .HasForeignKey("ReservationId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("Reservation");
+                });
+
             modelBuilder.Entity("viaggia_server.Models.HotelDates.HotelDate", b =>
                 {
                     b.HasOne("viaggia_server.Models.Hotels.Hotel", "Hotel")
@@ -684,6 +735,8 @@ namespace viaggia_server.Migrations
 
             modelBuilder.Entity("viaggia_server.Models.Reservations.Reservation", b =>
                 {
+                    b.Navigation("Companions");
+
                     b.Navigation("Payments");
                 });
 
