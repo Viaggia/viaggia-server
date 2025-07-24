@@ -9,6 +9,8 @@ namespace viaggia_server.Repositories
         Task<IEnumerable<PackageDate>> GetPackageDatesAsync(int packageId); // Obter datas de um pacote
         Task<PackageDate?> GetPackageDateByIdAsync(int packageDateId); // Obter data específica
         Task<IEnumerable<Media>> GetPackageMediasAsync(int packageId); // Obter mídias de um pacote
+
+        Task<PackageDate> AddPackageDateAsync(PackageDate packageDate);
         Task<Media> AddMediaAsync(Media media); // Adicionar mídia
         Task<bool> DeleteMediaAsync(int mediaId); // Remover mídia
     }
