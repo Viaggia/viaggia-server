@@ -17,15 +17,19 @@ namespace viaggia_server.Repositories
         public async Task<IEnumerable<PackageDate>> GetPackageDatesAsync(int packageId)
         {
             return await _context.PackageDates
+
+                .Where(pd => pd.PackageId == packageId && pd.IsActive)
+
                 .IgnoreQueryFilters() // Ignora o filtro global
                 .Where(pd => pd.PackageId == packageId)
+
                 .ToListAsync();
         }
 
         public async Task<PackageDate?> GetPackageDateByIdAsync(int packageDateId)
         {
             return await _context.PackageDates
-                .FirstOrDefaultAsync(pd => pd.PackageDateId == packageDateId);
+                .FirstOrDefaultAsync(pd => pd.PackageDateId == packageDateId && pd.IsActive);
         }
 
         public async Task<PackageDate> AddPackageDateAsync(PackageDate packageDate)
@@ -39,13 +43,14 @@ namespace viaggia_server.Repositories
         public async Task<IEnumerable<Media>> GetPackageMediasAsync(int packageId)
         {
             return await _context.Medias
-                .Where(m => m.PackageId == packageId)
+                .Where(m => m.PackageId == packageId && m.IsActive)
                 .ToListAsync();
         }
 
         public async Task<Media> AddMediaAsync(Media media)
         {
             await _context.Medias.AddAsync(media);
+            await _context.SaveChangesAsync();
             return media;
         }
 
@@ -55,9 +60,26 @@ namespace viaggia_server.Repositories
             if (media == null)
                 return false;
 
-            _context.Medias.Remove(media);
-            await _context.SaveChangesAsync(); // Ensure changes are saved to the database  
+            media.IsActive = false; // Soft delete
+            await _context.SaveChangesAsync();
             return true;
         }
+
+        public async Task<IEnumerable<Package>> SearchPackagesByDestinationAndDateAsync(string destination, DateTime startDate, DateTime endDate)
+        {
+            string destLower = destination.ToLower();
+
+            return await _context.Packages
+                .Include(p => p.Hotel)
+                .Include(p => p.Medias)
+                .Include(p => p.PackageDates)
+                .Where(p => p.IsActive &&
+                            p.Destination.ToLower().Contains(destLower) && // aqui: sem StringComparison
+                            p.PackageDates.Any(pd => pd.IsActive &&
+                                                    pd.StartDate <= endDate &&
+                                                    pd.EndDate >= startDate))
+                .ToListAsync();
+        }
+
     }
 }
