@@ -7,5 +7,7 @@ namespace viaggia_server.Controllers.Hotel
     [ApiController]
     public class HotelsController : ControllerBase
     {
+
+
     }
 }
