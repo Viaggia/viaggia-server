@@ -145,11 +145,14 @@ namespace viaggia_server.Controllers
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> CreatePackage([FromForm] PackageCreateDTO packageDTO)
         {
-            if (packageDTO == null || !ModelState.IsValid)
-                return BadRequest(new ApiResponse(false, "Invalid package data.", ModelState));
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(new ApiResponse(false, "Invalid data", ModelState));
+            }
 
             try
             {
+
                 var package = new Package
                 {
                     Name = packageDTO.Name,
@@ -160,7 +163,8 @@ namespace viaggia_server.Controllers
                     PackageDates = packageDTO.PackageDates.Select(pd => new PackageDate
                     {
                         StartDate = pd.StartDate,
-                        EndDate = pd.EndDate
+                        EndDate = pd.EndDate,
+                        IsActive = true
                     }).ToList()
                 };
 

@@ -46,9 +46,10 @@ namespace viaggia_server.Repositories
 
         public async Task<T?> GetByIdAsync(int id)
         {
-            var entity = await _context.Set<T>()
-                .Where(e => e.IsActive)
-                .FirstOrDefaultAsync(e => EF.Property<int>(e, "Id") == id);
+            var entity = await _context.Set<T>().FindAsync(id);
+            if (entity == null || !entity.IsActive)
+                return null;
+
             return entity;
         }
 
