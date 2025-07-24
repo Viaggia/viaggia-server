@@ -3,22 +3,18 @@ name: Viaggia CI - Build and Test
 on:
     push:
         branches:
-        [
-            main
-            main-dev
-            test
-            main-Victor
-            test-Victor
-        ]
+            - main
+            - main-dev
+            - test
+            - main-Victor
+            - test-Victor
     pull_request:
         branches:
-        [
-            main
-            main-dev
-            test
-            test-Victor
-            main-Victor
-        ]
+            - main
+            - main-dev
+            - test
+            - test-Victor
+            - main-Victor
 
 jobs:
     build-and-test:
@@ -41,4 +37,3 @@ jobs:
 
             - name: Run tests
               run: dotnet test --no-build --verbosity normal
-    
