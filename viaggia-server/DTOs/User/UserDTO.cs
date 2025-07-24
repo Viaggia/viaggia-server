@@ -7,10 +7,6 @@
         public string Email { get; set; } = null!;
         public string PhoneNumber { get; set; } = null!;
         public string? Cpf { get; set; }
-        public string? AddressStreet { get; set; }
-        public string? AddressCity { get; set; }
-        public string? AddressState { get; set; }
-        public string? AddressZipCode { get; set; }
         public string? CompanyName { get; set; }
         public string? Cnpj { get; set; }
         public string? CompanyLegalName { get; set; }
