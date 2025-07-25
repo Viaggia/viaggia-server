@@ -19,7 +19,7 @@ public class UserTests : IDisposable
     }
 
     [Fact]
-    public void User_HasRequiredProperties()
+    public void UserHasRequiredProperties()
     {
         // Test: Verify User entity has all required properties
         // Purpose: Ensures data model integrity
@@ -30,6 +30,20 @@ public class UserTests : IDisposable
         Assert.NotNull(user.Payments);
         Assert.True(user.IsActive);
         Assert.True(user.CreateDate <= DateTime.UtcNow);
+    }
+
+    [Fact]
+    public void UserHasRequiredCollections()
+    {
+        var user = new User();
+
+        Assert.NotNull(user.UserRoles);
+        Assert.NotNull(user.Reservations);
+        Assert.NotNull(user.Payments);
+        Assert.Empty(user.UserRoles);
+        Assert.Empty(user.Reservations);
+        Assert.Empty(user.Payments);
+
     }
 
     [Fact]
