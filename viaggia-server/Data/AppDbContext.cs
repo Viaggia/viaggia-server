@@ -90,10 +90,10 @@ namespace viaggia_server.Data
 
             // Configuration for Hotel
             modelBuilder.Entity<Hotel>()
-                .HasOne(h => h.Address)
-                .WithMany()
-                .HasForeignKey(h => h.AddressId)
-                .OnDelete(DeleteBehavior.NoAction);
+               .HasOne(h => h.Address)
+               .WithOne(a => a.Hotel)
+               .HasForeignKey<Hotel>(h => h.AddressId)
+               .OnDelete(DeleteBehavior.NoAction);
 
             modelBuilder.Entity<Hotel>()
                 .HasMany(h => h.RoomTypes)

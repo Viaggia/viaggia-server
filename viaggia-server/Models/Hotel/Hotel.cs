@@ -26,12 +26,6 @@ namespace viaggia_server.Models.Hotels
         [Range(1, 5, ErrorMessage = "Star rating must be between 1 and 5.")]
         public int StarRating { get; set; }
 
-        [Required(ErrorMessage = "Address is required.")]
-        public int AddressId { get; set; }
-
-        [ForeignKey("AddressId")]
-        public virtual Address Address { get; set; } = null!; // Fixed to Address
-
         public bool HasParking { get; set; }
         public bool HasBreakfast { get; set; }
         public bool HasLunch { get; set; }
@@ -59,6 +53,12 @@ namespace viaggia_server.Models.Hotels
 
         public bool IsActive { get; set; } = true;
 
+        [Required(ErrorMessage = "Address is required.")]
+        public int AddressId { get; set; }
+
+        [ForeignKey("AddressId")]
+        public virtual Address? Address { get; set; }
+
         // Relationships
         public virtual ICollection<HotelRoomType> RoomTypes { get; set; } = new List<HotelRoomType>();
         public virtual ICollection<HotelDate> HotelDates { get; set; } = new List<HotelDate>();
@@ -66,5 +66,7 @@ namespace viaggia_server.Models.Hotels
         public virtual ICollection<Media> Medias { get; set; } = new List<Media>();
         public virtual ICollection<Review> Reviews { get; set; } = new List<Review>();
         public virtual ICollection<Package> Packages { get; set; } = new List<Package>(); // New collection
+
+       
     }
 }

@@ -1,4 +1,8 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using viaggia_server.Models.HotelRoomTypes;
+using viaggia_server.Models.Hotels;
+using viaggia_server.Models.Packages;
 using viaggia_server.Repositories;
 
 namespace viaggia_server.Models.Addresses
@@ -25,5 +29,9 @@ namespace viaggia_server.Models.Addresses
         public string ZipCode { get; set; } = null!;
 
         public bool IsActive { get; set; } = true;
+
+       
+        public virtual Hotel? Hotel { get; set; }
+
     }
 }
