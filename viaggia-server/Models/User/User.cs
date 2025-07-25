@@ -21,8 +21,7 @@ namespace viaggia_server.Models.Users
         [Required]
         public string Password { get; set; } = null!; // Senha criptografada
 
-        [Required]
-        public string PhoneNumber { get; set; } = null!; // Telefone (ex.: +5511999999999)
+        public string PhoneNumber { get; set; } // Telefone (ex.: +5511999999999)
 
         public string? AvatarUrl { get; set; } // URL da foto de perfil (opcional)
 

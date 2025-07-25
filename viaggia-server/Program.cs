@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 using viaggia_server.Data;
 using viaggia_server.Models.Users;
 using viaggia_server.Repositories;
@@ -15,14 +16,7 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer(); // Swagger
 builder.Services.AddSwaggerGen(); // Swagger
 
-try
-{
-    builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
-} catch (Exception ex)
-{
-    Console.WriteLine("Erro ao configurar o DbContext: " + ex.Message);
-}
+builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 builder.Services.AddScoped<IPackageRepository, PackageRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
@@ -42,40 +36,27 @@ builder.Services.AddAuthentication(options =>
 })
 .AddCookie()
 .AddGoogle(options =>
-{
+{ 
     var config = builder.Configuration.GetSection("Authentication:Google");
     options.ClientId = builder.Configuration["Authentication:Google:ClientId"];
     options.ClientSecret = builder.Configuration["Authentication:Google:ClientSecret"];
-    options.CallbackPath = "/signin-google"; // Caminho de retorno após autenticação
-    options.ClaimActions.MapJsonKey("picture", "picture", "url");
     options.SaveTokens = true;
 
-    options.Scope.Add("email");
-    options.Scope.Add("profile");
+    options.ClaimActions.MapJsonKey(ClaimTypes.NameIdentifier, "sub");
+    options.ClaimActions.MapJsonKey(ClaimTypes.Name, "name");
+    options.ClaimActions.MapJsonKey(ClaimTypes.Email, "email");
+    options.ClaimActions.MapJsonKey(ClaimTypes.NameIdentifier, "nameidentifier");
+    options.ClaimActions.MapJsonKey(ClaimTypes.MobilePhone, "phonenumber");
+    options.ClaimActions.MapJsonKey("picture", "picture", "url");
 
-    options.Events.OnCreatingTicket = async context =>
+    options.Events.OnCreatingTicket = context =>
     {
-        var db = context.HttpContext.RequestServices.GetRequiredService<AppDbContext>();
-
-        var googleId = context.Principal.FindFirst("sub")?.Value;
-        var email = context.Principal.FindFirst("email")?.Value;
-        var name = context.Principal.FindFirst("name")?.Value;
-        var avatar = context.Principal.FindFirst("picture")?.Value;
-
-        var user = await db.Users.FirstOrDefaultAsync(u => u.GoogleId == googleId || u.Email == email);
-        if (user == null)
+        Console.WriteLine(context.Principal);
+        foreach (var claim in context.Principal.Claims)
         {
-            user = new User
-            {
-                GoogleId = googleId,
-                Email = email,
-                Name = name,
-                AvatarUrl = avatar,
-                IsActive = true
-            };
-            db.Users.Add(user);
-            await db.SaveChangesAsync();
+            Console.WriteLine($"Claim: {claim.Type} = {claim.Value}");
         }
+        return Task.CompletedTask;
     };
 });
 

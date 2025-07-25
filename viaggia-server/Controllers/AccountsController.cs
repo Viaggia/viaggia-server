@@ -3,6 +3,10 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
+using viaggia_server.Data;
+using viaggia_server.DTOs.Auth;
+using viaggia_server.Repositories.Users;
 
 namespace viaggia_server.Controllers
 {
@@ -10,13 +14,19 @@ namespace viaggia_server.Controllers
     [ApiController]
     public class AccountsController : ControllerBase
     {
+        private readonly IUserRepository _repository;
+
+        public AccountsController(IUserRepository repository)
+        {
+            _repository = repository;
+        }
 
         [HttpGet("login-google")]
         public IActionResult LoginWithGoogle()
         {
             var properties = new AuthenticationProperties 
             {
-                RedirectUri = "/signin-google"
+                RedirectUri = "/api/Accounts/google-callback"
             };
             return Challenge(properties, GoogleDefaults.AuthenticationScheme);
         }
@@ -25,22 +35,29 @@ namespace viaggia_server.Controllers
         public async Task<IActionResult> GoogleCallback()
         {
             var result = await HttpContext.AuthenticateAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-
-            if (!result.Succeeded)
-            {
-                return Unauthorized();
-            }
+            if (!result.Succeeded) return Unauthorized();
 
             var claims = result.Principal.Identities.First().Claims;
-            var name = claims.FirstOrDefault(c => c.Type == "name")?.Value;
-            var email = claims.FirstOrDefault(c => c.Type == "email")?.Value;
+            var googleUid = claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+            var email = claims.FirstOrDefault(c => c.Type == ClaimTypes.Email)?.Value;
+            var name = claims.FirstOrDefault(c => c.Type == ClaimTypes.Name)?.Value;
             var picture = claims.FirstOrDefault(c => c.Type == "picture")?.Value;
+            var password = claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+            var phoneNumber = claims.FirstOrDefault(c => c.Type == ClaimTypes.MobilePhone)?.Value;
+
+            // Validação básica
+            if (string.IsNullOrWhiteSpace(email))
+                return BadRequest("O login do Google não retornou um e-mail.");
+
+            var user = await _repository.CreateOrLoginOAuth(googleUid, email, name, picture,password, phoneNumber);
 
             return Ok(new
             {
-                Name = email,
-                Email = email,
-                Picture = picture
+                Name = user.Name,
+                Email = user.Email,
+                Password = user.Password,
+                phoneNumber = user.PhoneNumber,
+                Picture = user.AvatarUrl
             });
         }
         [HttpPost("logout")]
