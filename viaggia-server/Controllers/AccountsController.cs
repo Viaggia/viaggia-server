@@ -42,24 +42,29 @@ namespace viaggia_server.Controllers
             var email = claims.FirstOrDefault(c => c.Type == ClaimTypes.Email)?.Value;
             var name = claims.FirstOrDefault(c => c.Type == ClaimTypes.Name)?.Value;
             var picture = claims.FirstOrDefault(c => c.Type == "picture")?.Value;
-            var password = claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
             var phoneNumber = claims.FirstOrDefault(c => c.Type == ClaimTypes.MobilePhone)?.Value;
 
-            // Validação básica
             if (string.IsNullOrWhiteSpace(email))
                 return BadRequest("O login do Google não retornou um e-mail.");
 
-            var user = await _repository.CreateOrLoginOAuth(googleUid, email, name, picture,password, phoneNumber);
+            var user = await _repository.CreateOrLoginOAuth(new OAuthRequest
+            {
+                GoogleUid = googleUid,
+                Email = email,
+                Name = name,
+                Picture = picture,
+                PhoneNumber = phoneNumber
+            });
 
             return Ok(new
             {
                 Name = user.Name,
                 Email = user.Email,
-                Password = user.Password,
-                phoneNumber = user.PhoneNumber,
+                PhoneNumber = user.PhoneNumber,
                 Picture = user.AvatarUrl
             });
         }
+
         [HttpPost("logout")]
         public async Task<IActionResult> Logout()
         {

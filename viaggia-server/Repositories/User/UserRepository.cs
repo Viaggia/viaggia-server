@@ -57,31 +57,36 @@ namespace viaggia_server.Repositories.Users
             return await _context.Users.AnyAsync(u => u.Cnpj == cnpj);
         }
 
-        public async Task<User> CreateOrLoginOAuth(string googleUid, string email, string name, string? picture, string password, string phoneNumber)
+        public async Task<User> CreateOrLoginOAuth(OAuthRequest dto)
         {
             // Tenta encontrar o usuário pelo Google ID
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.GoogleId == googleUid);
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.GoogleId == dto.GoogleUid);
             if (user == null)
             {
+                var generatedPassword = Guid.NewGuid().ToString(); // Gera uma senha padrão
+                var hashedPassword = BCrypt.Net.BCrypt.HashPassword(generatedPassword); // Criptografa a senha
+
                 // Se não encontrar, cria um novo usuário
                 user = new User
                 {
-                    GoogleId = googleUid,
-                    Email = email,
-                    Name = name,
-                    AvatarUrl = picture,
-                    Password = password,
-                    PhoneNumber = phoneNumber, 
-                    IsActive = true
+                    GoogleId = dto.GoogleUid,
+                    Email = dto.Email,
+                    Name = dto.Name,
+                    AvatarUrl = dto.Picture,
+                    PhoneNumber = dto.PhoneNumber ?? "default-password", // Defina uma senha padrão ou gere uma
+                    Password = hashedPassword, // Senha não é necessária para OAuth
+                    IsActive = true,
+                    CreateDate = DateTime.UtcNow
+
                 };
                 await _context.Users.AddAsync(user);
             }
             else
             {
                 // Atualiza os dados do usuário existente
-                user.Email = email;
-                user.Name = name;
-                user.AvatarUrl = picture;
+                user.Email = dto.Email;
+                user.Name = dto.Name;
+                user.AvatarUrl = dto.Picture;
             }
             await _context.SaveChangesAsync();
             return user;

@@ -1,4 +1,5 @@
-﻿using viaggia_server.Models.Users;
+﻿using viaggia_server.DTOs.Auth;
+using viaggia_server.Models.Users;
 
 namespace viaggia_server.Repositories.Users
 {
@@ -7,7 +8,7 @@ namespace viaggia_server.Repositories.Users
         // Cria um usuário com uma role específica
         Task<User> CreateAsync(User user, string roleName);
         // Cria um usuário via Gmail
-        Task<User> CreateOrLoginOAuth(string googleUid, string email, string name, string picture, string password, string phoneNumber);
+        Task<User> CreateOrLoginOAuth(OAuthRequest dto);
         // Reativa um usuário
         Task<bool> ReactivateAsync(int id);
         // Verifica se um email já existe

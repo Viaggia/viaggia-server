@@ -51,7 +51,7 @@ builder.Services.AddAuthentication(options =>
 
     options.Events.OnCreatingTicket = context =>
     {
-        Console.WriteLine(context.Principal);
+        Console.WriteLine(context.Principal.Claims);
         foreach (var claim in context.Principal.Claims)
         {
             Console.WriteLine($"Claim: {claim.Type} = {claim.Value}");
