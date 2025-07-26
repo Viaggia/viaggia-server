@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using viaggia_server.Data;
 using viaggia_server.Repositories;
+using viaggia_server.Repositories.Hotel;
 using viaggia_server.Repositories.Users;
 using viaggia_server.Services.Auth;
 using viaggia_server.Services.Users;
@@ -53,6 +54,9 @@ builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 
 builder.Services.AddScoped<IPackageRepository, PackageRepository>();
+
+builder.Services.AddScoped<IHotelRepository, HotelRepository>();
+
 
 builder.Services.AddScoped<IAuthService, AuthService>();
 

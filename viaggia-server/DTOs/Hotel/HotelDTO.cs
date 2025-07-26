@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using viaggia_server.DTOs.Commodities;
 using viaggia_server.DTOs.Packages;
 using viaggia_server.DTOs.Reviews;
 
@@ -34,14 +35,6 @@ namespace viaggia_server.DTOs.Hotels
         [Range(1, 5, ErrorMessage = "Star rating must be between 1 and 5.")]
         public int StarRating { get; set; }
 
-        public bool HasParking { get; set; }
-        public bool HasBreakfast { get; set; }
-        public bool HasSpa { get; set; }
-        public bool HasPool { get; set; }
-        public bool HasGym { get; set; }
-        public bool HasWiFi { get; set; }
-        public bool IsPetFriendly { get; set; }
-
         [StringLength(10, ErrorMessage = "Check-in time cannot exceed 10 characters.")]
         public string? CheckInTime { get; set; }
 
@@ -61,6 +54,8 @@ namespace viaggia_server.DTOs.Hotels
         public List<HotelDateDTO> HotelDates { get; set; } = new List<HotelDateDTO>();
         public List<MediaDTO> Medias { get; set; } = new List<MediaDTO>();
         public List<ReviewDTO> Reviews { get; set; } = new List<ReviewDTO>();
+        public CommoditieDTO Commodities { get; set; } = null!;
+
         public double AverageRating { get; set; } // Média das avaliações
     }
 }

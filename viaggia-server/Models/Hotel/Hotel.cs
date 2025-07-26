@@ -1,6 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using viaggia_server.Models.Addresses;
+using viaggia_server.Models.Commodities;
 using viaggia_server.Models.HotelDates;
 using viaggia_server.Models.HotelRoomTypes;
 using viaggia_server.Models.Medias;
@@ -25,18 +26,6 @@ namespace viaggia_server.Models.Hotels
 
         [Range(1, 5, ErrorMessage = "Star rating must be between 1 and 5.")]
         public int StarRating { get; set; }
-
-        public bool HasParking { get; set; }
-        public bool HasBreakfast { get; set; }
-        public bool HasLunch { get; set; }
-        public bool HasDinner { get; set; }
-        public bool HasSpa { get; set; }
-        public bool HasPool { get; set; }
-        public bool HasGym { get; set; }
-        public bool HasWiFi { get; set; }
-        public bool HasAirConditioning { get; set; }
-        public bool HasAccessibilityFeatures { get; set; }
-        public bool IsPetFriendly { get; set; }
 
         [StringLength(10, ErrorMessage = "Check-in time cannot exceed 10 characters.")]
         public string? CheckInTime { get; set; }
@@ -67,6 +56,8 @@ namespace viaggia_server.Models.Hotels
         public virtual ICollection<Review> Reviews { get; set; } = new List<Review>();
         public virtual ICollection<Package> Packages { get; set; } = new List<Package>(); // New collection
 
-       
+        public Commoditie Commoditie { get; set; } = null!;
+
+
     }
 }
