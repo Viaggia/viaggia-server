@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using viaggia_server.Data;
 using viaggia_server.Repositories;
+using viaggia_server.Repositories.Reservations;
 using viaggia_server.Repositories.Users;
 using viaggia_server.Services.Auth;
 using viaggia_server.Services.Users;
@@ -48,12 +49,10 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
-
+builder.Services.AddScoped<IReservationRepository, ReservationRepository>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
-
 builder.Services.AddScoped<IPackageRepository, PackageRepository>();
-
 builder.Services.AddScoped<IAuthService, AuthService>();
 
 // Configure FluentValidation
