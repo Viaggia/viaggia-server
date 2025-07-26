@@ -1,12 +1,11 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using viaggia_server.Models.Hotels;
 using viaggia_server.Models.Medias;
-using viaggia_server.Models.Packages;
 using viaggia_server.Models.Reservations;
 using viaggia_server.Repositories;
 
-
-namespace ViaggiaServer.Models.Packages
+namespace viaggia_server.Models.Packages
 {
     public class Package : ISoftDeletable
     {
@@ -14,10 +13,10 @@ namespace ViaggiaServer.Models.Packages
         public int PackageId { get; set; }
 
         [Required]
-        public string? Name { get; set; }
+        public string Name { get; set; } = null!;
 
         [Required]
-        public string? Destination { get; set; }
+        public string Destination { get; set; } = null!;
 
         public string? Description { get; set; }
 
@@ -25,10 +24,16 @@ namespace ViaggiaServer.Models.Packages
         [Required]
         public decimal BasePrice { get; set; }
 
+        [Required]
+        public int HotelId { get; set; } // New foreign key
+
+        [ForeignKey("HotelId")]
+        public virtual Hotel Hotel { get; set; } = null!; // New navigation property
+
         public bool IsActive { get; set; }
 
-        // Relacionamentos
-        public virtual ICollection<Media> Medias { get; set; } = new List<Media>(); // Alterado de PackageMedia
+        // Relationships
+        public virtual ICollection<Media> Medias { get; set; } = new List<Media>();
         public virtual ICollection<PackageDate> PackageDates { get; set; } = new List<PackageDate>();
         public virtual ICollection<Reservation> Reservations { get; set; } = new List<Reservation>();
     }

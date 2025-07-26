@@ -46,12 +46,3 @@ Thumbs.db
 /viaggia-server/obj/
 /viaggia-server/appsettings.json
 /viaggia-server/appsettings.*.json
-/viaggia-server/appsettings.Development.json
-/viaggia-server/Migrations/
-
-/viaggia-server/wwwroot/Uploads/Packages/2d7ba84b-02ed-4a3e-9449-434a60982811.jpg
-/viaggia-server/wwwroot/Uploads/Packages/99427ba9-297a-455f-a7f1-cd97aa54f531.jpg
-/viaggia-server/wwwroot/Uploads/Packages/9f97bcc3-148a-4e00-980c-b523476c3e36.jpg
-/viaggia-server/wwwroot/Uploads/Packages/b50a06b2-ffa7-4d52-ac8a-8565208cb598.jpg
-/viaggia-server/wwwroot/Uploads/Packages/c2e2fdf4-14e3-4fee-a04a-a537a9a6177c.jpg
-/viaggia-server/appsettings.Development.json
