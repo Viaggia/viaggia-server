@@ -1,12 +1,15 @@
 {
   "version": 2,
-  "dgSpecHash": "YSOsCQxIfQg=",
+  "dgSpecHash": "Gld2EIsyQCQ=",
   "success": true,
   "projectFilePath": "C:\\Users\\r.freitas.dos.anjos\\OneDrive - Avanade\\Documents\\workspace\\viaggia-server\\viaggia-server\\viaggia-server.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\r.freitas.dos.anjos\\.nuget\\packages\\azure.core\\1.38.0\\azure.core.1.38.0.nupkg.sha512",
     "C:\\Users\\r.freitas.dos.anjos\\.nuget\\packages\\azure.identity\\1.11.4\\azure.identity.1.11.4.nupkg.sha512",
     "C:\\Users\\r.freitas.dos.anjos\\.nuget\\packages\\bcrypt.net-next\\4.0.2\\bcrypt.net-next.4.0.2.nupkg.sha512",
+    "C:\\Users\\r.freitas.dos.anjos\\.nuget\\packages\\fluentvalidation\\12.0.0\\fluentvalidation.12.0.0.nupkg.sha512",
+    "C:\\Users\\r.freitas.dos.anjos\\.nuget\\packages\\fluentvalidation.aspnetcore\\11.3.1\\fluentvalidation.aspnetcore.11.3.1.nupkg.sha512",
+    "C:\\Users\\r.freitas.dos.anjos\\.nuget\\packages\\fluentvalidation.dependencyinjectionextensions\\11.11.0\\fluentvalidation.dependencyinjectionextensions.11.11.0.nupkg.sha512",
     "C:\\Users\\r.freitas.dos.anjos\\.nuget\\packages\\humanizer.core\\2.14.1\\humanizer.core.2.14.1.nupkg.sha512",
     "C:\\Users\\r.freitas.dos.anjos\\.nuget\\packages\\microsoft.aspnetcore.authentication.google\\8.0.18\\microsoft.aspnetcore.authentication.google.8.0.18.nupkg.sha512",
     "C:\\Users\\r.freitas.dos.anjos\\.nuget\\packages\\microsoft.aspnetcore.authentication.jwtbearer\\8.0.18\\microsoft.aspnetcore.authentication.jwtbearer.8.0.18.nupkg.sha512",

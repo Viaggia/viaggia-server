@@ -1,7 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using viaggia_server.Repositories;
-using ViaggiaServer.Models.Packages;
 
 namespace viaggia_server.Models.Packages
 {

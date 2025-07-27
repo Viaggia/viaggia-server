@@ -14,7 +14,9 @@ namespace viaggia_server.Repositories.Hotels
         Task<bool> ReactivateAsync(int id);
 
         // Verifica se um hotel já existe pelo nome
-        Task<bool> NomeExistsAsync(string nome);
+        Task<bool> NameExistsAsync(string nome);
+
+        Task<bool> cnpjExistsAsync(string? cnpj);
 
 
     }
