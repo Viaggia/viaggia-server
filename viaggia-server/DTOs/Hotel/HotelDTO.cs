@@ -48,13 +48,13 @@ namespace viaggia_server.DTOs.Hotels
         [EmailAddress(ErrorMessage = "Invalid email format.")]
         public string? ContactEmail { get; set; }
 
-        public bool IsActive { get; set; }
+        public bool IsActive { get; set; } = true;
 
         public List<HotelRoomTypeDTO> RoomTypes { get; set; } = new List<HotelRoomTypeDTO>();
         public List<HotelDateDTO> HotelDates { get; set; } = new List<HotelDateDTO>();
         public List<MediaDTO> Medias { get; set; } = new List<MediaDTO>();
         public List<ReviewDTO> Reviews { get; set; } = new List<ReviewDTO>();
-        public CommoditieDTO Commodities { get; set; } = null!;
+        public CommoditieDTO Commoditie { get; set; } = null!;
 
         public double AverageRating { get; set; } // Média das avaliações
     }
