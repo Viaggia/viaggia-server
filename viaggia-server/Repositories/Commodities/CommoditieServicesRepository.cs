@@ -17,6 +17,7 @@ namespace viaggia_server.Repositories.Commodities
         {
             return await _context.CommoditiesServices
                 .Where(s => s.IsActive)
+                .OrderBy(s => s.CommoditieServicesId)
                 .ToListAsync();
         }
 
@@ -30,6 +31,7 @@ namespace viaggia_server.Repositories.Commodities
         {
             return await _context.CommoditiesServices
                 .Where(s => s.CommoditieId == commoditieId && s.IsActive)
+                .OrderBy(s => s.CommoditieServicesId)
                 .ToListAsync();
         }
 
@@ -59,5 +61,5 @@ namespace viaggia_server.Repositories.Commodities
         }
     }
 }
-    
+
 

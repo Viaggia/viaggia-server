@@ -33,39 +33,27 @@ namespace viaggia_server.Repositories.Commodities
                 .FirstOrDefaultAsync(c => c.HotelId == hotelId && c.IsActive);
         }
 
-        public async Task<Commoditie> AddAsync(Commoditie entity)
+        public async Task<Commoditie> AddAsync(Commoditie commoditie)
         {
-            await _context.Commodities.AddAsync(entity);
+            await _context.Commodities.AddAsync(commoditie);
             await _context.SaveChangesAsync();
-            return entity;
+            return commoditie;
         }
 
-        public async Task<Commoditie> UpdateAsync(Commoditie entity)
+        public async Task<bool> UpdateAsync(Commoditie commoditie)
         {
-            _context.Commodities.Update(entity);
-            await _context.SaveChangesAsync();
-            return entity;
+            _context.Commodities.Update(commoditie);
+            return await _context.SaveChangesAsync() > 0;
         }
 
-        public async Task<bool> SoftDeleteAsync(int id)
+        public async Task<bool> DeleteAsync(int id)
         {
             var entity = await GetByIdAsync(id);
             if (entity == null)
                 return false;
 
-            entity.IsActive = false;
-            _context.Commodities.Update(entity);
+            _context.Commodities.Remove(entity);
             return await _context.SaveChangesAsync() > 0;
-        }
-
-        Task<bool> ICommoditieRepository.UpdateAsync(Commoditie commoditie)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task<bool> DeleteAsync(int id)
-        {
-            throw new NotImplementedException();
         }
     }
 }
