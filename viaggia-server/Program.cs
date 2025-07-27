@@ -1,14 +1,15 @@
-using System.Text;
 using FluentValidation;
 using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using System.Text;
 using viaggia_server.Data;
 using viaggia_server.Repositories;
 using viaggia_server.Repositories.Reservations;
 using viaggia_server.Repositories.Users;
 using viaggia_server.Services.Auth;
+using viaggia_server.Services.Reservations;
 using viaggia_server.Services.Users;
 using viaggia_server.Validators;
 
@@ -54,6 +55,8 @@ builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IPackageRepository, PackageRepository>();
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IReservationService, ReservationService>();
+
 
 // Configure FluentValidation
 builder.Services.AddValidatorsFromAssemblyContaining<CreateClientDTOValidator>();
