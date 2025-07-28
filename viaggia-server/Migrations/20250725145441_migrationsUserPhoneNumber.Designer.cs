@@ -12,8 +12,8 @@ using viaggia_server.Data;
 namespace viaggia_server.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250724130529_InitialTest")]
-    partial class InitialTest
+    [Migration("20250725145441_migrationsUserPhoneNumber")]
+    partial class migrationsUserPhoneNumber
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -509,6 +509,9 @@ namespace viaggia_server.Migrations
                     b.Property<string>("AddressZipCode")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("AvatarUrl")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("Cnpj")
                         .HasColumnType("nvarchar(max)");
 
@@ -532,6 +535,10 @@ namespace viaggia_server.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("EmployerCompanyName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("GoogleId")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("IsActive")

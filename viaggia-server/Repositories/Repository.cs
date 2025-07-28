@@ -5,7 +5,7 @@ namespace viaggia_server.Repositories
 {
     public class Repository<T> : IRepository<T> where T : class, ISoftDeletable
     {
-        private readonly AppDbContext _context;
+        protected readonly AppDbContext _context;
 
         public Repository(AppDbContext context)
         {
@@ -85,11 +85,6 @@ namespace viaggia_server.Repositories
             return await _context.Set<T2>()
                 .FirstOrDefaultAsync(e => EF.Property<int>(e, primaryKey) == id && e.IsActive);
 
-            var entity = await _context.Set<T>().FindAsync(id);
-            if (entity == null || !entity.IsActive)
-                return null;
-
-            return entity;
 
         }
 

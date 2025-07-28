@@ -1,19 +1,15 @@
-﻿using System.ComponentModel.DataAnnotations;
-using viaggia_server.Repositories;
+using System.ComponentModel.DataAnnotations;
 
-namespace viaggia_server.Models.Addresses
+namespace viaggia_server.DTOs.Payment
 {
-    public class Address : ISoftDeletable
+    public class BillingAddressDTO
     {
-        [Key]
-        public int AddressId { get; set; }
-
         [Required(ErrorMessage = "Street is required.")]
-        [StringLength(100, ErrorMessage = "Street cannot exceed 100 characters.")]
+        [StringLength(200, ErrorMessage = "Street cannot exceed 200 characters.")]
         public string Street { get; set; } = null!;
 
         [Required(ErrorMessage = "City is required.")]
-        [StringLength(50, ErrorMessage = "City cannot exceed 50 characters.")]
+        [StringLength(100, ErrorMessage = "City cannot exceed 100 characters.")]
         public string City { get; set; } = null!;
 
         [Required(ErrorMessage = "State is required.")]
@@ -24,6 +20,10 @@ namespace viaggia_server.Models.Addresses
         [StringLength(20, ErrorMessage = "Zip code cannot exceed 20 characters.")]
         public string ZipCode { get; set; } = null!;
 
-        public bool IsActive { get; set; } = true;
+        [StringLength(100, ErrorMessage = "Country cannot exceed 100 characters.")]
+        public string Country { get; set; } = "Brazil";
+
+        [StringLength(100, ErrorMessage = "Card holder name cannot exceed 100 characters.")]
+        public string? CardHolderName { get; set; }
     }
 }

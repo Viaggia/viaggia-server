@@ -16,6 +16,6 @@ namespace viaggia_server.DTOs.Hotels
         [Range(0, int.MaxValue, ErrorMessage = "Available rooms must be non-negative.")]
         public int AvailableRooms { get; set; }
 
-        public bool IsActive { get; set; }
+        public bool IsActive { get; set; } = true;
     }
 }

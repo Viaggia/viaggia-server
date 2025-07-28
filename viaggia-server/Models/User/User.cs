@@ -14,11 +14,11 @@ namespace viaggia_server.Models.Users
         [Required(ErrorMessage = "Name is required.")]
         [StringLength(100, ErrorMessage = "Name cannot exceed 100 characters.")]
         public string Name { get; set; } = null!;
-
+        public string? GoogleId { get; set; } // ID do Google (para autenticação via Google)
+        
         [Required(ErrorMessage = "Email is required.")]
         [EmailAddress(ErrorMessage = "Invalid email format.")]
         public string Email { get; set; } = null!;
-
         [Required(ErrorMessage = "Password is required.")]
         [StringLength(256, ErrorMessage = "Password cannot exceed 256 characters.")]
         public string Password { get; set; } = null!; // Encrypted password
@@ -26,6 +26,8 @@ namespace viaggia_server.Models.Users
         [Required(ErrorMessage = "Phone number is required.")]
         [Phone(ErrorMessage = "Invalid phone number format.")]
         public string PhoneNumber { get; set; } = null!; // Ex.: +5511999999999
+
+        public string AvatarUrl { get; set; } = string.Empty; // URL do avatar do usuário
 
         public DateTime CreateDate { get; set; } = DateTime.UtcNow;
 
@@ -51,6 +53,10 @@ namespace viaggia_server.Models.Users
 
         [StringLength(50, ErrorMessage = "Employee ID cannot exceed 50 characters.")]
         public string? EmployeeId { get; set; }
+
+        // ✅ Stripe Integration
+        [StringLength(100, ErrorMessage = "Stripe Customer ID cannot exceed 100 characters.")]
+        public string? StripeCustomerId { get; set; }
 
         // Relationships
         public virtual ICollection<UserRole> UserRoles { get; set; } = new List<UserRole>();
