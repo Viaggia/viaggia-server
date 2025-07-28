@@ -81,7 +81,6 @@ namespace viaggia_server.Services.Users
             {
                 Name = request.ResponsibleName,
                 CompanyName = request.CompanyName,
-                Cnpj = request.Cnpj,
                 CompanyLegalName = request.CompanyLegalName,
                 Email = request.Email,
                 PhoneNumber = request.PhoneNumber,
@@ -201,7 +200,6 @@ namespace viaggia_server.Services.Users
                 PhoneNumber = user.PhoneNumber,
                 Cpf = user.Cpf,
                 CompanyName = user.CompanyName,
-                Cnpj = user.Cnpj,
                 CompanyLegalName = user.CompanyLegalName,
                 EmployerCompanyName = user.EmployerCompanyName,
                 EmployeeId = user.EmployeeId,

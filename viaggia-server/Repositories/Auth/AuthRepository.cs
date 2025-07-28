@@ -5,57 +5,38 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using viaggia_server.Data;
 using viaggia_server.Models.Users;
-using viaggia_server.Repositories.Auth;
 
-namespace viaggia_server.Services.Auth
+namespace viaggia_server.Repositories.Auth
 {
-    public class AuthService : IAuthService
+    public class AuthRepository : IAuthRepository
     {
-        private readonly IAuthRepository _authRepository;
         private readonly AppDbContext _context;
         private readonly IConfiguration _configuration;
 
-        public AuthService(IAuthRepository authRepository, AppDbContext context, IConfiguration configuration)
+        public AuthRepository(AppDbContext context, IConfiguration configuration)
         {
-            _authRepository = authRepository;
             _context = context;
             _configuration = configuration;
         }
 
         public async Task<string> LoginAsync(string email, string password)
         {
-            return await _authRepository.LoginAsync(email, password);
-        }
-
-        public async Task<User> GetUserByEmailAsync(string email)
-        {
             var user = await _context.Users
                 .Include(u => u.UserRoles)
                     .ThenInclude(ur => ur.Role)
                 .SingleOrDefaultAsync(u => u.Email == email);
-            if (user == null)
-                throw new Exception("Usuário não encontrado");
-            return user;
-        }
 
-        public async Task<string> GenerateJwtToken(User user)
-        {
-            var userWithRoles = await _context.Users
-                .Include(u => u.UserRoles)
-                    .ThenInclude(ur => ur.Role)
-                .SingleOrDefaultAsync(u => u.Id == user.Id);
-
-            if (userWithRoles == null)
-                throw new Exception("Usuário não encontrado");
+            if (user == null || user.Password == null || !BCrypt.Net.BCrypt.Verify(password, user.Password))
+                throw new UnauthorizedAccessException("Credenciais inválidas");
 
             var claims = new List<Claim>
             {
-                new Claim(ClaimTypes.NameIdentifier, userWithRoles.Id.ToString()),
-                new Claim(ClaimTypes.Name, userWithRoles.Name),
-                new Claim(ClaimTypes.Email, userWithRoles.Email)
+                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+                new Claim(ClaimTypes.Name, user.Name),
+                new Claim(ClaimTypes.Email, user.Email)
             };
 
-            foreach (var role in userWithRoles.UserRoles)
+            foreach (var role in user.UserRoles)
             {
                 claims.Add(new Claim(ClaimTypes.Role, role.Role.Name));
             }
