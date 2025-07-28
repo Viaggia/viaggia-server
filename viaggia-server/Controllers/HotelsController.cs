@@ -148,12 +148,12 @@ namespace viaggia_server.Controllers
                 if (hotel == null)
                      return NotFound(new ApiResponse<HotelDTO>(false, $"Hotel with ID {id} not found."));
 
-                hotel.RoomTypes = (await _packageRepository.GetPackageMediasAsync(id)).ToList();
-                hotel.HotelDates = (await _packageRepository.GetPackageDatesAsync(id)).ToList();
-                hotel.Medias = (await _packageRepository.GetPackageMediasAsync(id)).ToList();
-                hotel.Reviews = (await _packageRepository.GetPackageReviewsAsync(id)).ToList();
-                hotel.Commoditie = await _commoditieService.GetByHotelIdAsync(id);
-                hotel.Address = await _genericRepository.GetAddressByHotelIdAsync(id);
+                hotel.RoomTypes = (await _hotelRepository.GetHotelRoomTypesAsync(id)).ToList();
+                hotel.HotelDates = (await _hotelRepository.GetHotelDatesAsync(id)).ToList();
+                hotel.Medias = (await _hotelRepository.GetPackageMediasAsync(id)).ToList();
+                hotel.Reviews = (await _hotelRepository.GetPackageReviewsAsync(id)).ToList();
+                hotel.Commoditie = await _hotelRepository.GetByHotelIdAsync(id);
+                hotel.Address = await _hotelRepository.GetAddressByHotelIdAsync(id);
                 hotel.AverageRating = hotel.Reviews.Any() ? hotel.Reviews.Average(r => r.Rating) : 0;
 
                 var hotel = await _genericRepository.GetByIdAsync<Hotel>(package.HotelId);
