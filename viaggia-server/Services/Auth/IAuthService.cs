@@ -6,7 +6,11 @@ namespace viaggia_server.Services.Auth
     public interface IAuthService
     {
         Task<string> LoginAsync(string email, string password);
-        Task<string> GenerateJwtToken(User user);
         Task<User> GetUserByEmailAsync(string email);
+        Task<string> GenerateJwtToken(User user);
+        Task RevokeTokenAsync(string token);
+        Task<bool> IsTokenRevokedAsync(string token);
+        Task<string> GeneratePasswordResetTokenAsync(string email);
+        Task<bool> ResetPasswordAsync(string token, string newPassword);
     }
 }

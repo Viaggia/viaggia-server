@@ -1,6 +1,6 @@
 ﻿namespace viaggia_server.DTOs.Auth
 {
-    public class LoginResponse
+    public class LoginResponseDTO
     {
         public string Token { get; set; } = null!;
         public string Name { get; set; } = null!;

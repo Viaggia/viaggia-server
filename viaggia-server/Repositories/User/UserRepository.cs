@@ -1,18 +1,14 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using viaggia_server.Data;
-using viaggia_server.DTOs.Auth;
-using viaggia_server.Models.UserRoles;
 using viaggia_server.Models.Users;
 
 namespace viaggia_server.Repositories.Users
 {
     public class UserRepository : Repository<User>, IUserRepository
     {
-        private readonly AppDbContext _context;
-
         public UserRepository(AppDbContext context) : base(context)
         {
-            _context = context;
+            
         }
 
         public async Task<bool> ReactivateAsync(int id)
@@ -20,9 +16,9 @@ namespace viaggia_server.Repositories.Users
             var user = await _context.Users.FindAsync(id);
             if (user == null)
             {
-                return false; // Usuário não encontrado
+                return false;
             }
-            user.IsActive = true; // Reativa o usuário
+            user.IsActive = true;
             await _context.SaveChangesAsync();
             return true;
         }

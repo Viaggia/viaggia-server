@@ -61,7 +61,7 @@ namespace viaggia_server.Controllers
             var user = await _repository.CreateOrLoginOAuth(oauthRequest);
             var token = await _authService.GenerateJwtToken(user);
 
-            return Ok(new LoginResponse
+            return Ok(new LoginResponseDTO
             {
                 Token = token,
                 Name = user.Name,
@@ -72,7 +72,7 @@ namespace viaggia_server.Controllers
             });
         }
 
-        [HttpPost("logout")]
+        [HttpPost("logout-google")]
         public async Task<IActionResult> Logout()
         {
             await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);

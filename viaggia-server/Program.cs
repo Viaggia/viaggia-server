@@ -1,3 +1,4 @@
+using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using FluentValidation;
@@ -15,6 +16,7 @@ using viaggia_server.Repositories.Auth;
 using viaggia_server.Repositories.HotelRepository;
 using viaggia_server.Repositories.Payment;
 using viaggia_server.Repositories.Users;
+using viaggia_server.Services;
 using viaggia_server.Services.Auth;
 using viaggia_server.Services.Payment;
 using viaggia_server.Services.Users;
@@ -59,8 +61,8 @@ builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
 builder.Services.AddScoped<IStripePaymentService, StripePaymentService>();
 builder.Services.AddScoped<IAuthRepository, AuthRepository>();
 builder.Services.AddScoped<IGoogleAccountRepository, GoogleAccountRepository>();
-builder.Services.AddScoped<IAuthService, AuthService>(); // Added missing registration
-
+builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IEmailService, EmailService>();
 // Configure Stripe
 StripeConfiguration.ApiKey = builder.Configuration["Stripe:SecretKey"];
 
@@ -93,6 +95,19 @@ builder.Services.AddAuthentication(options =>
         ValidAudience = builder.Configuration["Jwt:Audience"],
         IssuerSigningKey = new SymmetricSecurityKey(
             Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!))
+    };
+
+    options.Events = new JwtBearerEvents
+    {
+        OnTokenValidated = async context =>
+        {
+            var authService = context.HttpContext.RequestServices.GetRequiredService<IAuthService>();
+            var token = context.SecurityToken as JwtSecurityToken;
+            if (token != null && await authService.IsTokenRevokedAsync(token.RawData))
+            {
+                context.Fail("Token foi revogado.");
+            }
+        }
     };
 })
 .AddCookie(CookieAuthenticationDefaults.AuthenticationScheme, options =>
