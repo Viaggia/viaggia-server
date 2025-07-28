@@ -27,7 +27,7 @@ namespace viaggia_server.Models.Users
         [Phone(ErrorMessage = "Invalid phone number format.")]
         public string PhoneNumber { get; set; } = null!; // Ex.: +5511999999999
 
-        public string AvatarUrl { get; set; } = null!; // URL do avatar do usuário
+        public string AvatarUrl { get; set; } = string.Empty; // URL do avatar do usuário
 
         public DateTime CreateDate { get; set; } = DateTime.UtcNow;
 
@@ -53,6 +53,10 @@ namespace viaggia_server.Models.Users
 
         [StringLength(50, ErrorMessage = "Employee ID cannot exceed 50 characters.")]
         public string? EmployeeId { get; set; }
+
+        // ✅ Stripe Integration
+        [StringLength(100, ErrorMessage = "Stripe Customer ID cannot exceed 100 characters.")]
+        public string? StripeCustomerId { get; set; }
 
         // Relationships
         public virtual ICollection<UserRole> UserRoles { get; set; } = new List<UserRole>();

@@ -12,14 +12,24 @@ using viaggia_server.Data;
 using viaggia_server.Models.Users;
 using viaggia_server.Repositories;
 using viaggia_server.Repositories.Users;
+using viaggia_server.Repositories.HotelRepository;
+using viaggia_server.Repositories.Payment;
 using viaggia_server.Services.Auth;
 using viaggia_server.Services.Users;
+using viaggia_server.Services.Payment;
 using viaggia_server.Validators;
+using Stripe;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-builder.Services.AddControllers();
+// Add services to the container.
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
+        options.JsonSerializerOptions.WriteIndented = true;
+    });
 builder.Services.AddEndpointsApiExplorer(); // Swagger
 builder.Services.AddSwaggerGen(c =>
 {
@@ -58,6 +68,15 @@ builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 
 builder.Services.AddScoped<IPackageRepository, PackageRepository>();
+
+builder.Services.AddScoped<IHotelRepository, HotelRepository>();
+
+// Configure Stripe
+StripeConfiguration.ApiKey = builder.Configuration["Stripe:SecretKey"];
+
+// Configure Payment services
+builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
+builder.Services.AddScoped<IStripePaymentService, StripePaymentService>();
 
 builder.Services.AddScoped<IAuthService, AuthService>();
 

@@ -24,6 +24,6 @@ namespace viaggia_server.DTOs.Hotels
         [StringLength(50, ErrorMessage = "Bed type cannot exceed 50 characters.")]
         public string BedType { get; set; } = null!;
 
-        public bool IsActive { get; set; }
+        public bool IsActive { get; set; } = true;
     }
 }

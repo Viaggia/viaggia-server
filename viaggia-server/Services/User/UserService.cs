@@ -76,8 +76,6 @@ namespace viaggia_server.Services.Users
 
             if (await _specificUserRepository.EmailExistsAsync(request.Email))
                 throw new ArgumentException("Email already exists.");
-            if (await _specificUserRepository.CnpjExistsAsync(request.Cnpj))
-                throw new ArgumentException("CNPJ already exists.");
 
             var user = new User
             {

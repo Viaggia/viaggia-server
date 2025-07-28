@@ -63,6 +63,10 @@
               "target": "Package",
               "version": "[11.3.1, )"
             },
+            "MailKit": {
+              "target": "Package",
+              "version": "[4.13.0, )"
+            },
             "Microsoft.AspNetCore.Authentication.Google": {
               "target": "Package",
               "version": "[8.0.18, )"
@@ -84,6 +88,10 @@
               "suppressParent": "All",
               "target": "Package",
               "version": "[8.0.18, )"
+            },
+            "Stripe.net": {
+              "target": "Package",
+              "version": "[46.0.0, )"
             },
             "Swashbuckle.AspNetCore": {
               "target": "Package",
