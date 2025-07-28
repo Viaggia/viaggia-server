@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using viaggia_server.DTOs.Commodities;
 using viaggia_server.Models.Addresses;
 using viaggia_server.Models.Commodities;
 using viaggia_server.Models.HotelDates;
@@ -73,8 +74,9 @@ namespace viaggia_server.Models.Hotels
         public virtual ICollection<Media> Medias { get; set; } = new List<Media>();
         public virtual ICollection<Review> Reviews { get; set; } = new List<Review>();
         public virtual ICollection<Package> Packages { get; set; } = new List<Package>(); // New collection
+        public CommoditieDTO Commodities { get; set; } = null!;
 
-      
-        
+
+
     }
 }

@@ -53,9 +53,9 @@ namespace viaggia_server.DTOs.Hotels
         public List<HotelRoomTypeDTO> RoomTypes { get; set; } = new List<HotelRoomTypeDTO>();
         public List<HotelDateDTO> HotelDates { get; set; } = new List<HotelDateDTO>();
         public List<MediaDTO> Medias { get; set; } = new List<MediaDTO>();
-        public List<ReviewDTO> Reviews { get; set; } = new List<ReviewDTO>();
+        public List<ReviewDTO> Reviews { get; set; } = new List<ReviewDTO>(); 
+        public List<PackageDTO> Packages { get; set; } = new List<PackageDTO>();
         public CommoditieDTO Commoditie { get; set; } = null!;
-
         public double AverageRating { get; set; } // Média das avaliações
     }
 }

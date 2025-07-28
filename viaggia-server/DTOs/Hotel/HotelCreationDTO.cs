@@ -1,6 +1,8 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using viaggia_server.DTOs.Commodities;
 using viaggia_server.DTOs.Hotels;
+using viaggia_server.DTOs.Packages;
+using viaggia_server.DTOs.Reviews;
 
 namespace viaggia_server.DTOs.Hotels
 {
@@ -53,7 +55,12 @@ namespace viaggia_server.DTOs.Hotels
         public List<HotelDateDTO> HotelDates { get; set; } = new List<HotelDateDTO>();
         public List<IFormFile> MediaFiles { get; set; } = new List<IFormFile>();
 
-        // ✅ Associação 1:1 com Commoditie
-        public CreateCommoditieDTO Commoditie { get; set; } = new CreateCommoditieDTO();
+        public List<PackageDTO> Packages { get; set; } = new List<PackageDTO>();
+
+        public List<ReviewDTO> Reviews { get; set; } = new List<ReviewDTO>();
+
+        public List<CommoditieDTO> Commodities { get; set; } = new List<CommoditieDTO>();
+        public double AverageRating { get; set; } // Média das avaliações
+       
     }
 }

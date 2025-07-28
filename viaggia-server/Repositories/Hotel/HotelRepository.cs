@@ -2,6 +2,7 @@
 using viaggia_server.Models.HotelRoomTypes;
 using viaggia_server.Data;
 using Microsoft.EntityFrameworkCore;
+using viaggia_server.Models.HotelDates;
 
 namespace viaggia_server.Repositories.Hotel
 {
@@ -56,6 +57,25 @@ namespace viaggia_server.Repositories.Hotel
         public async Task<IEnumerable<HotelRoomType>> GetHotelRoomTypesAsync(int hotelId)
         {
             return await _context.RoomTypes
+                .Where(rt => rt.HotelId == hotelId)
+                .ToListAsync();
+        }
+
+        public async Task<HotelDate> AddHotelDateAsync(HotelDate hotelDate)
+        {
+            var result = await _context.HotelDates.AddAsync(hotelDate);
+            await _context.SaveChangesAsync();
+            return result.Entity;
+        }
+
+        public async Task<HotelDate?> GetHotelDateByIdAsync(int hotelDateId)
+        {
+            return await _context.HotelDates.FindAsync(hotelDateId);
+        }
+
+        public async Task<IEnumerable<HotelDate>> GetHotelDatesAsync(int hotelId)
+        {
+            return await _context.HotelDates
                 .Where(rt => rt.HotelId == hotelId)
                 .ToListAsync();
         }
