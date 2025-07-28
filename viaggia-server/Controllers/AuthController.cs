@@ -21,7 +21,17 @@ namespace viaggia_server.Controllers
             try
             {
                 var token = await _authService.LoginAsync(request.Email, request.Password);
-                return Ok(new { Token = token });
+                // Buscar o usuário para retornar informações adicionais
+                var user = await _authService.GetUserByEmailAsync(request.Email); // Método adicional necessário no serviço
+                return Ok(new LoginResponse
+                {
+                    Token = token,
+                    Name = user.Name,
+                    Email = user.Email,
+                    PhoneNumber = user.PhoneNumber,
+                    Picture = user.AvatarUrl,
+                    NeedsProfileCompletion = string.IsNullOrEmpty(user.PhoneNumber)
+                });
             }
             catch (UnauthorizedAccessException)
             {

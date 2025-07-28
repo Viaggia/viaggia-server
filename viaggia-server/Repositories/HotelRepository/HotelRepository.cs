@@ -15,6 +15,7 @@ namespace viaggia_server.Repositories.HotelRepository
             _context = context;
         }
 
+
         // Criar um hotel
         public async Task<Hotel?> CreateAsync(Hotel hotel)
         {
