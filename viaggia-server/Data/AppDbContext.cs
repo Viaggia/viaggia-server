@@ -7,9 +7,11 @@ using viaggia_server.Models.HotelRoomTypes;
 using viaggia_server.Models.Hotels;
 using viaggia_server.Models.Medias;
 using viaggia_server.Models.Packages;
+using viaggia_server.Models.PasswordResetToken;
 using viaggia_server.Models.Payments;
 using viaggia_server.Models.Reservations;
 using viaggia_server.Models.Reviews;
+using viaggia_server.Models.RevokedToken;
 using viaggia_server.Models.UserRoles;
 using viaggia_server.Models.Users;
 
@@ -35,9 +37,11 @@ namespace viaggia_server.Data
         public DbSet<Media> Medias { get; set; } = null!;
         public DbSet<Review> Reviews { get; set; } = null!;
         public DbSet<Companion> Companions { get; set; } = null!;
-
         public DbSet<Commodity> Commodities { get; set; }
         public DbSet<CommoditieServices> CommoditiesServices { get; set; }
+        public DbSet<RevokedToken> RevokedTokens { get; set; } = null!;
+        public DbSet<PasswordResetToken> PasswordResetTokens { get; set; }
+
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -199,6 +203,12 @@ namespace viaggia_server.Data
                 .WithOne(cs => cs.Commoditie)
                 .HasForeignKey(cs => cs.CommoditieId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            //  PasswordResetToken
+            modelBuilder.Entity<PasswordResetToken>()
+                .HasOne(prt => prt.User)
+                .WithMany()
+                .HasForeignKey(prt => prt.UserId);
 
 
             // Configuration for Media
