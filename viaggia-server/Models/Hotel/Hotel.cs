@@ -51,8 +51,8 @@ namespace viaggia_server.Models.Hotels
         [ForeignKey("AddressId")]
         public Address? Address { get; set; }
 
-        [ForeignKey("CommodityId")]
-        public Commodity? Commodities { get; set; } = null!;
+        [ForeignKey("CommoditieId")]
+        public Commoditie? Commoditie { get; set; } = null!;
 
         // Relationships
         public virtual ICollection<HotelRoomType> RoomTypes { get; set; } = new List<HotelRoomType>();
@@ -61,6 +61,9 @@ namespace viaggia_server.Models.Hotels
         public virtual ICollection<Media> Medias { get; set; } = new List<Media>();
         public virtual ICollection<Review> Reviews { get; set; } = new List<Review>();
         public virtual ICollection<Package> Packages { get; set; } = new List<Package>(); // New collection
+        public virtual ICollection<Commoditie> Commodities { get; set; } = new List<Commoditie>();
+        public virtual ICollection<CommoditieServices> CommoditieServices { get; set; } = new List<CommoditieServices>();
+
         // public virtual ICollection<Address> Addresses { get; set; } = new List<Address>(); // New collection for addresses - Necessariamente o mesmo hotel com o mesmo nome na barra da tijuca não é o de copacabana
     }
 }

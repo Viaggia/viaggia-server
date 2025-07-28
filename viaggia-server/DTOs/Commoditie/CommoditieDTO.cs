@@ -1,6 +1,8 @@
-﻿using viaggia_server.DTOs.Commodities;
+﻿
+using viaggia_server.DTOs.Commoditie;
+using viaggia_server.DTOs.Commodity;
 
-namespace viaggia_server.DTOs.Commodities
+namespace viaggia_server.DTOs.Commoditie
 {
     public class CommoditieDTO
     {
@@ -44,6 +46,6 @@ namespace viaggia_server.DTOs.Commodities
         public bool IsActive { get; set; } = true;
 
         // Lista de serviços personalizados
-        public List<CommoditieServicesDTO> CommoditiesServices { get; set; } = new List<CommoditieServicesDTO>();
+        public List<CommoditieServicesDTO> CommoditieServices { get; set; } = new List<CommoditieServicesDTO>();
     }
 }

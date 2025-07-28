@@ -26,8 +26,6 @@
 
   <ItemGroup>
 
-    <Folder Include="Services\Commodities\" />
-
     <Folder Include="wwwroot\Uploads\Packages\" />
 
   </ItemGroup>

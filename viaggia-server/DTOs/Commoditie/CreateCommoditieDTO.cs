@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace viaggia_server.DTOs.Commodities
+namespace viaggia_server.DTOs.Commodity
 {
     public class CreateCommoditieDTO
     {
@@ -44,6 +44,6 @@ namespace viaggia_server.DTOs.Commodities
         public bool IsActive { get; set; } = true;
 
         // Serviços extras personalizados
-        public List<CommoditieServicesDTO> CommoditiesServices { get; set; } = new();
+        public List<CommoditieServicesDTO> CommoditieServices { get; set; } = new();
     }
 }

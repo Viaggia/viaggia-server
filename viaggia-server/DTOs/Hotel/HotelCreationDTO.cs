@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using viaggia_server.DTOs.Commodities;
+using viaggia_server.DTOs.Commoditie;
+using viaggia_server.DTOs.Commodity;
 using viaggia_server.DTOs.Hotels;
 using viaggia_server.DTOs.Packages;
 using viaggia_server.DTOs.Reviews;
@@ -11,6 +12,9 @@ namespace viaggia_server.DTOs.Hotels
         [Required(ErrorMessage = "Name is required.")]
         [StringLength(100, ErrorMessage = "Name cannot exceed 100 characters.")]
         public string Name { get; set; } = null!;
+
+        [Required(ErrorMessage = "CNPJ is required.")]
+        public string Cnpj { get; set; } = null!; // CNPJ for service providers
 
         [Required(ErrorMessage = "Street is required.")]
         [StringLength(100, ErrorMessage = "Street cannot exceed 100 characters.")]
@@ -54,12 +58,10 @@ namespace viaggia_server.DTOs.Hotels
         public List<HotelRoomTypeDTO> RoomTypes { get; set; } = new List<HotelRoomTypeDTO>();
         public List<HotelDateDTO> HotelDates { get; set; } = new List<HotelDateDTO>();
         public List<IFormFile> MediaFiles { get; set; } = new List<IFormFile>();
-
         public List<PackageDTO> Packages { get; set; } = new List<PackageDTO>();
-
         public List<ReviewDTO> Reviews { get; set; } = new List<ReviewDTO>();
-
         public List<CommoditieDTO> Commodities { get; set; } = new List<CommoditieDTO>();
+        public List<CommoditieServicesDTO> CommoditieServices { get; set; } = new List<CommoditieServicesDTO>();
         public double AverageRating { get; set; } // Média das avaliações
        
     }

@@ -15,7 +15,7 @@ namespace viaggia_server.Repositories.Commodities
 
         public async Task<IEnumerable<CommoditieServices>> GetAllAsync()
         {
-            return await _context.CommoditiesServices
+            return await _context.CommoditieServices
                 .Where(s => s.IsActive)
                 .OrderBy(s => s.CommoditieServicesId)
                 .ToListAsync();
@@ -23,13 +23,13 @@ namespace viaggia_server.Repositories.Commodities
 
         public async Task<CommoditieServices?> GetByIdAsync(int id)
         {
-            return await _context.CommoditiesServices
+            return await _context.CommoditieServices
                 .FirstOrDefaultAsync(s => s.CommoditieServicesId == id && s.IsActive);
         }
 
         public async Task<IEnumerable<CommoditieServices>> GetByCommoditieIdAsync(int commoditieId)
         {
-            return await _context.CommoditiesServices
+            return await _context.CommoditieServices
                 .Where(s => s.CommoditieId == commoditieId && s.IsActive)
                 .OrderBy(s => s.CommoditieServicesId)
                 .ToListAsync();
@@ -37,14 +37,14 @@ namespace viaggia_server.Repositories.Commodities
 
         public async Task<CommoditieServices> AddAsync(CommoditieServices entity)
         {
-            await _context.CommoditiesServices.AddAsync(entity);
+            await _context.CommoditieServices.AddAsync(entity);
             await _context.SaveChangesAsync();
             return entity;
         }
 
         public async Task<CommoditieServices> UpdateAsync(CommoditieServices entity)
         {
-            _context.CommoditiesServices.Update(entity);
+            _context.CommoditieServices.Update(entity);
             await _context.SaveChangesAsync();
             return entity;
         }
@@ -56,8 +56,13 @@ namespace viaggia_server.Repositories.Commodities
                 return false;
 
             entity.IsActive = false;
-            _context.CommoditiesServices.Update(entity);
+            _context.CommoditieServices.Update(entity);
             return await _context.SaveChangesAsync() > 0;
+        }
+
+        public Task<IEnumerable<CommoditieServices>> GetByCommodityIdAsync(int commodityId)
+        {
+            throw new NotImplementedException();
         }
     }
 }

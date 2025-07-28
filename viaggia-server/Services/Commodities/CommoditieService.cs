@@ -3,17 +3,18 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using viaggia_server.Data;
-using viaggia_server.DTOs.Commodities;
+using viaggia_server.DTOs.Commoditie;
+using viaggia_server.DTOs.Commodity;
 using viaggia_server.Models.Commodities;
 using viaggia_server.Services.Commodities;
 
 namespace viaggia_server.Services
 {
-    public class CommoditiesService : ICommoditiesService
+    public class CommoditieService : ICommoditieService
     {
         private readonly AppDbContext _context;
 
-        public CommoditiesService(AppDbContext context)
+        public CommoditieService(AppDbContext context)
         {
             _context = context;
         }
@@ -22,7 +23,7 @@ namespace viaggia_server.Services
         {
             var commodities = await _context.Commodities
                 .Where(c => c.IsActive)
-                .Include(c => c.CommoditiesServices.Where(s => s.IsActive))
+                .Include(c => c.CommoditieServices.Where(s => s.IsActive))
                 .ToListAsync();
 
             return commodities.Select(c => MapToDTO(c)).ToList();
@@ -31,7 +32,7 @@ namespace viaggia_server.Services
         public async Task<CommoditieDTO> GetByIdAsync(int id)
         {
             var commodity = await _context.Commodities
-                .Include(c => c.CommoditiesServices.Where(s => s.IsActive))
+                .Include(c => c.CommoditieServices.Where(s => s.IsActive))
                 .FirstOrDefaultAsync(c => c.CommoditieId == id && c.IsActive);
 
             if (commodity == null)
@@ -43,7 +44,7 @@ namespace viaggia_server.Services
         public async Task<CommoditieDTO?> GetByHotelIdAsync(int hotelId)
         {
             var commoditie = await _context.Commodities
-                .Include(c => c.CommoditiesServices) // Inclui os serviços personalizados
+                .Include(c => c.CommoditieServices) // Inclui os serviços personalizados
                 .FirstOrDefaultAsync(c => c.HotelId == hotelId && c.IsActive);
 
             if (commoditie == null)
@@ -77,7 +78,7 @@ namespace viaggia_server.Services
                 IsPetFriendlyPaid = !commoditie.IsPetFriendlyPaid,
                 IsActive = commoditie.IsActive,
 
-                CommoditiesServices = commoditie.CommoditiesServices?.Select(s => new CommoditieServicesDTO
+                CommoditieServices = commoditie.CommoditieServices?.Select(s => new CommoditieServicesDTO
                 {
                     Name = s.Name,
                     IsPaid = !s.IsPaid,
@@ -118,9 +119,9 @@ namespace viaggia_server.Services
             };
 
             // Adiciona serviços personalizados se houver
-            if (createDto.CommoditiesServices != null && createDto.CommoditiesServices.Any())
+            if (createDto.CommoditieServices != null && createDto.CommoditieServices.Any())
             {
-                commodity.CommoditiesServices = createDto.CommoditiesServices.Select(s => new CommoditieServices
+                commodity.CommoditieServices = createDto.CommoditieServices.Select(s => new CommoditieServices
                 {
                     Name = s.Name,
                     IsPaid = !s.IsPaid,
@@ -138,7 +139,7 @@ namespace viaggia_server.Services
         public async Task<CommoditieDTO> UpdateAsync(int id, CreateCommoditieDTO updateDto)
         {
             var commodity = await _context.Commodities
-                .Include(c => c.CommoditiesServices)
+                .Include(c => c.CommoditieServices)
                 .FirstOrDefaultAsync(c => c.CommoditieId == id && c.IsActive);
 
             if (commodity == null)
@@ -169,11 +170,11 @@ namespace viaggia_server.Services
             commodity.IsPetFriendlyPaid = !updateDto.IsPetFriendlyPaid;
 
             // Atualiza serviços personalizados
-            if (updateDto.CommoditiesServices != null)
+            if (updateDto.CommoditieServices != null)
             {
-                var servicesToKeep = updateDto.CommoditiesServices.Select(s => s.Name).ToHashSet();
+                var servicesToKeep = updateDto.CommoditieServices.Select(s => s.Name).ToHashSet();
 
-                foreach (var existingService in commodity.CommoditiesServices)
+                foreach (var existingService in commodity.CommoditieServices)
                 {
                     if (!servicesToKeep.Contains(existingService.Name))
                     {
@@ -181,9 +182,9 @@ namespace viaggia_server.Services
                     }
                 }
 
-                foreach (var newServiceDto in updateDto.CommoditiesServices)
+                foreach (var newServiceDto in updateDto.CommoditieServices)
                 {
-                    var existingService = commodity.CommoditiesServices.FirstOrDefault(s => s.Name == newServiceDto.Name);
+                    var existingService = commodity.CommoditieServices.FirstOrDefault(s => s.Name == newServiceDto.Name);
 
                     if (existingService != null)
                     {
@@ -192,7 +193,7 @@ namespace viaggia_server.Services
                     }
                     else
                     {
-                        commodity.CommoditiesServices.Add(new CommoditieServices
+                        commodity.CommoditieServices.Add(new CommoditieServices
                         {
                             Name = newServiceDto.Name,
                             IsPaid = !newServiceDto.IsPaid,
@@ -263,7 +264,7 @@ namespace viaggia_server.Services
                 IsPetFriendly = commodity.IsPetFriendly,
                 IsPetFriendlyPaid = !commodity.IsPetFriendlyPaid,
                 IsActive = commodity.IsActive,
-                CommoditiesServices = commodity.CommoditiesServices?
+                CommoditieServices = commodity.CommoditieServices?
                     .Where(s => s.IsActive)
                     .Select(s => new CommoditieServicesDTO
                     {
@@ -274,5 +275,7 @@ namespace viaggia_server.Services
                     }).ToList() ?? new List<CommoditieServicesDTO>()
             };
         }
+
+      
     }
 }
