@@ -5,7 +5,7 @@ namespace viaggia_server.Repositories
 {
     public class Repository<T> : IRepository<T> where T : class, ISoftDeletable
     {
-        private readonly AppDbContext _context;
+        protected readonly AppDbContext _context;
 
         public Repository(AppDbContext context)
         {

@@ -36,7 +36,7 @@ namespace viaggia_server.Data
         public DbSet<Review> Reviews { get; set; } = null!;
         public DbSet<Companion> Companions { get; set; } = null!;
 
-        public DbSet<Commoditie> Commodities { get; set; }
+        public DbSet<Commodity> Commodities { get; set; }
         public DbSet<CommoditieServices> CommoditiesServices { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -95,8 +95,8 @@ namespace viaggia_server.Data
             // Configuration for Hotel
             modelBuilder.Entity<Hotel>()
                .HasOne(h => h.Address)
-               .WithOne(a => a.Hotel)
-               .HasForeignKey<Hotel>(h => h.AddressId)
+               .WithMany() // Remove the back reference - Address doesn't have Hotel property
+               .HasForeignKey(h => h.AddressId)
                .OnDelete(DeleteBehavior.NoAction);
 
             modelBuilder.Entity<Hotel>()
@@ -188,13 +188,13 @@ namespace viaggia_server.Data
 
             // Hotel 1:1 Commodity
             modelBuilder.Entity<Hotel>()
-                .HasOne(h => h.Commoditie)
+                .HasOne(h => h.Commodities)
                 .WithOne(c => c.Hotel)
-                .HasForeignKey<Commoditie>(c => c.HotelId)
+                .HasForeignKey<Commodity>(c => c.HotelId)
                 .OnDelete(DeleteBehavior.Cascade);
 
             // Commodity 1:N CommoditiesServices
-            modelBuilder.Entity<Commoditie>()
+            modelBuilder.Entity<Commodity>()
                 .HasMany(c => c.CommoditiesServices)
                 .WithOne(cs => cs.Commoditie)
                 .HasForeignKey(cs => cs.CommoditieId)
@@ -227,7 +227,7 @@ namespace viaggia_server.Data
             modelBuilder.Entity<Media>().HasQueryFilter(m => m.IsActive);
             modelBuilder.Entity<Review>().HasQueryFilter(r => r.IsActive);
             modelBuilder.Entity<Companion>().HasQueryFilter(c => c.IsActive);
-            modelBuilder.Entity<Commoditie>().HasQueryFilter(c => c.IsActive);
+            modelBuilder.Entity<Commodity>().HasQueryFilter(c => c.IsActive);
             modelBuilder.Entity<CommoditieServices>().HasQueryFilter(cs => cs.IsActive);
             //modelBuilder.Entity<Role>().HasQueryFilter(r => r.IsActive);
         }

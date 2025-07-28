@@ -7,11 +7,11 @@ namespace viaggia_server.Repositories.Commodities
 {
     public interface ICommoditieRepository
     {
-        Task<Commoditie> AddAsync(Commoditie commoditie);
-        Task<Commoditie?> GetByIdAsync(int id);
-        Task<IEnumerable<Commoditie>> GetAllAsync();
-        Task<Commoditie?> GetByHotelIdAsync(int hotelId);
-        Task<bool> UpdateAsync(Commoditie commoditie);
+        Task<Commodity> AddAsync(Commodity commoditie);
+        Task<Commodity?> GetByIdAsync(int id);
+        Task<IEnumerable<Commodity>> GetAllAsync();
+        Task<Commodity?> GetByHotelIdAsync(int hotelId);
+        Task<bool> UpdateAsync(Commodity commoditie);
         Task<bool> DeleteAsync(int id);
     }
 }

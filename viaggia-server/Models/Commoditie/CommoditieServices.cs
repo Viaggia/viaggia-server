@@ -24,7 +24,7 @@ namespace viaggia_server.Models.Commodities
             public int CommoditieId { get; set; }
 
             [ForeignKey("CommoditieId")]
-            public Commoditie Commoditie { get; set; } = null!;
+            public Commodity Commoditie { get; set; } = null!;
         
     }
 }
