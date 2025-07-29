@@ -181,22 +181,6 @@ sequenceDiagram
 
 ---
 
-## 🔧 Configurações
-
-### **appsettings.json**
-```json
-{
-  "Smtp": {
-    "Host": "smtp.gmail.com",
-    "Port": 587,
-    "Username": "viaggia.societa.albergo@gmail.com",
-    "Password": "wybo jlsa ilvb rnyb",
-    "FromEmail": "viaggia.societa.albergo@gmail.com",
-    "FromName": "Viaggia Password Reset"
-  }
-}
-```
-
 ### **Banco de Dados**
 ```sql
 -- Tabela criada automaticamente pelo migration

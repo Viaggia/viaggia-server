@@ -1,4 +1,6 @@
-﻿namespace viaggia_server.Repositories
+﻿using viaggia_server.Models.Commodities;
+
+namespace viaggia_server.Repositories
 {
     public interface IRepository<T> where T : class, ISoftDeletable
     {

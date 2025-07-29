@@ -5,7 +5,7 @@ using viaggia_server.Repositories;
 
 namespace viaggia_server.Models.Commodities
 {
-    public class Commodity : ISoftDeletable
+    public class Commoditie : ISoftDeletable
     {
         [Key]
         public int CommoditieId { get; set; }
@@ -52,6 +52,6 @@ namespace viaggia_server.Models.Commodities
         public Hotel? Hotel { get; set; } = null!; // Relacionamento com o hotel
 
         // Lista de serviços personalizados adicionais
-        public ICollection<CommoditieServices> CommoditiesServices { get; set; } = new List<CommoditieServices>();
+        public ICollection<CommoditieServices> CommoditieServices { get; set; } = new List<CommoditieServices>();
     }
 }

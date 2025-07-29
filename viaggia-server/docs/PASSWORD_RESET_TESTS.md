@@ -5,21 +5,7 @@
 ### ⚡ NOVO: Sistema de Token de 6 Dígitos
 O sistema agora utiliza tokens numéricos de **6 dígitos** (ex: 123456) em vez de GUIDs, facilitando a digitação e uso móvel.
 
-### 1. Configurar Email de Teste
-No `appsettings.json`, verifique se as configurações de SMTP estão corretas:
-
-```json
-{
-  "Smtp": {
-    "Host": "smtp.gmail.com",
-    "Port": 587,
-    "Username": "viaggia.societa.albergo@gmail.com",
-    "Password": "wybo jlsa ilvb rnyb",
-    "FromEmail": "viaggia.societa.albergo@gmail.com",
-    "FromName": "Viaggia Password Reset"
-  }
-}
-```
+### 1. Configurar Email no json
 
 ### 2. Verificar Tabelas no Banco
 Execute no SQL Server para verificar a estrutura:
