@@ -1,6 +1,9 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using viaggia_server.DTOs;
+using viaggia_server.DTOs.Address;
+using viaggia_server.DTOs.Commoditie;
 using viaggia_server.DTOs.Hotels;
+using viaggia_server.DTOs.Packages;
 using viaggia_server.DTOs.Reviews;
 using viaggia_server.Models.Addresses;
 using viaggia_server.Models.HotelDates;
@@ -37,57 +40,97 @@ namespace viaggia_server.Controllers
             try
             {
                 var hotels = await _genericRepository.GetAllAsync();
+                var hotelDTOs = new List<HotelDTO>();
 
-                var hotelDTOs = hotels.Select(h => new HotelDTO
+                foreach (var hotel in hotels)
                 {
-                    HotelId = h.HotelId,
-                    Name = h.Name,
-                    Description = h.Description,
-                    StarRating = h.StarRating,
-                    CheckInTime = h.CheckInTime,
-                    CheckOutTime = h.CheckOutTime,
-                    ContactPhone = h.ContactPhone,
-                    ContactEmail = h.ContactEmail,
-                    IsActive = h.IsActive,
-                    RoomTypes = h.RoomTypes?.Select(rt => new HotelRoomTypeDTO
+                    var roomTypes = await _hotelRepository.GetHotelRoomTypesAsync(hotel.HotelId);
+                    var hotelDates = await _hotelRepository.GetHotelDatesAsync(hotel.HotelId);
+                    var medias = await _hotelRepository.GetMediasByHotelIdAsync(hotel.HotelId);
+                    var reviews = await _hotelRepository.GetReviewsByHotelIdAsync(hotel.HotelId);
+                    var addresses = await _hotelRepository.GetAddressesByHotelIdAsync(hotel.HotelId);
+                    var packages = await _hotelRepository.GetPackagesByHotelIdAsync(hotel.HotelId);
+                    
+                    var dto = new HotelDTO
                     {
-                        RoomTypeId = rt.RoomTypeId,
-                        Name = rt.Name,
-                        Price = rt.Price,
-                        Capacity = rt.Capacity,
-                        BedType = rt.BedType,
-                        IsActive = rt.IsActive
-                    }).ToList(),
-                    HotelDates = h.HotelDates?.Select(hd => new HotelDateDTO
-                    {
-                        HotelDateId = hd.HotelDateId,
-                        StartDate = hd.StartDate,
-                        EndDate = hd.EndDate,
-                        AvailableRooms = hd.AvailableRooms,
-                        IsActive = hd.IsActive
-                    }).ToList(),
-                    Medias = h.Medias?.Select(m => new MediaDTO
-                    {
-                        MediaId = m.MediaId,
-                        MediaUrl = m.MediaUrl,
-                        MediaType = m.MediaType
-                    }).ToList(),
-                    Reviews = h.Reviews?.Select(r => new ReviewDTO
-                    {
-                        ReviewId = r.ReviewId,
-                        Rating = r.Rating,
-                        Comment = r.Comment,
-                        CreatedAt = r.CreatedAt
-                    }).ToList(),
-                    AverageRating = h.Reviews?.Any() == true ? h.Reviews.Average(r => r.Rating) : 0
-                }).ToList();
+                        HotelId = hotel.HotelId,
+                        Name = hotel.Name,
+                        Description = hotel.Description,
+                        StarRating = hotel.StarRating,
+                        CheckInTime = hotel.CheckInTime,
+                        CheckOutTime = hotel.CheckOutTime,
+                        ContactPhone = hotel.ContactPhone,
+                        ContactEmail = hotel.ContactEmail,
+                        IsActive = hotel.IsActive,
+
+                        RoomTypes = roomTypes.Select(rt => new HotelRoomTypeDTO
+                        {
+                            RoomTypeId = rt.RoomTypeId,
+                            Name = rt.Name,
+                            Price = rt.Price,
+                            Capacity = rt.Capacity,
+                            BedType = rt.BedType,
+                            IsActive = rt.IsActive
+                        }).ToList(),
+
+                        HotelDates = hotelDates.Select(hd => new HotelDateDTO
+                        {
+                            HotelDateId = hd.HotelDateId,
+                            StartDate = hd.StartDate,
+                            EndDate = hd.EndDate,
+                            AvailableRooms = hd.AvailableRooms,
+                            IsActive = hd.IsActive
+                        }).ToList(),
+
+                        Medias = medias.Select(m => new MediaDTO
+                        {
+                            MediaId = m.MediaId,
+                            MediaUrl = m.MediaUrl,
+                            MediaType = m.MediaType
+                        }).ToList(),
+
+                        Reviews = reviews.Select(r => new ReviewDTO
+                        {
+                            ReviewId = r.ReviewId,
+                            Rating = r.Rating,
+                            Comment = r.Comment,
+                            CreatedAt = r.CreatedAt
+                        }).ToList(),
+
+                        AverageRating = reviews.Any() ? reviews.Average(r => r.Rating) : 0,
+
+                        Addresses = addresses.Select(a => new CreateAddressDTO
+                        {
+                            AddressId = a.AddressId,
+                            Street = a.Street,
+                            City = a.City,
+                            State = a.State,
+                            ZipCode = a.ZipCode,
+                            IsActive = a.IsActive
+                        }).ToList(),
+
+                        Packages = packages.Select(p => new PackageDTO
+                        {
+                            PackageId = p.PackageId,
+                            Name = p.Name,
+                            Description = p.Description,
+                            BasePrice = p.BasePrice,
+                            IsActive = p.IsActive
+                        }).ToList(),
+
+                      
+                    };
+
+                    hotelDTOs.Add(dto);
+                }
 
                 return Ok(new ApiResponse<List<HotelDTO>>(true, "Hotels retrieved successfully.", hotelDTOs));
             }
             catch (Exception ex)
             {
+                var innerMessage = ex.InnerException != null ? ex.InnerException.Message : ex.Message;
                 return StatusCode(StatusCodes.Status500InternalServerError,
-                    new ApiResponse<List<HotelDTO>>(false, $"Error retrieving hotels: {ex.Message}"));
+                    new ApiResponse<Hotel>(false, $"Erro ao criar hotel: {innerMessage}"));
             }
         }
 
@@ -161,8 +204,9 @@ namespace viaggia_server.Controllers
             }
             catch (Exception ex)
             {
+                var innerMessage = ex.InnerException != null ? ex.InnerException.Message : ex.Message;
                 return StatusCode(StatusCodes.Status500InternalServerError,
-                    new ApiResponse<HotelDTO>(false, $"Error retrieving hotel: {ex.Message}"));
+                    new ApiResponse<Hotel>(false, $"Erro ao criar hotel: {innerMessage}"));
             }
         }
 
