@@ -1,4 +1,6 @@
-﻿namespace viaggia_server.Repositories
+﻿using viaggia_server.Models.Commodities;
+
+namespace viaggia_server.Repositories
 {
     public interface IRepository<T> where T : class, ISoftDeletable
     {
@@ -10,5 +12,7 @@
         Task<bool> SaveChangesAsync();
         Task<T2?> GetByIdAsync<T2>(int id) where T2 : class, ISoftDeletable;
         Task<bool> SoftDeleteAsync<T2>(int id) where T2 : class, ISoftDeletable; // New method for cross-entity soft delete
+        Task UpdateAsync(Commoditie existing);
+        Task UpdateAsync(CommoditieServices existing);
     }
 }

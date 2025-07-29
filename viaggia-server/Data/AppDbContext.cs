@@ -194,17 +194,17 @@ namespace viaggia_server.Data
 
             // Commodity 1:N CommoditiesServices
             modelBuilder.Entity<Commoditie>()
-                .HasMany(c => c.CommoditieServices)
-                .WithOne(cs => cs.Commoditie)
-                .HasForeignKey(cs => cs.CommoditieId)
-                .OnDelete(DeleteBehavior.Cascade);
+              .HasMany(c => c.CommoditieServices)
+              .WithOne(cs => cs.Commoditie)
+              .HasForeignKey(cs => cs.CommoditieId)
+              .OnDelete(DeleteBehavior.NoAction); // Evita ciclos de deleção 
 
             // CommoditieServices 1:N Hotel
             modelBuilder.Entity<CommoditieServices>()
-                .HasOne(cs => cs.Hotel)
-                .WithMany(h => h.CommoditieServices)
-                .HasForeignKey(cs => cs.HotelId)
-                .OnDelete(DeleteBehavior.Cascade);
+            .HasOne(cs => cs.Hotel)
+            .WithMany(h => h.CommoditieServices)
+            .HasForeignKey(cs => cs.HotelId)
+            .OnDelete(DeleteBehavior.NoAction); // Evita ciclos de deleção
 
 
             // Configuration for Media

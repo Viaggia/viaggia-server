@@ -26,6 +26,8 @@
 
   <ItemGroup>
 
+    <Folder Include="wwwroot\Uploads\Hotel\" />
+
     <Folder Include="wwwroot\Uploads\Packages\" />
 
   </ItemGroup>
