@@ -1,4 +1,3 @@
-using System.Text;
 using FluentValidation;
 using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -8,13 +7,16 @@ using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Security.Claims;
+using System.Text;
 using viaggia_server.Data;
 using viaggia_server.Models.Users;
 using viaggia_server.Repositories;
+using viaggia_server.Repositories.Reservations;
 using viaggia_server.Repositories.Users;
 using viaggia_server.Repositories.HotelRepository;
 using viaggia_server.Repositories.Payment;
 using viaggia_server.Services.Auth;
+using viaggia_server.Services.Reservations;
 using viaggia_server.Services.Users;
 using viaggia_server.Services.Payment;
 using viaggia_server.Validators;
@@ -63,11 +65,12 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
-
+builder.Services.AddScoped<IReservationRepository, ReservationRepository>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
-
 builder.Services.AddScoped<IPackageRepository, PackageRepository>();
+builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IReservationService, ReservationService>();
 
 builder.Services.AddScoped<IHotelRepository, HotelRepository>();
 
