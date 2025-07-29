@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using viaggia_server.Data;
+using viaggia_server.DTOs.Commoditie;
 using viaggia_server.DTOs.Commodity;
 using viaggia_server.Models.Commodities;
 

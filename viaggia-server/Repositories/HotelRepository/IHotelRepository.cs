@@ -20,7 +20,7 @@ namespace viaggia_server.Repositories.HotelRepository
         // Endereços
         Task<Address> AddAddressAsync(Address address);
         Task<Address?> GetAddressByIdAsync(int addressId);
-        Task<Address?> GetAddressByHotelIdAsync(int hotelId);
+        Task<IEnumerable<Address>> GetAddressesByHotelIdAsync(int hotelId);
 
         // Tipos de Quarto
         Task<HotelRoomType> AddRoomTypeAsync(HotelRoomType roomType);

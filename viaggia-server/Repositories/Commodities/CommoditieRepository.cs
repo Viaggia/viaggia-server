@@ -58,16 +58,29 @@ namespace viaggia_server.Repositories.Commodities
             return await _context.SaveChangesAsync() > 0;
         }
 
-        public Task<bool> DeleteAsync(int id)
+        public async Task<bool> DeleteAsync(int id)
         {
-            var entity = _context.Commodities.Find(id);
+            var entity = await _context.Commodities.FindAsync(id);
             if (entity == null)
-                return Task.FromResult(false);
-            _context.Commodities.Remove(entity);
-            return _context.SaveChangesAsync().ContinueWith(t => t.Result > 0);
+                return false;
 
+            _context.Commodities.Remove(entity);
+            return await _context.SaveChangesAsync() > 0;
         }
 
+        public Task<bool> SaveChangesAsync()
+        {
+            throw new NotImplementedException();
+        }
 
+        Task<T2?> IRepository<Commoditie>.GetByIdAsync<T2>(int id) where T2 : class
+        {
+            throw new NotImplementedException();
+        }
+
+        Task<bool> IRepository<Commoditie>.SoftDeleteAsync<T2>(int id)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

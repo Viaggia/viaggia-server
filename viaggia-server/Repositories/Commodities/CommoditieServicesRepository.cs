@@ -64,6 +64,21 @@ namespace viaggia_server.Repositories.Commodities
         {
             throw new NotImplementedException();
         }
+
+        public Task<bool> SaveChangesAsync()
+        {
+            throw new NotImplementedException();
+        }
+
+        Task<T2?> IRepository<CommoditieServices>.GetByIdAsync<T2>(int id) where T2 : class
+        {
+            throw new NotImplementedException();
+        }
+
+        Task<bool> IRepository<CommoditieServices>.SoftDeleteAsync<T2>(int id)
+        {
+            throw new NotImplementedException();
+        }
     }
 }
 

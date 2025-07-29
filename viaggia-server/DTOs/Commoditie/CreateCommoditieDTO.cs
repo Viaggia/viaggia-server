@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using viaggia_server.DTOs.Commoditie;
 
 namespace viaggia_server.DTOs.Commodity
 {

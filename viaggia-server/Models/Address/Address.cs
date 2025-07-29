@@ -29,5 +29,10 @@ namespace viaggia_server.Models.Addresses
         public string ZipCode { get; set; } = null!;
 
         public bool IsActive { get; set; } = true;
+
+        // Foreign key for Hotel
+        public int? HotelId { get; set; }
+        [ForeignKey("HotelId")]
+        public Hotel? Hotel { get; set; } = null!; // Relationship with Hotel
     }
 }

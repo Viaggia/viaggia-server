@@ -87,16 +87,6 @@ namespace viaggia_server.Repositories.HotelRepository
             return await _context.Addresses.FindAsync(addressId);
         }
 
-        // Retorna o endereço de um hotel específico (relacionamento 1:1)
-        public async Task<Address?> GetAddressByHotelIdAsync(int hotelId)
-        {
-            var hotel = await _context.Hotels
-                .Include(h => h.Address)
-                .FirstOrDefaultAsync(h => h.HotelId == hotelId);
-
-            return hotel?.Address;
-        }
-
         // Adiciona um novo tipo de quarto
         public async Task<HotelRoomType> AddRoomTypeAsync(HotelRoomType roomType)
         {
@@ -254,6 +244,12 @@ namespace viaggia_server.Repositories.HotelRepository
             return result.Entity;
 
         }
-       
+
+        public async Task<IEnumerable<Address>> GetAddressesByHotelIdAsync(int hotelId)
+        {
+          return await _context.Addresses
+                .Where(a => a.HotelId == hotelId && a.IsActive)
+                .ToListAsync();
+        }
     }
 }

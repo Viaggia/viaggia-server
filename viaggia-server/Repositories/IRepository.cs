@@ -12,7 +12,6 @@ namespace viaggia_server.Repositories
         Task<bool> SaveChangesAsync();
         Task<T2?> GetByIdAsync<T2>(int id) where T2 : class, ISoftDeletable;
         Task<bool> SoftDeleteAsync<T2>(int id) where T2 : class, ISoftDeletable; // New method for cross-entity soft delete
-        Task UpdateAsync(Commoditie existing);
-        Task UpdateAsync(CommoditieServices existing);
+       
     }
 }
