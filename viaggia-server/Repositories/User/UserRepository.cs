@@ -1,6 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using viaggia_server.Data;
+using viaggia_server.DTOs.Auth;
 using viaggia_server.Models.Users;
+using viaggia_server.Models.UserRoles;
 
 namespace viaggia_server.Repositories.Users
 {

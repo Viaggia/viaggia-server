@@ -70,14 +70,60 @@ namespace viaggia_server.Controllers
             }
         }
 
+        [HttpPost("validate-token")]
+        public async Task<IActionResult> ValidateToken([FromBody] ValidateTokenRequestDTO request)
+        {
+            try
+            {
+                var result = await _authService.ValidatePasswordResetTokenAsync(request.Token);
+                
+                if (!result.IsValid)
+                {
+                    return BadRequest(new { 
+                        Message = result.Message,
+                        IsValid = false 
+                    });
+                }
+
+                return Ok(new { 
+                    Message = result.Message,
+                    IsValid = true,
+                    UserName = result.UserName,
+                    Email = result.Email,
+                    ExpiryDate = result.ExpiryDate
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { Message = ex.Message });
+            }
+        }
+
         [HttpPost("reset-password")]
         public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequestDTO request)
         {
-            var success = await _authService.ResetPasswordAsync(request.Token, request.NewPassword);
-            if (!success)
-                return BadRequest(new { Message = "Token inválido, expirado ou já utilizado." });
+            try
+            {
+                // Primeiro valida o token
+                var tokenValidation = await _authService.ValidatePasswordResetTokenAsync(request.Token);
+                if (!tokenValidation.IsValid)
+                {
+                    return BadRequest(new { Message = tokenValidation.Message });
+                }
 
-            return Ok(new { Message = "Senha redefinida com sucesso." });
+                var success = await _authService.ResetPasswordAsync(request.Token, request.NewPassword);
+                if (!success)
+                    return BadRequest(new { Message = "Erro interno. Tente novamente." });
+
+                return Ok(new { 
+                    Message = "Senha redefinida com sucesso!",
+                    UserName = tokenValidation.UserName
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { Message = ex.Message });
+            }
         }
     }
 }

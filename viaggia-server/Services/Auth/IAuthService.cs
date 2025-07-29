@@ -1,4 +1,5 @@
 ﻿using viaggia_server.DTOs.Auth;
+using viaggia_server.DTOs.User;
 using viaggia_server.Models.Users;
 
 namespace viaggia_server.Services.Auth
@@ -11,6 +12,7 @@ namespace viaggia_server.Services.Auth
         Task RevokeTokenAsync(string token);
         Task<bool> IsTokenRevokedAsync(string token);
         Task<string> GeneratePasswordResetTokenAsync(string email);
+        Task<ValidateTokenResponseDTO> ValidatePasswordResetTokenAsync(string token);
         Task<bool> ResetPasswordAsync(string token, string newPassword);
     }
 
