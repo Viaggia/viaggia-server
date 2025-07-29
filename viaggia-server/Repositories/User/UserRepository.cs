@@ -1,43 +1,51 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using viaggia_server.Data;
+using viaggia_server.DTOs.Auth;
 using viaggia_server.Models.UserRoles;
 using viaggia_server.Models.Users;
 
 namespace viaggia_server.Repositories.Users
 {
-    public class UserRepository : IUserRepository
+    public class UserRepository : Repository<User>, IUserRepository
     {
         private readonly AppDbContext _context;
 
-        public UserRepository(AppDbContext context)
+        public UserRepository(AppDbContext context) : base(context)
         {
-            _context = context ?? throw new ArgumentNullException(nameof(context));
+            _context = context;
         }
 
-        public async Task<User> CreateAsync(User user, string roleName)
+        public Task<User> CreateAsync(User user, string roleName)
         {
-            // Adiciona o usuário ao banco
-            await _context.Users.AddAsync(user);
-
-            // Busca a role pelo nome
-            var role = await _context.Roles.FirstOrDefaultAsync(r => r.Name == roleName)
-                ?? throw new Exception($"Role {roleName} not found.");
-
-            // Cria o relacionamento UserRole
-            var userRole = new UserRole { User = user, Role = role };
-            await _context.UserRoles.AddAsync(userRole);
-
-            return user;
+            // Verifica se a role existe
+            var role = _context.Roles.FirstOrDefaultAsync(r => r.Name == roleName);
+            if (role == null)
+            {
+                throw new ArgumentException($"Role '{roleName}' does not exist.");
+            }
+            // Adiciona o usuário ao contexto
+            _context.Users.Add(user);
+            _context.SaveChanges();
+            // Cria a relação entre o usuário e a role
+            var userRole = new UserRole
+            {
+                UserId = user.Id,
+                RoleId = role.Result.Id
+            };
+            _context.UserRoles.Add(userRole);
+            _context.SaveChanges();
+            return Task.FromResult(user);
         }
 
         public async Task<bool> ReactivateAsync(int id)
         {
             var user = await _context.Users.FindAsync(id);
             if (user == null)
-                return false;
-
-            user.IsActive = true;
-            _context.Users.Update(user);
+            {
+                return false; // Usuário não encontrado
+            }
+            user.IsActive = true; // Reativa o usuário
+            await _context.SaveChangesAsync();
             return true;
         }
 
@@ -46,14 +54,44 @@ namespace viaggia_server.Repositories.Users
             return await _context.Users.AnyAsync(u => u.Email == email);
         }
 
-        public async Task<bool> CpfExistsAsync(string cpf)
+        public async Task<bool> CpfExistsAsync(string? cpf)
         {
-            return await _context.Users.AnyAsync(u => u.Cpf == cpf);
+            return cpf != null && await _context.Users.AnyAsync(u => u.Cpf == cpf);
         }
 
-        public async Task<bool> CnpjExistsAsync(string cnpj)
+        public async Task<User> CreateOrLoginOAuth(OAuthRequest dto)
         {
-            return await _context.Users.AnyAsync(u => u.Cnpj == cnpj);
+            // Tenta encontrar o usuário pelo Google ID
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.GoogleId == dto.GoogleUid);
+            if (user == null)
+            {
+                var generatedPassword = Guid.NewGuid().ToString(); // Gera uma senha padrão
+                var hashedPassword = BCrypt.Net.BCrypt.HashPassword(generatedPassword); // Criptografa a senha
+
+                // Se não encontrar, cria um novo usuário
+                user = new User
+                {
+                    GoogleId = dto.GoogleUid,
+                    Email = dto.Email,
+                    Name = dto.Name,
+                    AvatarUrl = dto.Picture,
+                    PhoneNumber = dto.PhoneNumber ?? "default-password", // Defina uma senha padrão ou gere uma
+                    Password = hashedPassword, // Senha não é necessária para OAuth
+                    IsActive = true,
+                    CreateDate = DateTime.UtcNow
+
+                };
+                await _context.Users.AddAsync(user);
+            }
+            else
+            {
+                // Atualiza os dados do usuário existente
+                user.Email = dto.Email;
+                user.Name = dto.Name;
+                user.AvatarUrl = dto.Picture;
+            }
+            await _context.SaveChangesAsync();
+            return user;
         }
     }
 }
