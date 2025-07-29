@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Http;
 
 namespace viaggia_server.DTOs.Packages
 {
@@ -21,10 +22,10 @@ namespace viaggia_server.DTOs.Packages
         [Required]
         public int HotelId { get; set; }
 
-        public bool IsActive { get; set; }
+        public bool IsActive { get; set; } = true;
 
         public List<PackageDateDTO> PackageDates { get; set; } = new List<PackageDateDTO>();
-        public List<int> MediaIdsToDelete { get; set; } = new List<int>();
         public List<IFormFile> NewMediaFiles { get; set; } = new List<IFormFile>();
+        public List<int> MediaIdsToDelete { get; set; } = new List<int>();
     }
 }

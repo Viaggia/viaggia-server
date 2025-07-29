@@ -2,7 +2,9 @@
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.Google;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using viaggia_server.Data;
 using viaggia_server.DTOs.Auth;
 using viaggia_server.Repositories;
 using viaggia_server.Repositories.Auth;
@@ -61,7 +63,7 @@ namespace viaggia_server.Controllers
             var user = await _repository.CreateOrLoginOAuth(oauthRequest);
             var token = await _authService.GenerateJwtToken(user);
 
-            return Ok(new LoginResponse
+            return Ok(new LoginResponseDTO
             {
                 Token = token,
                 Name = user.Name,
@@ -72,7 +74,7 @@ namespace viaggia_server.Controllers
             });
         }
 
-        [HttpPost("logout")]
+        [HttpPost("logout-google")]
         public async Task<IActionResult> Logout()
         {
             await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);

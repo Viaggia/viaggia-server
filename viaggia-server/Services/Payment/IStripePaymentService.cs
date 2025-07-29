@@ -49,5 +49,10 @@ namespace viaggia_server.Services.Payment
         /// Busca um pagamento por ID
         /// </summary>
         Task<PaymentDTO?> GetPaymentByIdAsync(int paymentId);
+
+        /// <summary>
+        /// Atualiza o status de um pagamento através do webhook
+        /// </summary>
+        Task<bool> UpdatePaymentStatusAsync(string paymentIntentId, string status, long amount);
     }
 }

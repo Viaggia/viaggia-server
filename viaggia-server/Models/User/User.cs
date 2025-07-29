@@ -20,7 +20,6 @@ namespace viaggia_server.Models.Users
         [Required(ErrorMessage = "Email is required.")]
         [EmailAddress(ErrorMessage = "Invalid email format.")]
         public string Email { get; set; } = null!;
-
         [StringLength(256, ErrorMessage = "Password cannot exceed 256 characters.")]
         public string? Password { get; set; } // Nullable for OAuth user
 

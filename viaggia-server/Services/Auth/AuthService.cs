@@ -4,22 +4,36 @@ using System.Text;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using viaggia_server.Data;
+using viaggia_server.DTOs.User;
+using viaggia_server.Models;
+using viaggia_server.Models.RevokedToken;
 using viaggia_server.Models.Users;
 using viaggia_server.Repositories.Auth;
+using viaggia_server.Repositories.Users;
+using viaggia_server.Services;
 
 namespace viaggia_server.Services.Auth
 {
     public class AuthService : IAuthService
     {
         private readonly IAuthRepository _authRepository;
+        private readonly IUserRepository _userRepository;
         private readonly AppDbContext _context;
         private readonly IConfiguration _configuration;
+        private readonly IEmailService _emailService;
 
-        public AuthService(IAuthRepository authRepository, AppDbContext context, IConfiguration configuration)
+        public AuthService(
+            IAuthRepository authRepository,
+            IUserRepository userRepository,
+            AppDbContext context,
+            IConfiguration configuration,
+            IEmailService emailService)
         {
             _authRepository = authRepository;
+            _userRepository = userRepository;
             _context = context;
             _configuration = configuration;
+            _emailService = emailService;
         }
 
         public async Task<string> LoginAsync(string email, string password)
@@ -40,11 +54,7 @@ namespace viaggia_server.Services.Auth
 
         public async Task<string> GenerateJwtToken(User user)
         {
-            var userWithRoles = await _context.Users
-                .Include(u => u.UserRoles)
-                    .ThenInclude(ur => ur.Role)
-                .SingleOrDefaultAsync(u => u.Id == user.Id);
-
+            var userWithRoles = await _userRepository.GetByIdAsync(user.Id);
             if (userWithRoles == null)
                 throw new Exception("Usuário não encontrado");
 
@@ -60,7 +70,7 @@ namespace viaggia_server.Services.Auth
                 claims.Add(new Claim(ClaimTypes.Role, role.Role.Name));
             }
 
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]!));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
             var token = new JwtSecurityToken(
@@ -71,6 +81,130 @@ namespace viaggia_server.Services.Auth
                 signingCredentials: creds);
 
             return new JwtSecurityTokenHandler().WriteToken(token);
+        }
+
+        public async Task RevokeTokenAsync(string token)
+        {
+            var jwtToken = new JwtSecurityTokenHandler().ReadJwtToken(token);
+            var expiryDate = jwtToken.ValidTo;
+
+            var revokedToken = new RevokedToken
+            {
+                Token = token,
+                RevokedAt = DateTime.UtcNow,
+                ExpiryDate = expiryDate
+            };
+
+            await _context.RevokedTokens.AddAsync(revokedToken);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task<bool> IsTokenRevokedAsync(string token)
+        {
+            return await _context.RevokedTokens.AnyAsync(rt => rt.Token == token && (rt.ExpiryDate == null || rt.ExpiryDate > DateTime.UtcNow));
+        }
+
+        public async Task<string> GeneratePasswordResetTokenAsync(string email)
+        {
+            var user = await GetUserByEmailAsync(email);
+            if (user == null || string.IsNullOrEmpty(user.Password))
+                throw new Exception("Usuário não encontrado ou não possui senha definida (usuário OAuth).");
+
+            // Generate a unique 6-digit numeric token
+            var token = GenerateNumericToken();
+            
+            // Ensure token is unique
+            while (await _context.PasswordResetTokens.AnyAsync(prt => prt.Token == token && !prt.IsUsed))
+            {
+                token = GenerateNumericToken();
+            }
+
+            var resetToken = new PasswordResetToken
+            {
+                Token = token,
+                UserId = user.Id,
+                CreatedAt = DateTime.UtcNow,
+                ExpiresAt = DateTime.UtcNow.AddHours(1), // Token valid for 1 hour
+                IsUsed = false
+            };
+
+            await _context.PasswordResetTokens.AddAsync(resetToken);
+            await _context.SaveChangesAsync();
+
+            // Send email with reset link
+            await _emailService.SendPasswordResetEmailAsync(email, user.Name, token);
+
+            return token;
+        }
+
+        public async Task<ValidateTokenResponseDTO> ValidatePasswordResetTokenAsync(string token)
+        {
+            var resetToken = await _context.PasswordResetTokens
+                .Include(prt => prt.User)
+                .FirstOrDefaultAsync(prt => prt.Token == token);
+
+            if (resetToken == null)
+            {
+                return new ValidateTokenResponseDTO
+                {
+                    IsValid = false,
+                    Message = "Token não encontrado ou inválido."
+                };
+            }
+
+            if (resetToken.IsUsed)
+            {
+                return new ValidateTokenResponseDTO
+                {
+                    IsValid = false,
+                    Message = "Este token já foi utilizado."
+                };
+            }
+
+            if (resetToken.ExpiresAt <= DateTime.UtcNow)
+            {
+                return new ValidateTokenResponseDTO
+                {
+                    IsValid = false,
+                    Message = "Token expirado. Solicite um novo reset de senha."
+                };
+            }
+
+            return new ValidateTokenResponseDTO
+            {
+                IsValid = true,
+                UserName = resetToken.User.Name,
+                Email = resetToken.User.Email,
+                ExpiryDate = resetToken.ExpiresAt,
+                Message = "Token válido."
+            };
+        }
+
+        public async Task<bool> ResetPasswordAsync(string token, string newPassword)
+        {
+            var resetToken = await _context.PasswordResetTokens
+                .Include(prt => prt.User)
+                .FirstOrDefaultAsync(prt => prt.Token == token && !prt.IsUsed && prt.ExpiresAt > DateTime.UtcNow);
+
+            if (resetToken == null)
+                return false;
+
+            resetToken.User.Password = BCrypt.Net.BCrypt.HashPassword(newPassword);
+            resetToken.IsUsed = true;
+
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
+        /// <summary>
+        /// Generates a secure 6-digit numeric token
+        /// </summary>
+        /// <returns>6-digit numeric string token</returns>
+        private string GenerateNumericToken()
+        {
+            var random = new Random();
+            var token = random.Next(100000, 999999).ToString();
+            return token;
         }
     }
 }

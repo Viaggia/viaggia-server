@@ -124,6 +124,7 @@ namespace viaggia_server.Controllers
         }
 
         [HttpPost]
+        [Consumes("multipart/form-data")]
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
@@ -134,6 +135,20 @@ namespace viaggia_server.Controllers
 
             try
             {
+                // Validate file types and sizes
+                if (packageDTO.MediaFiles != null && packageDTO.MediaFiles.Any())
+                {
+                    var allowedExtensions = new[] { ".jpg", ".jpeg", ".png" };
+                    foreach (var file in packageDTO.MediaFiles)
+                    {
+                        if (file.Length > 5 * 1024 * 1024) // 5MB limit
+                            return BadRequest(new ApiResponse<PackageDTO>(false, "File size exceeds 5MB."));
+                        var extension = Path.GetExtension(file.FileName).ToLower();
+                        if (!allowedExtensions.Contains(extension))
+                            return BadRequest(new ApiResponse<PackageDTO>(false, $"Invalid file type: {extension}. Allowed types: {string.Join(", ", allowedExtensions)}"));
+                    }
+                }
+
                 var hotel = await _genericRepository.GetByIdAsync<Hotel>(packageDTO.HotelId);
                 if (hotel == null || !hotel.IsActive)
                     return BadRequest(new ApiResponse<PackageDTO>(false, $"Hotel with ID {packageDTO.HotelId} not found or inactive."));
@@ -154,6 +169,11 @@ namespace viaggia_server.Controllers
                     Medias = new List<Media>()
                 };
 
+                // Save package to get PackageId
+                await _genericRepository.AddAsync(package);
+                await _genericRepository.SaveChangesAsync();
+
+                // Process file uploads
                 var uploadPath = Path.Combine(_environment.WebRootPath, "Uploads", "Packages");
                 if (!Directory.Exists(uploadPath))
                     Directory.CreateDirectory(uploadPath);
@@ -162,7 +182,7 @@ namespace viaggia_server.Controllers
                 {
                     if (file.Length > 0)
                     {
-                        var fileName = Guid.NewGuid().ToString() + Path.GetExtension(file.FileName);
+                        var fileName = $"{Guid.NewGuid()}{Path.GetExtension(file.FileName)}";
                         var filePath = Path.Combine(uploadPath, fileName);
                         using (var stream = new FileStream(filePath, FileMode.Create))
                         {
@@ -179,7 +199,7 @@ namespace viaggia_server.Controllers
                     }
                 }
 
-                await _genericRepository.AddAsync(package);
+                // Save any changes to Medias
                 await _genericRepository.SaveChangesAsync();
 
                 var resultDTO = new PackageDTO
