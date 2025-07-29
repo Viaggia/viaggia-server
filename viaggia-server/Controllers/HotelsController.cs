@@ -55,11 +55,7 @@ namespace viaggia_server.Controllers
                 {
                     HotelId = h.HotelId,
                     Name = h.Name,
-                    Street = h.Street,
                     Description = h.Description,
-                    City = h.City,
-                    State = h.State,
-                    ZipCode = h.ZipCode,
                     StarRating = h.StarRating,
                     CheckInTime = h.CheckInTime,
                     CheckOutTime = h.CheckOutTime,
@@ -136,11 +132,7 @@ namespace viaggia_server.Controllers
                 {
                     HotelId = hotel.HotelId,
                     Name = hotel.Name,
-                    Street = hotel.Street,
                     Description = hotel.Description,
-                    City = hotel.City,
-                    State = hotel.State,
-                    ZipCode = hotel.ZipCode,
                     StarRating = hotel.StarRating,
                     CheckInTime = hotel.CheckInTime,
                     CheckOutTime = hotel.CheckOutTime,
@@ -232,11 +224,7 @@ namespace viaggia_server.Controllers
                 var hotel = new Hotel
                 {
                     Name = createHotelDto.Name,
-                    Street = createHotelDto.Street,
                     Description = createHotelDto.Description,
-                    City = createHotelDto.City,
-                    State = createHotelDto.State,
-                    ZipCode = createHotelDto.ZipCode,
                     StarRating = createHotelDto.StarRating,
                     CheckInTime = createHotelDto.CheckInTime,
                     CheckOutTime = createHotelDto.CheckOutTime,
