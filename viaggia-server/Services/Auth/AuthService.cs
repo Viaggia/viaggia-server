@@ -4,12 +4,13 @@ using System.Text;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using viaggia_server.Data;
+using viaggia_server.DTOs.User;
 using viaggia_server.Models;
-using viaggia_server.Models.PasswordResetToken;
 using viaggia_server.Models.RevokedToken;
 using viaggia_server.Models.Users;
 using viaggia_server.Repositories.Auth;
 using viaggia_server.Repositories.Users;
+using viaggia_server.Services;
 
 namespace viaggia_server.Services.Auth
 {
@@ -109,15 +110,21 @@ namespace viaggia_server.Services.Auth
             if (user == null || string.IsNullOrEmpty(user.Password))
                 throw new Exception("Usuário não encontrado ou não possui senha definida (usuário OAuth).");
 
-            // Generate a unique token
-            var token = Guid.NewGuid().ToString();
+            // Generate a unique 6-digit numeric token
+            var token = GenerateNumericToken();
+            
+            // Ensure token is unique
+            while (await _context.PasswordResetTokens.AnyAsync(prt => prt.Token == token && !prt.IsUsed))
+            {
+                token = GenerateNumericToken();
+            }
 
             var resetToken = new PasswordResetToken
             {
                 Token = token,
                 UserId = user.Id,
                 CreatedAt = DateTime.UtcNow,
-                ExpiryDate = DateTime.UtcNow.AddHours(1), // Token valid for 1 hour
+                ExpiresAt = DateTime.UtcNow.AddHours(1), // Token valid for 1 hour
                 IsUsed = false
             };
 
@@ -125,16 +132,59 @@ namespace viaggia_server.Services.Auth
             await _context.SaveChangesAsync();
 
             // Send email with reset link
-            await _emailService.SendPasswordResetEmailAsync(email, token);
+            await _emailService.SendPasswordResetEmailAsync(email, user.Name, token);
 
             return token;
+        }
+
+        public async Task<ValidateTokenResponseDTO> ValidatePasswordResetTokenAsync(string token)
+        {
+            var resetToken = await _context.PasswordResetTokens
+                .Include(prt => prt.User)
+                .FirstOrDefaultAsync(prt => prt.Token == token);
+
+            if (resetToken == null)
+            {
+                return new ValidateTokenResponseDTO
+                {
+                    IsValid = false,
+                    Message = "Token não encontrado ou inválido."
+                };
+            }
+
+            if (resetToken.IsUsed)
+            {
+                return new ValidateTokenResponseDTO
+                {
+                    IsValid = false,
+                    Message = "Este token já foi utilizado."
+                };
+            }
+
+            if (resetToken.ExpiresAt <= DateTime.UtcNow)
+            {
+                return new ValidateTokenResponseDTO
+                {
+                    IsValid = false,
+                    Message = "Token expirado. Solicite um novo reset de senha."
+                };
+            }
+
+            return new ValidateTokenResponseDTO
+            {
+                IsValid = true,
+                UserName = resetToken.User.Name,
+                Email = resetToken.User.Email,
+                ExpiryDate = resetToken.ExpiresAt,
+                Message = "Token válido."
+            };
         }
 
         public async Task<bool> ResetPasswordAsync(string token, string newPassword)
         {
             var resetToken = await _context.PasswordResetTokens
                 .Include(prt => prt.User)
-                .FirstOrDefaultAsync(prt => prt.Token == token && !prt.IsUsed && prt.ExpiryDate > DateTime.UtcNow);
+                .FirstOrDefaultAsync(prt => prt.Token == token && !prt.IsUsed && prt.ExpiresAt > DateTime.UtcNow);
 
             if (resetToken == null)
                 return false;
@@ -144,6 +194,17 @@ namespace viaggia_server.Services.Auth
 
             await _context.SaveChangesAsync();
             return true;
+        }
+
+        /// <summary>
+        /// Generates a secure 6-digit numeric token
+        /// </summary>
+        /// <returns>6-digit numeric string token</returns>
+        private string GenerateNumericToken()
+        {
+            var random = new Random();
+            var token = random.Next(100000, 999999).ToString();
+            return token;
         }
     }
 }
