@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using viaggia_server.DTOs;
 using viaggia_server.DTOs.Users;
 using viaggia_server.Services.Users;
+using viaggia_server.Services;
 
 namespace viaggia_server.Controllers
 {
@@ -13,10 +14,12 @@ namespace viaggia_server.Controllers
     public class UsersController : ControllerBase
     {
         private readonly IUserService _service;
+        private readonly IEmailService _emailService;
 
-        public UsersController(IUserService service)
+        public UsersController(IUserService service, IEmailService emailService)
         {
             _service = service ?? throw new ArgumentNullException(nameof(service));
+            _emailService = emailService ?? throw new ArgumentNullException(nameof(emailService));
         }
 
         [HttpPost("client")]
@@ -28,6 +31,19 @@ namespace viaggia_server.Controllers
             try
             {
                 var result = await _service.CreateClientAsync(request);
+                
+                // Enviar e-mail de boas-vindas
+                try
+                {
+                    await _emailService.SendWelcomeEmailAsync(result.Email, result.Name);
+                }
+                catch (Exception emailEx)
+                {
+                    // Log do erro do e-mail, mas não falha a criação do usuário
+                    // O usuário foi criado com sucesso, apenas o e-mail falhou
+                    Console.WriteLine($"Falha ao enviar e-mail de boas-vindas: {emailEx.Message}");
+                }
+                
                 return CreatedAtAction(nameof(GetById), new { id = result.Id },
                     new ApiResponse<UserDTO>(true, "Client created successfully.", result));
             }
