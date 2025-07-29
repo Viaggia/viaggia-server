@@ -6,12 +6,10 @@ namespace viaggia_server.DTOs.Packages
     {
         public int PackageDateId { get; set; }
 
-        [Required]
+        [Required(ErrorMessage = "Start date is required.")]
         public DateTime StartDate { get; set; }
 
-        [Required]
+        [Required(ErrorMessage = "End date is required.")]
         public DateTime EndDate { get; set; }
-
-        public bool IsActive { get; set; } = true;
     }
 }
