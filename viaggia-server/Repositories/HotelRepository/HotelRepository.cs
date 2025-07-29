@@ -207,18 +207,19 @@ namespace viaggia_server.Repositories.HotelRepository
                 .Where(c => c.HotelId == hotelId && c.IsActive)
                 .ToListAsync();
 
+
         }
 
-        public Task<Commoditie?> GetCommoditieByIdAsync(int commoditieId) // Busca uma comodidade específica por ID
+        public async Task<Commoditie?> GetCommoditieByIdAsync(int commoditieId) // Busca uma comodidade específica por ID
         {
-            return _context.Commodities
+            return await _context.Commodities
                 .FirstOrDefaultAsync(c => c.CommoditieId == commoditieId && c.IsActive);
         }
 
         public async Task<Commoditie> AddCommoditieAsync(Commoditie commoditie) // Adiciona uma nova comodidade
         {
             var result = _context.Commodities.Add(commoditie);
-            _context.SaveChangesAsync();
+            await _context.SaveChangesAsync();
             return result.Entity;
 
         }
@@ -240,7 +241,7 @@ namespace viaggia_server.Repositories.HotelRepository
         public async Task<CommoditieServices> AddCommoditieServiceAsync(CommoditieServices commoditieService) // Adiciona um novo serviço de comodidade
         {
             var result = _context.CommoditieServices.Add(commoditieService);
-            _context.SaveChangesAsync();
+            await _context.SaveChangesAsync();
             return result.Entity;
 
         }
@@ -250,6 +251,50 @@ namespace viaggia_server.Repositories.HotelRepository
           return await _context.Addresses
                 .Where(a => a.HotelId == hotelId && a.IsActive)
                 .ToListAsync();
+        }
+
+        public async Task<Hotel?> GetHotelWithDetailsByIdAsync(int id)
+        {
+            return await _context.Hotels
+                .Include(h => h.RoomTypes)
+                .Include(h => h.HotelDates)
+                .Include(h => h.Addresses)
+                .Include(h => h.Medias)
+                .Include(h => h.Reviews)
+                .Include(h => h.Packages)
+                .Include(h => h.Commodities)
+                .Include(h => h.CommoditieServices)
+                .FirstOrDefaultAsync(h => h.HotelId == id && h.IsActive);
+        }
+
+        public async Task<List<Hotel>> GetAllHotelsWithDetailsAsync()
+        {
+            return await _context.Hotels
+                .Include(h => h.RoomTypes)
+                .Include(h => h.HotelDates)
+                .Include(h => h.Addresses)
+                .Include(h => h.Medias)
+                .Include(h => h.Reviews)
+                .Include(h => h.Packages)
+                .Include(h => h.Commodities)
+                .Include(h => h.CommoditieServices)
+                .Where(h => h.IsActive)
+                .ToListAsync();
+        }
+
+
+        public async Task<Hotel?> GetHotelByIdWithDetailsAsync(int hotelId)
+        {
+            return await _context.Hotels
+                .Include(h => h.RoomTypes)
+                .Include(h => h.HotelDates)
+                .Include(h => h.Medias)
+                .Include(h => h.Reviews)
+                .Include(h => h.Addresses)
+                .Include(h => h.Packages)
+                .Include(h => h.Commodities)
+                .Include(h => h.CommoditieServices)
+                .FirstOrDefaultAsync(h => h.HotelId == hotelId);
         }
     }
 }

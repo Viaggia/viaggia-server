@@ -216,6 +216,7 @@ namespace viaggia_server.Data
                 .HasForeignKey(prt => prt.UserId);
 
 
+
             // Configuration for Media
             modelBuilder.Entity<Media>()
                 .ToTable(t => t.HasCheckConstraint("CK_Media_OneEntity",

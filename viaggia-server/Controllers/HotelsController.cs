@@ -10,6 +10,7 @@ using viaggia_server.Models.HotelDates;
 using viaggia_server.Models.HotelRoomTypes;
 using viaggia_server.Models.Hotels;
 using viaggia_server.Models.Medias;
+using viaggia_server.Models.Packages;
 using viaggia_server.Repositories;
 using viaggia_server.Repositories.HotelRepository;
 
@@ -39,18 +40,17 @@ namespace viaggia_server.Controllers
         {
             try
             {
-                var hotels = await _genericRepository.GetAllAsync();
+                var hotels = await _hotelRepository.GetAllHotelsWithDetailsAsync();
                 var hotelDTOs = new List<HotelDTO>();
-
                 foreach (var hotel in hotels)
                 {
-                    var roomTypes = await _hotelRepository.GetHotelRoomTypesAsync(hotel.HotelId);
-                    var hotelDates = await _hotelRepository.GetHotelDatesAsync(hotel.HotelId);
-                    var medias = await _hotelRepository.GetMediasByHotelIdAsync(hotel.HotelId);
-                    var reviews = await _hotelRepository.GetReviewsByHotelIdAsync(hotel.HotelId);
-                    var addresses = await _hotelRepository.GetAddressesByHotelIdAsync(hotel.HotelId);
-                    var packages = await _hotelRepository.GetPackagesByHotelIdAsync(hotel.HotelId);
-                    
+                    var roomTypes = (await _hotelRepository.GetHotelRoomTypesAsync(hotel.HotelId)).ToList();
+                    var hotelDates = (await _hotelRepository.GetHotelDatesAsync(hotel.HotelId)).ToList();
+                    var medias = (await _hotelRepository.GetMediasByHotelIdAsync(hotel.HotelId)).ToList();
+                    var reviews = (await _hotelRepository.GetReviewsByHotelIdAsync(hotel.HotelId)).ToList();
+                    var addresses = (await _hotelRepository.GetAddressesByHotelIdAsync(hotel.HotelId)).ToList();
+                    var packages = (await _hotelRepository.GetPackagesByHotelIdAsync(hotel.HotelId)).ToList();
+
                     var dto = new HotelDTO
                     {
                         HotelId = hotel.HotelId,
@@ -96,9 +96,6 @@ namespace viaggia_server.Controllers
                             Comment = r.Comment,
                             CreatedAt = r.CreatedAt
                         }).ToList(),
-
-                        AverageRating = reviews.Any() ? reviews.Average(r => r.Rating) : 0,
-
                         Addresses = addresses.Select(a => new CreateAddressDTO
                         {
                             AddressId = a.AddressId,
@@ -118,7 +115,8 @@ namespace viaggia_server.Controllers
                             IsActive = p.IsActive
                         }).ToList(),
 
-                      
+                        AverageRating = reviews.Any() ? reviews.Average(r => r.Rating) : 0,
+
                     };
 
                     hotelDTOs.Add(dto);
@@ -136,6 +134,8 @@ namespace viaggia_server.Controllers
 
         // GET: api/hotel/{id}
         [HttpGet("{id:int}")]
+        [ProducesResponseType(typeof(ApiResponse<HotelDTO>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse<HotelDTO>), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> GetHotelById(int id)
         {
             if (id <= 0)
@@ -143,7 +143,7 @@ namespace viaggia_server.Controllers
 
             try
             {
-                var hotel = await _genericRepository.GetByIdAsync(id);
+                var hotel = await _hotelRepository.GetHotelByIdWithDetailsAsync(id);
                 if (hotel == null)
                     return NotFound(new ApiResponse<HotelDTO>(false, $"Hotel with ID {id} not found."));
 
@@ -197,7 +197,25 @@ namespace viaggia_server.Controllers
                         Comment = r.Comment,
                         CreatedAt = r.CreatedAt
                     }).ToList(),
+                    Addresses = hotel.Addresses.Select(a => new CreateAddressDTO
+                    {
+                        AddressId = a.AddressId,
+                        Street = a.Street,
+                        City = a.City,
+                        State = a.State,
+                        ZipCode = a.ZipCode,
+                        IsActive = a.IsActive
+                    }).ToList(),
+                    Packages = hotel.Packages.Select(p => new PackageDTO
+                    {
+                        PackageId = p.PackageId,
+                        Name = p.Name,
+                        Description = p.Description,
+                        BasePrice = p.BasePrice,
+                        IsActive = p.IsActive
+                    }).ToList(),
                     AverageRating = hotel.AverageRating
+
                 };
 
                 return Ok(new ApiResponse<HotelDTO>(true, "Hotel retrieved successfully.", hotelDTO));
@@ -210,7 +228,6 @@ namespace viaggia_server.Controllers
             }
         }
 
-        // POST: api/hotel
         [HttpPost]
         [Consumes("multipart/form-data")]
         public async Task<IActionResult> CreateHotel([FromForm] CreateHotelDTO createHotelDto)
@@ -232,7 +249,7 @@ namespace viaggia_server.Controllers
                     }
                 }
 
-                // Criar o hotel já com os endereços na coleção Addresses
+                // Criar hotel base
                 var hotel = new Hotel
                 {
                     Name = createHotelDto.Name,
@@ -244,7 +261,6 @@ namespace viaggia_server.Controllers
                     ContactEmail = createHotelDto.ContactEmail,
                     IsActive = createHotelDto.IsActive,
                     Cnpj = createHotelDto.Cnpj,
-
                     Addresses = createHotelDto.Addresses?.Select(addrDto => new Address
                     {
                         Street = addrDto.Street,
@@ -255,13 +271,10 @@ namespace viaggia_server.Controllers
                     }).ToList() ?? new List<Address>()
                 };
 
-                // Salvar hotel junto com os endereços (inserção em cascata)
                 var createdHotel = await _genericRepository.AddAsync(hotel);
 
-                // Continuar adicionando HotelDates, RoomTypes e Medias como antes
-
-                // Adicionando HotelDates usando a lista tipada
-                if (createHotelDto.HotelDates != null && createHotelDto.HotelDates.Any())
+                // Adicionar datas
+                if (createHotelDto.HotelDates != null)
                 {
                     foreach (var hdDto in createHotelDto.HotelDates)
                     {
@@ -277,8 +290,8 @@ namespace viaggia_server.Controllers
                     }
                 }
 
-                // Adicionando RoomTypes usando a lista tipada
-                if (createHotelDto.RoomTypes != null && createHotelDto.RoomTypes.Any())
+                // Adicionar tipos de quarto
+                if (createHotelDto.RoomTypes != null)
                 {
                     foreach (var rtDto in createHotelDto.RoomTypes)
                     {
@@ -295,7 +308,24 @@ namespace viaggia_server.Controllers
                     }
                 }
 
-                // Upload mídias
+                // Adicionar pacotes
+                if (createHotelDto.Packages != null)
+                {
+                    foreach (var packageDto in createHotelDto.Packages)
+                    {
+                        var package = new Package
+                        {
+                            Name = packageDto.Name,
+                            Description = packageDto.Description,
+                            BasePrice = packageDto.BasePrice,
+                            IsActive = packageDto.IsActive,
+                            HotelId = createdHotel.HotelId
+                        };
+                        await _hotelRepository.AddPackageAsync(package);
+                    }
+                }
+
+                // Upload e salvar mídias
                 var uploadPath = Path.Combine(_environment.WebRootPath, "Uploads", "Hotel");
                 Directory.CreateDirectory(uploadPath);
 
@@ -318,15 +348,20 @@ namespace viaggia_server.Controllers
                     }
                 }
 
-                return CreatedAtAction(nameof(GetHotelById), new { id = createdHotel.HotelId }, new ApiResponse<Hotel>(true, "Hotel criado com sucesso.", createdHotel));
+                // ✅ Buscar hotel com todos os relacionamentos preenchidos
+                var hotelWithDetails = await _hotelRepository.GetHotelByIdWithDetailsAsync(createdHotel.HotelId);
+
+                return CreatedAtAction(nameof(GetHotelById), new { id = createdHotel.HotelId },
+                    new ApiResponse<Hotel>(true, "Hotel criado com sucesso.", hotelWithDetails));
             }
             catch (Exception ex)
             {
-                var innerMessage = ex.InnerException != null ? ex.InnerException.Message : ex.Message;
+                var innerMessage = ex.InnerException?.Message ?? ex.Message;
                 return StatusCode(StatusCodes.Status500InternalServerError,
                     new ApiResponse<Hotel>(false, $"Erro ao criar hotel: {innerMessage}"));
             }
         }
+
 
 
         [HttpPut("{id:int}")]

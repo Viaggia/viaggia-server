@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Stripe;
+using Viaggia.Swagger;
 using viaggia_server.Data;
 using viaggia_server.Repositories;
 using viaggia_server.Repositories.Auth;
@@ -49,14 +50,31 @@ builder.Services.AddSwaggerGen(c =>
         Description = "Please enter JWT with Bearer into field",
         Name = "Authorization",
         Type = Microsoft.OpenApi.Models.SecuritySchemeType.Http,
-        Scheme = "Bearer"
+        Scheme = "Bearer",
+        BearerFormat = "JWT"
     });
+    c.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
+    {
+        {
+            new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+            {
+                Reference = new Microsoft.OpenApi.Models.OpenApiReference
+                {
+                    Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            new string[] { }
+        }
+    });
+    c.SchemaFilter<FormFileSchemaFilter>(); // For multipart/form-data file upload
 });
 
 
 // Configure DbContext
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"),
+    sqlOptions => sqlOptions.CommandTimeout(60)));
 
 // Register repositories and services
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
@@ -152,13 +170,14 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
-        policy.WithOrigins(
-                "http://localhost:5173",
-                "https://your-production-frontend.com"
-            )
-            .AllowAnyHeader()
-            .AllowAnyMethod()
-            .AllowCredentials();
+        //policy.WithOrigins(
+        //        "http://localhost:5173",
+        //        "https://your-production-frontend.com"
+        //    )
+        policy.AllowAnyOrigin()
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+           
     });
 });
 

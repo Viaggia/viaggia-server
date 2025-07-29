@@ -1,13 +1,6 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Configuration;
-
+﻿
 namespace viaggia_server.Services
 {
-    public interface IImageService
-    {
-        Task<string?> UploadImageAsync(IFormFile? image, string userId);
-    }
-
     public class ImageService : IImageService
     {
         private readonly IConfiguration _configuration;
