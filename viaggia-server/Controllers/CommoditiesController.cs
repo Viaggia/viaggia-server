@@ -1,73 +1,110 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
+using viaggia_server.DTOs;
+using viaggia_server.DTOs.Commoditie;
+using viaggia_server.DTOs.Commodity;
 using viaggia_server.Models.Commodities;
-using viaggia_server.Models.Hotels;
-using viaggia_server.Repositories;
 using viaggia_server.Repositories.Commodities;
 
 namespace viaggia_server.Controllers
 {
-    [Route("api/[controller]")]
     [ApiController]
-    public class CommoditiesController : ControllerBase
+    [Route("api/[controller]")]
+    public class CommoditieController : ControllerBase
     {
-        private readonly IRepository<Commoditie> _genericRepository;
         private readonly ICommoditieRepository _commoditieRepository;
 
-        public CommoditiesController(
-            ICommoditieRepository commoditieRepository,
-            IRepository<Commoditie> genericRepository)
+        public CommoditieController(ICommoditieRepository commoditieRepository)
         {
             _commoditieRepository = commoditieRepository;
-            _genericRepository = genericRepository;
         }
 
-        // GET: api/commodities/hotel/{hotelId}
+        // GET: api/commoditie
+        [HttpGet]
+        public async Task<IActionResult> GetAll()
+        {
+            var commodities = await _commoditieRepository.GetAllAsync();
+            return Ok(new ApiResponse<IEnumerable<Commoditie>>(true, "Commodities recuperadas com sucesso.", commodities));
+        }
+
+        // GET: api/commoditie/{id}
+        [HttpGet("{id:int}")]
+        public async Task<IActionResult> GetById(int id)
+        {
+            var commoditie = await _commoditieRepository.GetByIdAsync(id);
+            if (commoditie == null)
+                return NotFound(new ApiResponse<Commoditie>(false, "Commodity não encontrada."));
+
+            return Ok(new ApiResponse<Commoditie>(true, "Commodity encontrada.", commoditie));
+        }
+
+        // GET: api/commoditie/hotel/{hotelId}
         [HttpGet("hotel/{hotelId:int}")]
-        public async Task<IActionResult> GetCommoditieByHotelId(int hotelId)
+        public async Task<IActionResult> GetByHotelId(int hotelId)
         {
             var commoditie = await _commoditieRepository.GetByHotelIdAsync(hotelId);
             if (commoditie == null)
-                return NotFound($"Nenhuma commoditie encontrada para o hotel {hotelId}.");
-            return Ok(commoditie);
+                return NotFound(new ApiResponse<Commoditie>(false, "Commodity não encontrada para este hotel."));
+
+            return Ok(new ApiResponse<Commoditie>(true, "Commodity do hotel encontrada.", commoditie));
         }
 
-        // POST: api/commodities/hotel/{hotelId}
-        [HttpPost("hotel/{hotelId:int}")]
-        public async Task<IActionResult> AddCommoditieToHotel(int hotelId, [FromBody] Commoditie commoditie)
+        // POST: api/commoditie
+        [HttpPost]
+        public async Task<IActionResult> Create([FromBody] CommoditieDTO dto)
         {
-            if (commoditie == null)
-                return BadRequest("Dados da commoditie são obrigatórios.");
+            if (!ModelState.IsValid)
+                return BadRequest(new ApiResponse<CommoditieDTO>(false, "Dados inválidos.", null, ModelState));
 
-            commoditie.HotelId = hotelId;
-            var result = await _genericRepository.AddAsync(commoditie);
-            return CreatedAtAction(nameof(GetCommoditieByHotelId), new { hotelId = hotelId }, result);
+            var commoditie = new Commoditie
+            {
+                HotelId = dto.HotelId,
+                HasParking = dto.HasParking,
+                HasBreakfast = dto.HasBreakfast,
+                HasLunch = dto.HasLunch,
+                HasDinner = dto.HasDinner,
+                HasSpa = dto.HasSpa,
+                HasPool = dto.HasPool,
+                HasGym = dto.HasGym,
+                IsActive = true
+            };
+
+            var created = await _commoditieRepository.AddAsync(commoditie);
+            return CreatedAtAction(nameof(GetById), new { id = created.CommoditieId },
+                new ApiResponse<Commoditie>(true, "Commodity criada com sucesso.", created));
         }
 
-        // PUT: api/commodities/hotel/{hotelId}
-        [HttpPut("hotel/{hotelId:int}")]
-        public async Task<IActionResult> UpdateCommoditieByHotelId(int hotelId, [FromBody] Commoditie commoditie)
+        // PUT: api/commoditie/{id}
+        [HttpPut("{id:int}")]
+        public async Task<IActionResult> Update(int id, [FromBody] CommoditieDTO dto)
         {
-            var existing = await _commoditieRepository.GetByHotelIdAsync(hotelId);
+            if (!ModelState.IsValid)
+                return BadRequest(new ApiResponse<CommoditieDTO>(false, "Dados inválidos.", null, ModelState));
+
+            var existing = await _commoditieRepository.GetByIdAsync(id);
             if (existing == null)
-                return NotFound($"Nenhuma commoditie encontrada para o hotel {hotelId}.");
+                return NotFound(new ApiResponse<Commoditie>(false, "Commodity não encontrada."));
 
-            commoditie.CommoditieId = existing.CommoditieId;
-            commoditie.HotelId = hotelId;
-            var updated = await _genericRepository.UpdateAsync(commoditie);
-            return Ok(updated);
+            existing.HasParking = dto.HasParking;
+            existing.HasBreakfast = dto.HasBreakfast;
+            existing.HasLunch = dto.HasLunch;
+            existing.HasDinner = dto.HasDinner;
+            existing.HasSpa = dto.HasSpa;
+            existing.HasPool = dto.HasPool;
+            existing.HasGym = dto.HasGym;
+            existing.IsActive = dto.IsActive;
+
+            await _commoditieRepository.UpdateAsync(existing);
+            return Ok(new ApiResponse<Commoditie>(true, "Commodity atualizada com sucesso.", existing));
         }
 
-        // DELETE (soft): api/commodities/hotel/{hotelId}
-        [HttpDelete("hotel/{hotelId:int}")]
-        public async Task<IActionResult> SoftDeleteCommoditieByHotelId(int hotelId)
+        // DELETE: api/commoditie/{id}
+        [HttpDelete("{id:int}")]
+        public async Task<IActionResult> Delete(int id)
         {
-            var commoditie = await _commoditieRepository.GetByHotelIdAsync(hotelId);
-            if (commoditie == null)
-                return NotFound($"Nenhuma commoditie encontrada para o hotel {hotelId}.");
+            var deleted = await _commoditieRepository.SoftDeleteAsync(id);
+            if (!deleted)
+                return NotFound(new ApiResponse<Commoditie>(false, "Commodity não encontrada ou já removida."));
 
-            commoditie.IsActive = false;
-            await _genericRepository.UpdateAsync(commoditie);
             return NoContent();
         }
     }

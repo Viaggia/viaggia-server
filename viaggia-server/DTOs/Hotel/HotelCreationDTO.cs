@@ -2,6 +2,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using viaggia_server.DTOs.Address;
 using viaggia_server.DTOs.Commoditie;
 using viaggia_server.DTOs.Commodity;
 using viaggia_server.DTOs.Hotels;
@@ -19,25 +20,6 @@ namespace viaggia_server.DTOs.Hotels
             
             public string Name { get; set; } = null!;
 
-            [Required(ErrorMessage = "Street is required.")]
-            [StringLength(100, ErrorMessage = "Street cannot exceed 100 characters.")]
-           
-            public string Street { get; set; } = null!;
-
-            [Required(ErrorMessage = "City is required.")]
-            [StringLength(50, ErrorMessage = "City cannot exceed 50 characters.")]
-           
-            public string City { get; set; } = null!;
-
-            [Required(ErrorMessage = "State is required.")]
-            [StringLength(50, ErrorMessage = "State cannot exceed 50 characters.")]
-            
-            public string State { get; set; } = null!;
-
-            [Required(ErrorMessage = "Zip code is required.")]
-            [StringLength(20, ErrorMessage = "Zip code cannot exceed 20 characters.")]
-            
-            public string ZipCode { get; set; } = null!;
 
             [Required(ErrorMessage = "CNPJ is required.")]
             [StringLength(14, ErrorMessage = "CNPJ must be 14 characters.")]
@@ -73,24 +55,24 @@ namespace viaggia_server.DTOs.Hotels
            
             public bool IsActive { get; set; } = true;
 
-           
-            public string? RoomTypesJson { get; set; }
 
-           
-            public string? HotelDatesJson { get; set; }
- 
-            public string? CommoditieJson { get; set; }
+        /// <summary>
+        /// Lista de datas do hotel em formato JSON. Exemplo: [{"startDate":"2025-07-29","endDate":"2025-07-30","availableRooms":10,"isActive":true}]
+        /// </summary>
+        public string? HotelDatesJson { get; set; }
 
+        /// <summary>
+        /// Lista de tipos de quarto em formato JSON. Exemplo: [{"name":"Standard","price":100,"capacity":2,"bedType":"Casal","isActive":true}]
+        /// </summary>
+        public string? RoomTypesJson { get; set; }
 
-
-
+        public string? CommoditieJson { get; set; }
 
         public List<IFormFile> MediaFiles { get; set; } = new List<IFormFile>();
-        public List<HotelDateDTO> HotelDates { get; set; } = new List<HotelDateDTO>();
-        public List<HotelRoomTypeDTO> RoomTypes { get; set; } = new List<HotelRoomTypeDTO>();
-
+       public List<HotelDateDTO> HotelDates { get; set; } = new List<HotelDateDTO>();
+       public List<HotelRoomTypeDTO> RoomTypes { get; set; } = new List<HotelRoomTypeDTO>();
         public List<MediaDTO> Medias { get; set; } = new List<MediaDTO>();
-
+        public List<CreateAddressDTO> Addresses { get; set; } = new List<CreateAddressDTO>();
         public List<PackageDTO> Packages { get; set; } = new List<PackageDTO>();
         public List<ReviewDTO> Reviews { get; set; } = new List<ReviewDTO>();
         public List<CommoditieDTO> Commodities { get; set; } = new List<CommoditieDTO>();

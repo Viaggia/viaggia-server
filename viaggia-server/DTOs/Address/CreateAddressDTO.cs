@@ -3,9 +3,9 @@ using viaggia_server.DTOs.Hotels;
 using viaggia_server.DTOs.Packages;
 using viaggia_server.Models.Hotels;
 
-namespace viaggia_server.DTOs.Adress
+namespace viaggia_server.DTOs.Address
 {
-    public class CreateAdressDTO
+    public class CreateAddressDTO
     {
         [Key]
         public int AddressId { get; set; }
@@ -28,6 +28,6 @@ namespace viaggia_server.DTOs.Adress
 
         public bool IsActive { get; set; } = true;
 
-        public virtual Hotel? Hotel { get; set; }
+        public int HotelId { get; set; }
     }
 }

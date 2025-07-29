@@ -96,10 +96,10 @@ namespace viaggia_server.Data
 
             // Configuration for Hotel
             modelBuilder.Entity<Hotel>()
-               .HasOne(h => h.Address)
-               .WithMany() // Remove the back reference - Address doesn't have Hotel property
-               .HasForeignKey(h => h.AddressId)
-               .OnDelete(DeleteBehavior.NoAction);
+                .HasMany(h => h.Addresses)
+                .WithOne(a => a.Hotel) // Remove the back reference - Address doesn't have Hotel property
+                .HasForeignKey(h => h.AddressId)
+                .OnDelete(DeleteBehavior.NoAction);
 
             modelBuilder.Entity<Hotel>()
                 .HasMany(h => h.RoomTypes)
@@ -204,10 +204,10 @@ namespace viaggia_server.Data
 
             // CommoditieServices 1:N Hotel
             modelBuilder.Entity<CommoditieServices>()
-            .HasOne(cs => cs.Hotel)
-            .WithMany(h => h.CommoditieServices)
-            .HasForeignKey(cs => cs.HotelId)
-            .OnDelete(DeleteBehavior.NoAction); // Evita ciclos de deleção
+                .HasOne(cs => cs.Hotel)
+                .WithMany(h => h.CommoditieServices)
+                .HasForeignKey(cs => cs.HotelId)
+                .OnDelete(DeleteBehavior.NoAction); // Evita ciclos de deleção
 
             //  PasswordResetToken
             modelBuilder.Entity<PasswordResetToken>()

@@ -5,7 +5,7 @@ using viaggia_server.Models.Commodities;
 
 namespace viaggia_server.Repositories.Commodities
 {
-    public interface ICommoditieRepository
+    public interface ICommoditieRepository : IRepository<Commoditie>
     {
         Task<IEnumerable<Commoditie>> GetAllAsync();
         Task<Commoditie?> GetByIdAsync(int id);
