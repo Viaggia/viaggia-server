@@ -6,7 +6,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using viaggia_server.Data;
 using viaggia_server.DTOs.Auth;
-using viaggia_server.DTOs.User;
 using viaggia_server.Models.RevokedToken;
 using viaggia_server.Models.Users;
 
@@ -85,13 +84,35 @@ namespace viaggia_server.Repositories.Auth
             return await _context.RevokedTokens.AnyAsync(rt => rt.Token == token);
         }
 
+        //public async Task<string> GeneratePasswordResetTokenAsync(string email)
+        //{
+        //    var user = await GetUserByEmailAsync(email);
+        //    if (user == null)
+        //        throw new ArgumentException("Usuário não encontrado.");
+
+        //    var token = Guid.NewGuid().ToString();
+        //    var resetToken = new PasswordResetToken
+        //    {
+        //        UserId = user.Id,
+        //        Token = token,
+        //        ExpiryDate = DateTime.UtcNow.AddHours(1)
+        //    };
+
+        //    await _context.PasswordResetTokens.AddAsync(resetToken);
+        //    await _context.SaveChangesAsync();
+        //    return token;
+        //}
+
         public async Task<string> GeneratePasswordResetTokenAsync(string email)
         {
             var user = await GetUserByEmailAsync(email);
             if (user == null)
                 throw new ArgumentException("Usuário não encontrado.");
 
-            var token = Guid.NewGuid().ToString();
+            // Generate a 6-digit numeric token
+            var random = new Random();
+            var token = random.Next(100000, 999999).ToString("D6"); // Ensures 6 digits
+
             var resetToken = new PasswordResetToken
             {
                 UserId = user.Id,

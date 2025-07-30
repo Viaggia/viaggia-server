@@ -149,47 +149,6 @@ namespace viaggia_server.Services.Users
             var created = await CreateUserWithRoleAsync(user, "ADMIN");
             return ToDTO(created);
         }
-
-        public async Task<List<UserDTO>> GetAllAsync()
-        {
-            // Existing implementation (unchanged)
-            _logger.LogInformation("Retrieving all active users");
-            var users = await _userRepository.GetAllAsync();
-            return users.Select(ToDTO).ToList();
-        }
-
-        public async Task<UserDTO> GetByIdAsync(int id)
-        {
-            // Existing implementation (unchanged)
-            _logger.LogInformation("Retrieving user with ID: {Id}", id);
-            var user = await _userRepository.GetByIdAsync(id)
-                ?? throw new ArgumentException("User not found.");
-            return ToDTO(user);
-        }
-
-        public async Task SoftDeleteAsync(int id)
-        {
-            // Existing implementation (unchanged)
-            _logger.LogInformation("Soft deleting user with ID: {Id}", id);
-            var deleted = await _userRepository.SoftDeleteAsync(id);
-            if (!deleted)
-                throw new ArgumentException("User not found.");
-            await _userRepository.SaveChangesAsync();
-        }
-
-        public async Task ReactivateAsync(int id)
-        {
-            // Existing implementation (unchanged)
-            _logger.LogInformation("Reactivating user with ID: {Id}", id);
-            var user = await _context.Users.IgnoreQueryFilters().FirstOrDefaultAsync(u => u.Id == id);
-            if (user == null)
-                throw new ArgumentException("User not found.");
-
-            user.IsActive = true;
-            _context.Users.Update(user);
-            await _userRepository.SaveChangesAsync();
-        }
-
         public async Task<UserDTO> UpdateAsync(int id, UpdateUserDTO request)
         {
             _logger.LogInformation("Updating user with ID: {Id}", id);

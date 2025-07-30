@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace viaggia_server.DTOs.User
+namespace viaggia_server.DTOs.Auth
 {
     public class ResetPasswordRequestDTO
     {
