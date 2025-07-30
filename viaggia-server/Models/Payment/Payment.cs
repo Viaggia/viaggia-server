@@ -75,6 +75,11 @@ namespace viaggia_server.Models.Payments
         [StringLength(100, ErrorMessage = "Refund ID cannot exceed 100 characters.")]
         public string? StripeRefundId { get; set; }
 
+        // Timestamps adicionais
+        public DateTime? ProcessedAt { get; set; }
+        public DateTime? UpdatedAt { get; set; }
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
         public bool IsActive { get; set; } = true;
     }
 }

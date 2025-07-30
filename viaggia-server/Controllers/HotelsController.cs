@@ -1,182 +1,395 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
+using viaggia_server.DTOs;
+using viaggia_server.DTOs.Address;
+using viaggia_server.DTOs.Commoditie;
 using viaggia_server.DTOs.Hotels;
-using viaggia_server.DTOs.Commodities;
-using viaggia_server.Models.Commodities;
+using viaggia_server.DTOs.Packages;
+using viaggia_server.DTOs.Reviews;
+using viaggia_server.Models.Addresses;
+using viaggia_server.Models.HotelDates;
+using viaggia_server.Models.HotelRoomTypes;
 using viaggia_server.Models.Hotels;
+using viaggia_server.Models.Medias;
+using viaggia_server.Models.Packages;
 using viaggia_server.Repositories;
 using viaggia_server.Repositories.HotelRepository;
 
 namespace viaggia_server.Controllers
 {
-    [Route("api/[controller]")]
     [ApiController]
-    public class HotelsController : ControllerBase
+    [Route("api/[controller]")]
+    public class HotelController : ControllerBase
     {
-        private readonly IRepository<Hotel> _hotelRepository;
-        private readonly IRepository<Commodity> _commoditieRepository;
-        private readonly IHotelRepository _hotelRepositorySpecific; // só para Address e RoomType
+        private readonly IRepository<Hotel> _genericRepository;
+        private readonly IHotelRepository _hotelRepository;
+        private readonly IWebHostEnvironment _environment;
 
-        public HotelsController(
-            IRepository<Hotel> hotelRepository,
-            IRepository<Commodity> commoditieRepository,
-            IHotelRepository hotelRepositorySpecific)
+        public HotelController(
+            IRepository<Hotel> genericRepository,
+            IHotelRepository hotelRepository,
+            IWebHostEnvironment environment)
         {
+            _genericRepository = genericRepository;
             _hotelRepository = hotelRepository;
-            _commoditieRepository = commoditieRepository;
-            _hotelRepositorySpecific = hotelRepositorySpecific;
+            _environment = environment;
         }
 
-        [HttpGet("{id}")]
-        public async Task<IActionResult> GetById(int id)
+        // GET: api/hotel
+        [HttpGet]
+        public async Task<IActionResult> GetAllHotels()
         {
-            var hotel = await _hotelRepository.GetByIdAsync(id);
-            if (hotel == null)
-                return NotFound();
-
-            var address = await _hotelRepositorySpecific.GetAddressByHotelIdAsync(id);
-
-            var commoditieList = await _commoditieRepository.GetAllAsync();
-            var commoditie = commoditieList.FirstOrDefault(c => c.HotelId == id);
-
-            var dto = new HotelDTO
+            try
             {
-                HotelId = hotel.HotelId,
-                Name = hotel.Name,
-                Description = hotel.Description,
-                StarRating = hotel.StarRating,
-                CheckInTime = hotel.CheckInTime,
-                CheckOutTime = hotel.CheckOutTime,
-                ContactPhone = hotel.ContactPhone,
-                ContactEmail = hotel.ContactEmail,
-                Street = address?.Street ?? "",
-                City = address?.City ?? "",
-                State = address?.State ?? "",
-                ZipCode = address?.ZipCode ?? "",
-                Commoditie = commoditie != null ? new CommoditieDTO
+                var hotels = await _hotelRepository.GetAllHotelsWithDetailsAsync();
+                var hotelDTOs = new List<HotelDTO>();
+                foreach (var hotel in hotels)
                 {
-                    HasBreakfast = commoditie.HasBreakfast,
-                    HasParking = commoditie.HasParking,
-                    HasSpa = commoditie.HasSpa,
-                    HasPool = commoditie.HasPool,
-                    IsActive = commoditie.IsActive
-                } : new CommoditieDTO(),
-                IsActive = hotel.IsActive
-            };
+                    var roomTypes = (await _hotelRepository.GetHotelRoomTypesAsync(hotel.HotelId)).ToList();
+                    var hotelDates = (await _hotelRepository.GetHotelDatesAsync(hotel.HotelId)).ToList();
+                    var medias = (await _hotelRepository.GetMediasByHotelIdAsync(hotel.HotelId)).ToList();
+                    var reviews = (await _hotelRepository.GetReviewsByHotelIdAsync(hotel.HotelId)).ToList();
+                    var addresses = (await _hotelRepository.GetAddressesByHotelIdAsync(hotel.HotelId)).ToList();
+                    var packages = (await _hotelRepository.GetPackagesByHotelIdAsync(hotel.HotelId)).ToList();
 
-            return Ok(dto);
+                    var dto = new HotelDTO
+                    {
+                        HotelId = hotel.HotelId,
+                        Name = hotel.Name,
+                        Description = hotel.Description,
+                        StarRating = hotel.StarRating,
+                        CheckInTime = hotel.CheckInTime,
+                        CheckOutTime = hotel.CheckOutTime,
+                        ContactPhone = hotel.ContactPhone,
+                        ContactEmail = hotel.ContactEmail,
+                        IsActive = hotel.IsActive,
+
+                        RoomTypes = roomTypes.Select(rt => new HotelRoomTypeDTO
+                        {
+                            RoomTypeId = rt.RoomTypeId,
+                            Name = rt.Name,
+                            Price = rt.Price,
+                            Capacity = rt.Capacity,
+                            BedType = rt.BedType,
+                            IsActive = rt.IsActive
+                        }).ToList(),
+
+                        HotelDates = hotelDates.Select(hd => new HotelDateDTO
+                        {
+                            HotelDateId = hd.HotelDateId,
+                            StartDate = hd.StartDate,
+                            EndDate = hd.EndDate,
+                            AvailableRooms = hd.AvailableRooms,
+                            IsActive = hd.IsActive
+                        }).ToList(),
+
+                        Medias = medias.Select(m => new MediaDTO
+                        {
+                            MediaId = m.MediaId,
+                            MediaUrl = m.MediaUrl,
+                            MediaType = m.MediaType
+                        }).ToList(),
+
+                        Reviews = reviews.Select(r => new ReviewDTO
+                        {
+                            ReviewId = r.ReviewId,
+                            Rating = r.Rating,
+                            Comment = r.Comment,
+                            CreatedAt = r.CreatedAt
+                        }).ToList(),
+                        Addresses = addresses.Select(a => new CreateAddressDTO
+                        {
+                            AddressId = a.AddressId,
+                            Street = a.Street,
+                            City = a.City,
+                            State = a.State,
+                            ZipCode = a.ZipCode,
+                            IsActive = a.IsActive
+                        }).ToList(),
+
+                        Packages = packages.Select(p => new PackageDTO
+                        {
+                            PackageId = p.PackageId,
+                            Name = p.Name,
+                            Description = p.Description,
+                            BasePrice = p.BasePrice,
+                            IsActive = p.IsActive
+                        }).ToList(),
+
+                        AverageRating = reviews.Any() ? reviews.Average(r => r.Rating) : 0,
+
+                    };
+
+                    hotelDTOs.Add(dto);
+                }
+
+                return Ok(new ApiResponse<List<HotelDTO>>(true, "Hotels retrieved successfully.", hotelDTOs));
+            }
+            catch (Exception ex)
+            {
+                var innerMessage = ex.InnerException != null ? ex.InnerException.Message : ex.Message;
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    new ApiResponse<Hotel>(false, $"Erro ao criar hotel: {innerMessage}"));
+            }
+        }
+
+        // GET: api/hotel/{id}
+        [HttpGet("{id:int}")]
+        [ProducesResponseType(typeof(ApiResponse<HotelDTO>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse<HotelDTO>), StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> GetHotelById(int id)
+        {
+            if (id <= 0)
+                return BadRequest(new ApiResponse<HotelDTO>(false, "Invalid hotel ID."));
+
+            try
+            {
+                var hotel = await _hotelRepository.GetHotelByIdWithDetailsAsync(id);
+                if (hotel == null)
+                    return NotFound(new ApiResponse<HotelDTO>(false, $"Hotel with ID {id} not found."));
+
+                hotel.RoomTypes = (await _hotelRepository.GetHotelRoomTypesAsync(id)).ToList();
+                hotel.HotelDates = (await _hotelRepository.GetHotelDatesAsync(id)).ToList();
+                hotel.Medias = (await _hotelRepository.GetMediasByHotelIdAsync(id)).ToList();
+                hotel.Reviews = (await _hotelRepository.GetReviewsByHotelIdAsync(id)).ToList();
+                hotel.Addresses = (await _hotelRepository.GetAddressesByHotelIdAsync(id)).ToList();
+
+                hotel.AverageRating = hotel.Reviews.Any() ? hotel.Reviews.Average(r => r.Rating) : 0;
+
+                var hotelDTO = new HotelDTO
+                {
+                    HotelId = hotel.HotelId,
+                    Name = hotel.Name,
+                  
+                    Description = hotel.Description,
+                    StarRating = hotel.StarRating,
+                    CheckInTime = hotel.CheckInTime,
+                    CheckOutTime = hotel.CheckOutTime,
+                    ContactPhone = hotel.ContactPhone,
+                    ContactEmail = hotel.ContactEmail,
+                    IsActive = hotel.IsActive,
+                    RoomTypes = hotel.RoomTypes.Select(rt => new HotelRoomTypeDTO
+                    {
+                        RoomTypeId = rt.RoomTypeId,
+                        Name = rt.Name,
+                        Price = rt.Price,
+                        Capacity = rt.Capacity,
+                        BedType = rt.BedType,
+                        IsActive = rt.IsActive
+                    }).ToList(),
+                    HotelDates = hotel.HotelDates.Select(hd => new HotelDateDTO
+                    {
+                        HotelDateId = hd.HotelDateId,
+                        StartDate = hd.StartDate,
+                        EndDate = hd.EndDate,
+                        AvailableRooms = hd.AvailableRooms,
+                        IsActive = hd.IsActive
+                    }).ToList(),
+                    Medias = hotel.Medias.Select(m => new MediaDTO
+                    {
+                        MediaId = m.MediaId,
+                        MediaUrl = m.MediaUrl,
+                        MediaType = m.MediaType
+                    }).ToList(),
+                    Reviews = hotel.Reviews.Select(r => new ReviewDTO
+                    {
+                        ReviewId = r.ReviewId,
+                        Rating = r.Rating,
+                        Comment = r.Comment,
+                        CreatedAt = r.CreatedAt
+                    }).ToList(),
+                    Addresses = hotel.Addresses.Select(a => new CreateAddressDTO
+                    {
+                        AddressId = a.AddressId,
+                        Street = a.Street,
+                        City = a.City,
+                        State = a.State,
+                        ZipCode = a.ZipCode,
+                        IsActive = a.IsActive
+                    }).ToList(),
+                    Packages = hotel.Packages.Select(p => new PackageDTO
+                    {
+                        PackageId = p.PackageId,
+                        Name = p.Name,
+                        Description = p.Description,
+                        BasePrice = p.BasePrice,
+                        IsActive = p.IsActive
+                    }).ToList(),
+                    AverageRating = hotel.AverageRating
+
+                };
+
+                return Ok(new ApiResponse<HotelDTO>(true, "Hotel retrieved successfully.", hotelDTO));
+            }
+            catch (Exception ex)
+            {
+                var innerMessage = ex.InnerException != null ? ex.InnerException.Message : ex.Message;
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    new ApiResponse<Hotel>(false, $"Erro ao criar hotel: {innerMessage}"));
+            }
         }
 
         [HttpPost]
-        public async Task<IActionResult> CreateHotel([FromBody] CreateHotelDTO dto)
+        [Consumes("multipart/form-data")]
+        public async Task<IActionResult> CreateHotel([FromForm] CreateHotelDTO createHotelDto)
         {
             if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+                return BadRequest(new ApiResponse<CreateHotelDTO>(false, "Invalid data.", null, ModelState));
 
             try
             {
-                // Criar endereço via HotelRepository específico
-                var address = new viaggia_server.Models.Addresses.Address
+                // Validar arquivos de mídia
+                var allowedExtensions = new[] { ".jpg", ".jpeg", ".png" };
+                if (createHotelDto.MediaFiles != null)
                 {
-                    Street = dto.Street,
-                    City = dto.City,
-                    State = dto.State,
-                    ZipCode = dto.ZipCode,
-                    IsActive = true
-                };
-
-                var createdAddress = await _hotelRepositorySpecific.AddAddressAsync(address);
-
-                // Criar hotel usando o endereço criado
-                var hotel = new Hotel
-                {
-                    Name = dto.Name,
-                    Description = dto.Description,
-                    StarRating = dto.StarRating,
-                    CheckInTime = dto.CheckInTime,
-                    CheckOutTime = dto.CheckOutTime,
-                    ContactPhone = dto.ContactPhone,
-                    ContactEmail = dto.ContactEmail,
-                    AddressId = createdAddress.AddressId,
-                    IsActive = true
-                };
-
-                var createdHotel = await _hotelRepository.AddAsync(hotel);
-
-                // Criar commoditie via repositório genérico
-                if (dto.Commoditie != null)
-                {
-                    var commoditie = new Commodity
+                    foreach (var file in createHotelDto.MediaFiles)
                     {
-                        HotelId = createdHotel.HotelId,
-                        HasBreakfast = dto.Commoditie.HasBreakfast,
-                        HasParking = dto.Commoditie.HasParking,
-                        HasSpa = dto.Commoditie.HasSpa,
-                        HasPool = dto.Commoditie.HasPool,
-                        IsActive = true
-                    };
-                    await _commoditieRepository.AddAsync(commoditie);
+                        var ext = Path.GetExtension(file.FileName).ToLower();
+                        if (!allowedExtensions.Contains(ext) || file.Length > 5 * 1024 * 1024)
+                            return BadRequest(new ApiResponse<CreateHotelDTO>(false, "Invalid media file."));
+                    }
                 }
 
-                return CreatedAtAction(nameof(GetById), new { id = createdHotel.HotelId }, createdHotel);
+                // Criar hotel base
+                var hotel = new Hotel
+                {
+                    Name = createHotelDto.Name,
+                    Description = createHotelDto.Description,
+                    StarRating = createHotelDto.StarRating,
+                    CheckInTime = createHotelDto.CheckInTime,
+                    CheckOutTime = createHotelDto.CheckOutTime,
+                    ContactPhone = createHotelDto.ContactPhone,
+                    ContactEmail = createHotelDto.ContactEmail,
+                    IsActive = createHotelDto.IsActive,
+                    Cnpj = createHotelDto.Cnpj,
+                    Addresses = createHotelDto.Addresses?.Select(addrDto => new Address
+                    {
+                        Street = addrDto.Street,
+                        City = addrDto.City,
+                        State = addrDto.State,
+                        ZipCode = addrDto.ZipCode,
+                        IsActive = true
+                    }).ToList() ?? new List<Address>()
+                };
+
+                var createdHotel = await _genericRepository.AddAsync(hotel);
+
+                // Adicionar datas
+                if (createHotelDto.HotelDates != null)
+                {
+                    foreach (var hdDto in createHotelDto.HotelDates)
+                    {
+                        var hotelDate = new HotelDate
+                        {
+                            StartDate = hdDto.StartDate,
+                            EndDate = hdDto.EndDate,
+                            AvailableRooms = hdDto.AvailableRooms,
+                            HotelId = createdHotel.HotelId,
+                            IsActive = hdDto.IsActive
+                        };
+                        await _hotelRepository.AddHotelDateAsync(hotelDate);
+                    }
+                }
+
+                // Adicionar tipos de quarto
+                if (createHotelDto.RoomTypes != null)
+                {
+                    foreach (var rtDto in createHotelDto.RoomTypes)
+                    {
+                        var roomType = new HotelRoomType
+                        {
+                            Name = rtDto.Name,
+                            Price = rtDto.Price,
+                            Capacity = rtDto.Capacity,
+                            BedType = rtDto.BedType,
+                            IsActive = rtDto.IsActive,
+                            HotelId = createdHotel.HotelId
+                        };
+                        await _hotelRepository.AddRoomTypeAsync(roomType);
+                    }
+                }
+
+                // Adicionar pacotes
+                if (createHotelDto.Packages != null)
+                {
+                    foreach (var packageDto in createHotelDto.Packages)
+                    {
+                        var package = new Package
+                        {
+                            Name = packageDto.Name,
+                            Description = packageDto.Description,
+                            BasePrice = packageDto.BasePrice,
+                            IsActive = packageDto.IsActive,
+                            HotelId = createdHotel.HotelId
+                        };
+                        await _hotelRepository.AddPackageAsync(package);
+                    }
+                }
+
+                // Upload e salvar mídias
+                var uploadPath = Path.Combine(_environment.WebRootPath, "Uploads", "Hotel");
+                Directory.CreateDirectory(uploadPath);
+
+                if (createHotelDto.MediaFiles != null)
+                {
+                    foreach (var file in createHotelDto.MediaFiles)
+                    {
+                        var fileName = $"{Guid.NewGuid()}{Path.GetExtension(file.FileName)}";
+                        var filePath = Path.Combine(uploadPath, fileName);
+                        using var stream = new FileStream(filePath, FileMode.Create);
+                        await file.CopyToAsync(stream);
+
+                        var media = new Media
+                        {
+                            MediaUrl = $"/Uploads/Hotel/{fileName}",
+                            MediaType = file.ContentType,
+                            HotelId = createdHotel.HotelId
+                        };
+                        await _hotelRepository.AddMediaAsync(media);
+                    }
+                }
+
+                // ✅ Buscar hotel com todos os relacionamentos preenchidos
+                var hotelWithDetails = await _hotelRepository.GetHotelByIdWithDetailsAsync(createdHotel.HotelId);
+
+                return CreatedAtAction(nameof(GetHotelById), new { id = createdHotel.HotelId },
+                    new ApiResponse<Hotel>(true, "Hotel criado com sucesso.", hotelWithDetails));
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { success = false, message = $"Error creating hotel: {ex.Message}" });
+                var innerMessage = ex.InnerException?.Message ?? ex.Message;
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    new ApiResponse<Hotel>(false, $"Erro ao criar hotel: {innerMessage}"));
             }
         }
 
-        [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateHotel(int id, [FromBody] CreateHotelDTO dto)
+
+
+        [HttpPut("{id:int}")]
+        public async Task<IActionResult> UpdateHotel(int id, [FromBody] HotelDTO hotelDto)
         {
-            var hotel = await _hotelRepository.GetByIdAsync(id);
-            if (hotel == null)
-                return NotFound();
+            if (!ModelState.IsValid || id != hotelDto.HotelId)
+                return BadRequest(new ApiResponse<object>(false, "Dados inválidos."));
 
-            try
-            {
-                hotel.Name = dto.Name;
-                hotel.Description = dto.Description;
-                hotel.StarRating = dto.StarRating;
-                hotel.CheckInTime = dto.CheckInTime;
-                hotel.CheckOutTime = dto.CheckOutTime;
-                hotel.ContactPhone = dto.ContactPhone;
-                hotel.ContactEmail = dto.ContactEmail;
+            var existingHotel = await _genericRepository.GetByIdAsync(id);
+            if (existingHotel == null)
+                return NotFound(new ApiResponse<object>(false, "Hotel não encontrado."));
 
-                await _hotelRepository.UpdateAsync(hotel);
+            existingHotel.Name = hotelDto.Name;
+            existingHotel.Description = hotelDto.Description;
+            existingHotel.IsActive = hotelDto.IsActive;
 
-                // Atualizar endereço via HotelRepository específico
-                var address = await _hotelRepositorySpecific.GetAddressByHotelIdAsync(id);
-                if (address != null)
-                {
-                    address.Street = dto.Street;
-                    address.City = dto.City;
-                    address.State = dto.State;
-                    address.ZipCode = dto.ZipCode;
+            await _genericRepository.UpdateAsync(existingHotel);
+            return Ok(new ApiResponse<object>(true, "Hotel atualizado com sucesso."));
+        }
 
-                    // Atualiza endereço
-                    await _hotelRepositorySpecific.AddAddressAsync(address); // Se tiver UpdateAddressAsync, usar ele, senão terá que implementar
-                }
-
-                // Atualizar commoditie via repositório genérico
-                var commoditieList = await _commoditieRepository.GetAllAsync();
-                var commoditie = commoditieList.FirstOrDefault(c => c.HotelId == id);
-                if (commoditie != null && dto.Commoditie != null)
-                {
-                    commoditie.HasBreakfast = dto.Commoditie.HasBreakfast;
-                    commoditie.HasParking = dto.Commoditie.HasParking;
-                    commoditie.HasSpa = dto.Commoditie.HasSpa;
-                    commoditie.HasPool = dto.Commoditie.HasPool;
-
-                    await _commoditieRepository.UpdateAsync(commoditie);
-                }
-
-                return NoContent();
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { success = false, message = $"Error updating hotel: {ex.Message}" });
-            }
+        [HttpDelete("{id:int}")]
+        public async Task<IActionResult> DeleteHotel(int id)
+        {
+            var deleted = await _genericRepository.SoftDeleteAsync(id);
+            if (deleted)
+                return Ok(new ApiResponse<object>(true, "Hotel excluído com sucesso."));
+            else
+                return NotFound(new ApiResponse<object>(false, "Hotel não encontrado."));
         }
     }
 }

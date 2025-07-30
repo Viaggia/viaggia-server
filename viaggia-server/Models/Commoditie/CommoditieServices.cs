@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using viaggia_server.Models.Hotels;
 using viaggia_server.Repositories;
 
 namespace viaggia_server.Models.Commodities
@@ -24,8 +25,13 @@ namespace viaggia_server.Models.Commodities
             public int CommoditieId { get; set; }
 
             [ForeignKey("CommoditieId")]
-            public Commodity Commoditie { get; set; } = null!;
-        
+            public Commoditie Commoditie { get; set; } = null!;
+
+            public int HotelId { get; set; }
+    
+            [ForeignKey("HotelId")]
+            public Hotel? Hotel { get; set; } = null!; // Relacionamento com o hotel
+
     }
 }
 

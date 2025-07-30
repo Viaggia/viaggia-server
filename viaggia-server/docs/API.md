@@ -874,6 +874,272 @@ Authorization: Bearer <token>
 }
 ```
 
+## 💳 Endpoints de Pagamentos
+
+### POST /api/payments/create-intent
+Cria um Payment Intent no Stripe para processar pagamento.
+
+**Headers:**
+```http
+Authorization: Bearer <token>
+Content-Type: application/json
+```
+
+**Request:**
+```json
+{
+  "amount": 599.99,
+  "currency": "brl",
+  "description": "Pagamento do Pacote Paris Romântico - 3 dias",
+  "packageId": 1,
+  "metadata": {
+    "reservationId": "123",
+    "userId": "456",
+    "packageName": "Paris Romântico"
+  },
+  "billingAddress": {
+    "street": "Rua das Flores, 456",
+    "city": "São Paulo",
+    "state": "SP",
+    "zipCode": "01234-567",
+    "country": "BR"
+  }
+}
+```
+
+**Response (200):**
+```json
+{
+  "paymentIntentId": "pi_1234567890abcdef",
+  "clientSecret": "pi_1234567890abcdef_secret_xyz",
+  "amount": 59999,
+  "currency": "brl",
+  "status": "requires_payment_method",
+  "description": "Pagamento do Pacote Paris Romântico - 3 dias",
+  "publishableKey": "pk_test_1234567890abcdef",
+  "message": "Payment Intent criado com sucesso"
+}
+```
+
+### POST /api/payments/confirm
+Confirma um pagamento no Stripe.
+
+**Headers:**
+```http
+Authorization: Bearer <token>
+Content-Type: application/json
+```
+
+**Request:**
+```json
+{
+  "paymentIntentId": "pi_1234567890abcdef",
+  "paymentMethodId": "pm_1234567890abcdef"
+}
+```
+
+**Response (200):**
+```json
+{
+  "paymentId": 1,
+  "stripePaymentIntentId": "pi_1234567890abcdef",
+  "amount": 599.99,
+  "currency": "brl",
+  "status": "Completed",
+  "description": "Pagamento do Pacote Paris Romântico - 3 dias",
+  "processedAt": "2024-01-15T10:30:00Z",
+  "billingAddress": {
+    "street": "Rua das Flores, 456",
+    "city": "São Paulo",
+    "state": "SP",
+    "zipCode": "01234-567",
+    "country": "BR"
+  },
+  "message": "Pagamento confirmado com sucesso"
+}
+```
+
+### POST /api/payments/cancel/{paymentIntentId}
+Cancela um Payment Intent no Stripe.
+
+**Headers:**
+```http
+Authorization: Bearer <token>
+```
+
+**Response (200):**
+```json
+{
+  "paymentIntentId": "pi_1234567890abcdef",
+  "status": "canceled",
+  "message": "Payment Intent cancelado com sucesso"
+}
+```
+
+### POST /api/payments/refund
+Cria um reembolso no Stripe.
+
+**Headers:**
+```http
+Authorization: Bearer <token>
+Content-Type: application/json
+```
+
+**Request:**
+```json
+{
+  "paymentIntentId": "pi_1234567890abcdef",
+  "amount": 299.99,
+  "reason": "requested_by_customer",
+  "metadata": {
+    "cancellationReason": "Cliente cancelou a viagem",
+    "refundPolicy": "partial"
+  }
+}
+```
+
+**Response (200):**
+```json
+{
+  "refundId": "re_1234567890abcdef",
+  "paymentIntentId": "pi_1234567890abcdef",
+  "amount": 299.99,
+  "currency": "brl",
+  "status": "succeeded",
+  "reason": "requested_by_customer",
+  "createdAt": "2024-01-15T11:00:00Z",
+  "estimatedArrival": "2024-01-20T00:00:00Z",
+  "message": "Reembolso processado com sucesso"
+}
+```
+
+### GET /api/payments/user/{userId}
+Lista todos os pagamentos de um usuário.
+
+**Headers:**
+```http
+Authorization: Bearer <token>
+```
+
+**Response (200):**
+```json
+{
+  "payments": [
+    {
+      "paymentId": 1,
+      "stripePaymentIntentId": "pi_1234567890abcdef",
+      "amount": 599.99,
+      "currency": "brl",
+      "status": "Completed",
+      "description": "Pagamento do Pacote Paris Romântico - 3 dias",
+      "createdAt": "2024-01-15T10:00:00Z",
+      "processedAt": "2024-01-15T10:30:00Z",
+      "packageInfo": {
+        "packageId": 1,
+        "packageName": "Paris Romântico",
+        "destination": "Paris, França"
+      }
+    },
+    {
+      "paymentId": 2,
+      "stripePaymentIntentId": "pi_0987654321fedcba",
+      "amount": 899.99,
+      "currency": "brl",
+      "status": "Failed",
+      "description": "Pagamento do Pacote Londres Executivo - 5 dias",
+      "createdAt": "2024-01-10T14:00:00Z",
+      "failureReason": "card_declined"
+    }
+  ],
+  "totalCount": 2,
+  "totalPaid": 599.99,
+  "totalFailed": 899.99
+}
+```
+
+### GET /api/payments/{paymentId}
+Busca um pagamento específico por ID.
+
+**Headers:**
+```http
+Authorization: Bearer <token>
+```
+
+**Response (200):**
+```json
+{
+  "paymentId": 1,
+  "stripePaymentIntentId": "pi_1234567890abcdef",
+  "amount": 599.99,
+  "currency": "brl",
+  "status": "Completed",
+  "description": "Pagamento do Pacote Paris Romântico - 3 dias",
+  "createdAt": "2024-01-15T10:00:00Z",
+  "processedAt": "2024-01-15T10:30:00Z",
+  "billingAddress": {
+    "street": "Rua das Flores, 456",
+    "city": "São Paulo",
+    "state": "SP",
+    "zipCode": "01234-567",
+    "country": "BR"
+  },
+  "metadata": {
+    "reservationId": "123",
+    "packageName": "Paris Romântico",
+    "checkIn": "2024-02-01",
+    "checkOut": "2024-02-04"
+  }
+}
+```
+
+### POST /api/webhook/stripe
+Endpoint para receber webhooks do Stripe (uso interno).
+
+> ⚠️ **IMPORTANTE**: Este endpoint é usado internamente pelo Stripe para notificar sobre eventos de pagamento. Não deve ser chamado diretamente pela aplicação frontend.
+
+**Headers (enviado pelo Stripe):**
+```http
+Content-Type: application/json
+Stripe-Signature: t=1234567890,v1=abc123def456...
+```
+
+**Eventos Processados:**
+- `payment_intent.succeeded` - Pagamento confirmado
+- `payment_intent.payment_failed` - Pagamento falhou
+- `payment_intent.canceled` - Pagamento cancelado
+- `charge.refunded` - Reembolso processado
+- `charge.dispute.created` - Chargeback criado
+- `payment_intent.requires_action` - Requer autenticação 3D Secure
+
+**Response (200):**
+```json
+{
+  "received": true
+}
+```
+
+## 🔐 Status de Pagamentos
+
+| Status | Descrição | Ação do Sistema |
+|--------|-----------|-----------------|
+| `Processing` | Pagamento em processamento | Manter reserva temporária |
+| `Completed` | Pagamento confirmado | Confirmar reserva e enviar voucher |
+| `Failed` | Pagamento falhou | Liberar quartos e notificar usuário |
+| `Cancelled` | Pagamento cancelado | Cancelar pré-reservas |
+| `Refunded` | Pagamento reembolsado | Processar cancelamento de reserva |
+| `Disputed` | Pagamento em disputa | Coletar evidências e notificar suporte |
+
+## 💰 Códigos de Erro Específicos de Pagamento
+
+| Código | Descrição | Solução |
+|--------|-----------|---------|
+| `PAYMENT_001` | Cartão recusado | Tentar outro cartão ou método |
+| `PAYMENT_002` | Saldo insuficiente | Verificar limite do cartão |
+| `PAYMENT_003` | Cartão expirado | Atualizar dados do cartão |
+| `PAYMENT_004` | CVV inválido | Verificar código de segurança |
+| `PAYMENT_005` | Webhook signature inválida | Verificar configuração |
+| `PAYMENT_006` | Payment Intent não encontrado | Criar novo Payment Intent |
+
 ## ⭐ Endpoints de Reviews
 
 ### POST /api/reviews

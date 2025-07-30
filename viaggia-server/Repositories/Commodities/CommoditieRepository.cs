@@ -13,34 +13,34 @@ namespace viaggia_server.Repositories.Commodities
             _context = context;
         }
 
-        public async Task<IEnumerable<Commodity>> GetAllAsync()
+        public async Task<IEnumerable<Commoditie>> GetAllAsync()
         {
             return await _context.Commodities
                 .Where(c => c.IsActive)
                 .ToListAsync();
         }
 
-        public async Task<Commodity?> GetByIdAsync(int id)
+        public async Task<Commoditie?> GetByIdAsync(int id)
         {
             return await _context.Commodities
                 .FirstOrDefaultAsync(c => c.CommoditieId == id && c.IsActive);
         }
 
-        public async Task<Commodity?> GetByHotelIdAsync(int hotelId)
+        public async Task<Commoditie?> GetByHotelIdAsync(int hotelId)
         {
             return await _context.Commodities
-                .Include(c => c.CommoditiesServices)
+                .Include(c => c.CommoditieServices)
                 .FirstOrDefaultAsync(c => c.HotelId == hotelId && c.IsActive);
         }
 
-        public async Task<Commodity> AddAsync(Commodity entity)
+        public async Task<Commoditie> AddAsync(Commoditie entity)
         {
             await _context.Commodities.AddAsync(entity);
             await _context.SaveChangesAsync();
             return entity;
         }
 
-        public async Task<Commodity> UpdateAsync(Commodity entity)
+        public async Task<Commoditie> UpdateAsync(Commoditie entity)
         {
             _context.Commodities.Update(entity);
             await _context.SaveChangesAsync();
@@ -58,15 +58,29 @@ namespace viaggia_server.Repositories.Commodities
             return await _context.SaveChangesAsync() > 0;
         }
 
-        Task<bool> ICommoditieRepository.UpdateAsync(Commodity commoditie)
+        public async Task<bool> DeleteAsync(int id)
+        {
+            var entity = await _context.Commodities.FindAsync(id);
+            if (entity == null)
+                return false;
+
+            _context.Commodities.Remove(entity);
+            return await _context.SaveChangesAsync() > 0;
+        }
+
+        public Task<bool> SaveChangesAsync()
         {
             throw new NotImplementedException();
         }
 
-        public Task<bool> DeleteAsync(int id)
+        Task<T2?> IRepository<Commoditie>.GetByIdAsync<T2>(int id) where T2 : class
+        {
+            throw new NotImplementedException();
+        }
+
+        Task<bool> IRepository<Commoditie>.SoftDeleteAsync<T2>(int id)
         {
             throw new NotImplementedException();
         }
     }
 }
-

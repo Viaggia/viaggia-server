@@ -2,7 +2,7 @@
 
 namespace viaggia_server.Repositories.Commodities
 {
-    public interface ICommoditieServicesRepository
+    public interface ICommoditieServicesRepository : IRepository<CommoditieServices>
     {
         Task<IEnumerable<CommoditieServices>> GetAllAsync();
         Task<CommoditieServices?> GetByIdAsync(int id);
@@ -10,6 +10,5 @@ namespace viaggia_server.Repositories.Commodities
         Task<CommoditieServices> AddAsync(CommoditieServices entity);
         Task<CommoditieServices> UpdateAsync(CommoditieServices entity);
         Task<bool> SoftDeleteAsync(int id);
-
     }
 }
