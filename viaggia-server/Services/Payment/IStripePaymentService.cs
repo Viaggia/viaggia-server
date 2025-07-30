@@ -1,5 +1,5 @@
 using Stripe;
-using viaggia_server.DTOs.Payments;
+using viaggia_server.DTOs.ReservationDTO;
 
 namespace viaggia_server.Services.Payment
 {
@@ -8,6 +8,6 @@ namespace viaggia_server.Services.Payment
         /// <summary>
         /// Cria um Payment Intent no Stripe para processar o pagamento
         /// </summary>
-        Task<PaymentIntentDTO> CreatePaymentIntentAsync(int id);
+        Task CreatePaymentIntentAsync(CreateReservation createResevation);
     }
 }

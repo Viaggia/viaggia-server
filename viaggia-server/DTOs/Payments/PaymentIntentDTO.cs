@@ -16,7 +16,7 @@
         /// </summary>
         public string Status { get; set; } = null!;
 
-        public int Amount { get; set; }
+        public string Amount { get; set; } = null!;
 
         public string Currency { get; set; } = "brl"; // Default to Brazilian Real
     }

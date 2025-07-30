@@ -87,10 +87,17 @@ builder.Services.AddScoped<ICommoditieServicesRepository, CommoditieServicesRepo
 builder.Services.AddScoped<IStripePaymentService, StripePaymentService>();
 builder.Services.AddScoped<IAuthRepository, AuthRepository>();
 builder.Services.AddScoped<IGoogleAccountRepository, GoogleAccountRepository>();
-builder.Services.AddScoped<IReservationServices, ReservationServices>();
+// builder.Services.AddScoped<IReservationServices, ReservationServices>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IImageService, ImageService>();
+builder.Services.AddScoped<Stripe.TokenService>();
+builder.Services.AddScoped<Stripe.CustomerService>();
+builder.Services.AddScoped<Stripe.ChargeService>();
+builder.Services.AddScoped<Stripe.PaymentIntent>();
+builder.Services.AddScoped<Stripe.PaymentIntentService>();
+builder.Services.AddScoped<Stripe.ProductService>();
+
 
 // Configure Stripe
 StripeConfiguration.ApiKey = builder.Configuration["Stripe:SecretKey"];

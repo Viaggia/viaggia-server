@@ -4,7 +4,7 @@ using viaggia_server.Models.Reservations;
 
 namespace viaggia_server.Services.ReservationServices
 {
-    public class ReservationServices : IReservationServices
+    public class ReservationServices :IReservationServices
     {
         private readonly IConfiguration _configuration;
         private readonly IReservationRepository _reservationRepository;
@@ -16,50 +16,51 @@ namespace viaggia_server.Services.ReservationServices
             _reservationRepository = reservationRepository;
             _logger = logger;
         }
-        public Task<Reservation> CreateReservationAsync(CreateReservation createReservation)
+        public Task<CreateReservation> CreateReservationAsync(Reservation createReservation)
         {
-            try
-            {
-                var reservation = new CreateReservation
-                {
-                    UserId = createReservation.UserId,
-                    ReservationId = createReservation.ReservationId,
-                    HotelId = createReservation.HotelId,
-                    CheckInDate = createReservation.CheckInDate,
-                    CheckOutDate = createReservation.CheckOutDate,
-                    TotalPrice = createReservation.TotalPrice,
-                };
-                return _reservationRepository.CreateReservationAsync(reservation);
-            }
-            catch (Exception ex)
-            {
-                // Handle exceptions, log errors, etc.
-                throw new Exception("An error occurred while creating the reservation.", ex);
-            }
+            throw new Exception("An error occurred while creating the reservation.");
+            //try
+            //{
+            //    var reservation = new CreateReservation
+            //    {
+            //        UserId = createReservation.UserId,
+            //        ReservationId = createReservation.ReservationId,
+            //        HotelId = createReservation.HotelId,
+            //        CheckInDate = createReservation.CheckInDate,
+            //        CheckOutDate = createReservation.CheckOutDate,
+            //        TotalPrice = createReservation.TotalPrice,
+            //    };
+            //    return _reservationRepository.CreateReservationAsync(reservation);
+            //}
+            //catch (Exception ex)
+            //{
+            //    // Handle exceptions, log errors, etc.
+            //    throw new Exception("An error occurred while creating the reservation.", ex);
+            //}
         }
         public Task<CreateReservation> GetReservationByIdAsync(CreateReservation createReservation)
         {
             try
             {
-                return reservationRepository.GetReservationByIdAsync();
+                //return reservationRepository.GetReservationByIdAsync();
             }
             catch(Exception ex)
             {
                 // Handle exceptions, log errors, etc.
-                throw new Exception("An error occurred while retrieving the reservation.", ex);
             }
+                throw new Exception("An error occurred while retrieving the reservation.");
         }
         public Task<IEnumerable<CreateReservation>> GetAllReservationsAsync()
         {
             try
             {
-                return reservationRepository.GetAllReservationsAsync();   
+                //return reservationRepository.GetAllReservationsAsync();   
             }
             catch(Exception ex)
             {
                 // Handle exceptions, log errors, etc.
-                throw new Exception("An error occurred while retrieving all reservations.", ex);
             }
+                throw new Exception("An error occurred while retrieving all reservations.");
         }
     }
 }
