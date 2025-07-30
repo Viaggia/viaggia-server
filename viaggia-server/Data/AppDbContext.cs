@@ -7,7 +7,6 @@ using viaggia_server.Models.HotelRoomTypes;
 using viaggia_server.Models.Hotels;
 using viaggia_server.Models.Medias;
 using viaggia_server.Models.Packages;
-using viaggia_server.Models.Payments;
 using viaggia_server.Models.Reservations;
 using viaggia_server.Models.Reviews;
 using viaggia_server.Models.RevokedToken;
@@ -30,9 +29,7 @@ namespace viaggia_server.Data
         public DbSet<HotelRoomType> RoomTypes { get; set; } = null!;
         public DbSet<HotelDate> HotelDates { get; set; } = null!;
         public DbSet<Reservation> Reservations { get; set; } = null!;
-        public DbSet<Payment> Payments { get; set; } = null!;
         public DbSet<Address> Addresses { get; set; } = null!;
-        public DbSet<BillingAddress> BillingAddresses { get; set; } = null!;
         public DbSet<Media> Medias { get; set; } = null!;
         public DbSet<Review> Reviews { get; set; } = null!;
         public DbSet<Companion> Companions { get; set; } = null!;
@@ -44,12 +41,6 @@ namespace viaggia_server.Data
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
-
-            // Configure TPH inheritance for Address and BillingAddress
-            modelBuilder.Entity<Address>()
-                .HasDiscriminator<string>("AddressType")
-                .HasValue<Address>("Address")
-                .HasValue<BillingAddress>("BillingAddress");
 
             // Configuration for UserRole (composite key)
             modelBuilder.Entity<UserRole>()
@@ -155,25 +146,6 @@ namespace viaggia_server.Data
                 .IsRequired(false)
                 .OnDelete(DeleteBehavior.NoAction);
 
-            // Configuration for Payment
-            modelBuilder.Entity<Payment>()
-                .HasOne(p => p.User)
-                .WithMany(u => u.Payments)
-                .HasForeignKey(p => p.UserId)
-                .OnDelete(DeleteBehavior.NoAction);
-
-            modelBuilder.Entity<Payment>()
-                .HasOne(p => p.Reservation)
-                .WithMany(r => r.Payments)
-                .HasForeignKey(p => p.ReservationId)
-                .OnDelete(DeleteBehavior.NoAction);
-
-            modelBuilder.Entity<Payment>()
-                .HasOne(p => p.BillingAddress)
-                .WithMany()
-                .HasForeignKey(p => p.BillingAddressId)
-                .OnDelete(DeleteBehavior.NoAction);
-
             // Configuration for Review
             modelBuilder.Entity<Review>()
                 .HasOne(r => r.User)
@@ -238,7 +210,6 @@ namespace viaggia_server.Data
             modelBuilder.Entity<HotelRoomType>().HasQueryFilter(rt => rt.IsActive);
             modelBuilder.Entity<HotelDate>().HasQueryFilter(hd => hd.IsActive);
             modelBuilder.Entity<Reservation>().HasQueryFilter(r => r.IsActive);
-            modelBuilder.Entity<Payment>().HasQueryFilter(p => p.IsActive);
             modelBuilder.Entity<Address>().HasQueryFilter(a => a.IsActive);
             modelBuilder.Entity<Media>().HasQueryFilter(m => m.IsActive);
             modelBuilder.Entity<Review>().HasQueryFilter(r => r.IsActive);
