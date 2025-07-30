@@ -1,5 +1,4 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using viaggia_server.Models.Payments;
 using viaggia_server.Models.Reservations;
 using viaggia_server.Models.UserRoles;
 using viaggia_server.Repositories;
@@ -57,6 +56,5 @@ namespace viaggia_server.Models.Users
         // Relationships
         public virtual ICollection<UserRole> UserRoles { get; set; } = new List<UserRole>();
         public virtual ICollection<Reservation> Reservations { get; set; } = new List<Reservation>();
-        public virtual ICollection<Payment> Payments { get; set; } = new List<Payment>();
     }
 }
