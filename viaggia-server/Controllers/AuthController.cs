@@ -1,9 +1,8 @@
 ﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Mvc;
 using viaggia_server.DTOs.Auth;
 using viaggia_server.DTOs.User;
-using viaggia_server.Services.Auth;
+using viaggia_server.Repositories.Auth;
 
 namespace viaggia_server.Controllers
 {
@@ -11,11 +10,11 @@ namespace viaggia_server.Controllers
     [Route("api/[controller]")]
     public class AuthController : ControllerBase
     {
-        private readonly IAuthService _authService;
+        private readonly IAuthRepository _authRepository;
 
-        public AuthController(IAuthService authService)
+        public AuthController(IAuthRepository authRepository)
         {
-            _authService = authService;
+            _authRepository = authRepository;
         }
 
         [HttpPost("login")]
@@ -23,9 +22,8 @@ namespace viaggia_server.Controllers
         {
             try
             {
-                var token = await _authService.LoginAsync(request.Email, request.Password);
-                // Buscar o usuário para retornar informações adicionais
-                var user = await _authService.GetUserByEmailAsync(request.Email); // Método adicional necessário no serviço
+                var token = await _authRepository.LoginAsync(request.Email, request.Password);
+                var user = await _authRepository.GetUserByEmailAsync(request.Email);
                 return Ok(new LoginResponseDTO
                 {
                     Token = token,
@@ -42,7 +40,6 @@ namespace viaggia_server.Controllers
             }
         }
 
-
         [Authorize]
         [HttpPost("logout-default")]
         public async Task<IActionResult> Logout()
@@ -51,17 +48,16 @@ namespace viaggia_server.Controllers
             if (string.IsNullOrEmpty(token))
                 return BadRequest(new { Message = "Token não fornecido." });
 
-            await _authService.RevokeTokenAsync(token);
+            await _authRepository.RevokeTokenAsync(token);
             return Ok(new { Message = "Logout do JWT realizado com sucesso. Token revogado." });
         }
-
 
         [HttpPost("forgot-password")]
         public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequestDTO request)
         {
             try
             {
-                await _authService.GeneratePasswordResetTokenAsync(request.Email);
+                await _authRepository.GeneratePasswordResetTokenAsync(request.Email);
                 return Ok(new { Message = "E-mail de redefinição de senha enviado com sucesso." });
             }
             catch (Exception ex)
@@ -75,17 +71,18 @@ namespace viaggia_server.Controllers
         {
             try
             {
-                var result = await _authService.ValidatePasswordResetTokenAsync(request.Token);
-                
+                var result = await _authRepository.ValidatePasswordResetTokenAsync(request.Token);
                 if (!result.IsValid)
                 {
-                    return BadRequest(new { 
+                    return BadRequest(new
+                    {
                         Message = result.Message,
-                        IsValid = false 
+                        IsValid = false
                     });
                 }
 
-                return Ok(new { 
+                return Ok(new
+                {
                     Message = result.Message,
                     IsValid = true,
                     UserName = result.UserName,
@@ -104,18 +101,18 @@ namespace viaggia_server.Controllers
         {
             try
             {
-                // Primeiro valida o token
-                var tokenValidation = await _authService.ValidatePasswordResetTokenAsync(request.Token);
+                var tokenValidation = await _authRepository.ValidatePasswordResetTokenAsync(request.Token);
                 if (!tokenValidation.IsValid)
                 {
                     return BadRequest(new { Message = tokenValidation.Message });
                 }
 
-                var success = await _authService.ResetPasswordAsync(request.Token, request.NewPassword);
+                var success = await _authRepository.ResetPasswordAsync(request.Token, request.NewPassword);
                 if (!success)
                     return BadRequest(new { Message = "Erro interno. Tente novamente." });
 
-                return Ok(new { 
+                return Ok(new
+                {
                     Message = "Senha redefinida com sucesso!",
                     UserName = tokenValidation.UserName
                 });

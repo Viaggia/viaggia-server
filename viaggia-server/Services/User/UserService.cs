@@ -8,6 +8,7 @@ using viaggia_server.Models.UserRoles;
 using viaggia_server.Models.Users;
 using viaggia_server.Repositories;
 using viaggia_server.Repositories.Users;
+using viaggia_server.Services.Media;
 using viaggia_server.Validators;
 using ValidationException = FluentValidation.ValidationException;
 

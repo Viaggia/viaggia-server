@@ -23,7 +23,7 @@ namespace viaggia_server.Models.Users
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         [Required]
-        public DateTime ExpiresAt { get; set; }
+        public DateTime ExpiryDate { get; set; }
 
         public bool IsUsed { get; set; } = false;
 
@@ -37,6 +37,6 @@ namespace viaggia_server.Models.Users
 
         // Token é válido se não expirou e não foi usado
         [NotMapped]
-        public bool IsValid => DateTime.UtcNow < ExpiresAt && !IsUsed;
+        public bool IsValid => DateTime.UtcNow < ExpiryDate && !IsUsed;
     }
 }
