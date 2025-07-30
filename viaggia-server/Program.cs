@@ -21,7 +21,6 @@ using viaggia_server.Services.Auth;
 using viaggia_server.Services.Payment;
 using viaggia_server.Services.Users;
 using viaggia_server.Validators;
-using viaggia_server.Swagger; // Ensure this namespace is included for FileUploadOperationFilter
 using System.Security.Claims;
 using System.IdentityModel.Tokens.Jwt;
 using FluentValidation;
@@ -45,22 +44,16 @@ builder.Services.AddControllers()
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
-    c.SwaggerDoc("v1", new OpenApiInfo { Title = "Viaggia Server API", Version = "v1" });
-    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    c.SwaggerDoc("v1", new() { Title = "Viaggia Server API", Version = "v1" });
+    c.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
     {
-        In = ParameterLocation.Header,
+        In = Microsoft.OpenApi.Models.ParameterLocation.Header,
         Description = "Please enter JWT with Bearer into field",
         Name = "Authorization",
-        Type = SecuritySchemeType.Http,
+        Type = Microsoft.OpenApi.Models.SecuritySchemeType.Http,
         Scheme = "Bearer"
     });
-    c.EnableAnnotations(); // Enable Swagger annotations
-    c.OperationFilter<FileUploadOperationFilter>(); // Register the file upload filter
-    var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
-    var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
-    c.IncludeXmlComments(xmlPath);
 });
-
 // Configure DbContext
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));

@@ -1,9 +1,8 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using viaggia_server.DTOs.Address;
 using viaggia_server.DTOs.Commoditie;
-using viaggia_server.DTOs.Commodity;
 using viaggia_server.DTOs.Packages;
 using viaggia_server.DTOs.Reviews;
+using viaggia_server.DTOs.Hotel;
 
 namespace viaggia_server.DTOs.Hotels
 {
@@ -19,7 +18,21 @@ namespace viaggia_server.DTOs.Hotels
         [Required(ErrorMessage = "CNPJ is required.")]
         public string Cnpj { get; set; } = null!; // CNPJ for service providers
 
-      
+        [Required(ErrorMessage = "Street is required.")]
+        [StringLength(100, ErrorMessage = "Street cannot exceed 100 characters.")]
+        public string Street { get; set; } = null!;
+
+        [Required(ErrorMessage = "City is required.")]
+        [StringLength(50, ErrorMessage = "City cannot exceed 50 characters.")]
+        public string City { get; set; } = null!;
+
+        [Required(ErrorMessage = "State is required.")]
+        [StringLength(50, ErrorMessage = "State cannot exceed 50 characters.")]
+        public string State { get; set; } = null!;
+
+        [Required(ErrorMessage = "Zip code is required.")]
+        [StringLength(20, ErrorMessage = "Zip code cannot exceed 20 characters.")]
+        public string ZipCode { get; set; } = null!;
 
         [StringLength(500, ErrorMessage = "Description cannot exceed 500 characters.")]
         public string? Description { get; set; }
@@ -45,11 +58,8 @@ namespace viaggia_server.DTOs.Hotels
         public List<HotelRoomTypeDTO> RoomTypes { get; set; } = new List<HotelRoomTypeDTO>();
         public List<HotelDateDTO> HotelDates { get; set; } = new List<HotelDateDTO>();
         public List<MediaDTO> Medias { get; set; } = new List<MediaDTO>();
-        public List<CreateAddressDTO> Addresses { get; set; } = new List<CreateAddressDTO>();
         public List<ReviewDTO> Reviews { get; set; } = new List<ReviewDTO>(); 
         public List<PackageDTO> Packages { get; set; } = new List<PackageDTO>();
-        public List<CommoditieDTO> Commodities { get; set; } = new List<CommoditieDTO>();
-        public List<CommoditieServicesDTO> CommoditieServices { get; set; } = new List<CommoditieServicesDTO>();
         public double AverageRating { get; set; } // Média das avaliações
 
     }

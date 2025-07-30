@@ -24,6 +24,22 @@ namespace viaggia_server.Models.Hotels
         [Required(ErrorMessage = "CNPJ is required.")]
         public string Cnpj { get; set; } = null!; // CNPJ for service providers
 
+        [Required(ErrorMessage = "Street is required.")]
+        [StringLength(100, ErrorMessage = "Street cannot exceed 100 characters.")]
+        public string Street { get; set; } = null!;
+
+        [Required(ErrorMessage = "City is required.")]
+        [StringLength(50, ErrorMessage = "City cannot exceed 50 characters.")]
+        public string City { get; set; } = null!;
+
+        [Required(ErrorMessage = "State is required.")]
+        [StringLength(50, ErrorMessage = "State cannot exceed 50 characters.")]
+        public string State { get; set; } = null!;
+
+        [Required(ErrorMessage = "Zip code is required.")]
+        [StringLength(20, ErrorMessage = "Zip code cannot exceed 20 characters.")]
+        public string ZipCode { get; set; } = null!;
+
         [StringLength(500, ErrorMessage = "Description cannot exceed 500 characters.")]
         public string? Description { get; set; }
 
@@ -50,7 +66,7 @@ namespace viaggia_server.Models.Hotels
 
         // Relationships
         public virtual ICollection<HotelRoomType> RoomTypes { get; set; } = new List<HotelRoomType>();
-        public virtual ICollection<Address> Addresses { get; set; } = new List<Address>();
+
         public virtual ICollection<HotelDate> HotelDates { get; set; } = new List<HotelDate>();
         public virtual ICollection<Reservation> Reservations { get; set; } = new List<Reservation>();
         public virtual ICollection<Media> Medias { get; set; } = new List<Media>();

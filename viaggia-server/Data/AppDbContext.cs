@@ -31,7 +31,7 @@ namespace viaggia_server.Data
         public DbSet<HotelDate> HotelDates { get; set; } = null!;
         public DbSet<Reservation> Reservations { get; set; } = null!;
         public DbSet<Payment> Payments { get; set; } = null!;
-        public DbSet<Address> Addresses { get; set; } = null!;
+       
         public DbSet<BillingAddress> BillingAddresses { get; set; } = null!;
         public DbSet<Media> Medias { get; set; } = null!;
         public DbSet<Review> Reviews { get; set; } = null!;
@@ -44,12 +44,6 @@ namespace viaggia_server.Data
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
-
-            // Configure TPH inheritance for Address and BillingAddress
-            modelBuilder.Entity<Address>()
-                .HasDiscriminator<string>("AddressType")
-                .HasValue<Address>("Address")
-                .HasValue<BillingAddress>("BillingAddress");
 
             // Configuration for UserRole (composite key)
             modelBuilder.Entity<UserRole>()
@@ -94,13 +88,7 @@ namespace viaggia_server.Data
                 .HasForeignKey(p => p.HotelId)
                 .OnDelete(DeleteBehavior.NoAction);
 
-            // Configuration for Hotel
-            modelBuilder.Entity<Hotel>()
-                .HasMany(h => h.Addresses)
-                .WithOne(a => a.Hotel) // Remove the back reference - Address doesn't have Hotel property
-                .HasForeignKey(h => h.AddressId)
-                .OnDelete(DeleteBehavior.NoAction);
-
+         
             modelBuilder.Entity<Hotel>()
                 .HasMany(h => h.RoomTypes)
                 .WithOne(rt => rt.Hotel)
@@ -238,7 +226,6 @@ namespace viaggia_server.Data
             modelBuilder.Entity<HotelDate>().HasQueryFilter(hd => hd.IsActive);
             modelBuilder.Entity<Reservation>().HasQueryFilter(r => r.IsActive);
             modelBuilder.Entity<Payment>().HasQueryFilter(p => p.IsActive);
-            modelBuilder.Entity<Address>().HasQueryFilter(a => a.IsActive);
             modelBuilder.Entity<Media>().HasQueryFilter(m => m.IsActive);
             modelBuilder.Entity<Review>().HasQueryFilter(r => r.IsActive);
             modelBuilder.Entity<Companion>().HasQueryFilter(c => c.IsActive);

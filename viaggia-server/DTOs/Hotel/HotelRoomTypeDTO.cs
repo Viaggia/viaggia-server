@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace viaggia_server.DTOs.Hotels
+namespace viaggia_server.DTOs.Hotel
 {
     public class HotelRoomTypeDTO
     {

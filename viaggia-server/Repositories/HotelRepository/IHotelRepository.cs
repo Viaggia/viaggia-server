@@ -9,7 +9,7 @@ using viaggia_server.Models.Commodities;
 
 namespace viaggia_server.Repositories.HotelRepository
 {
-    public interface IHotelRepository
+    public interface IHotelRepository 
     {
         // Reativar um hotel
         Task<bool> ReactivateAsync(int id);
@@ -17,11 +17,7 @@ namespace viaggia_server.Repositories.HotelRepository
         Task<bool> NameExistsAsync(string nome);
         Task<bool> CnpjExistsAsync(string? cnpj);
 
-        // Endereços
-        Task<Address> AddAddressAsync(Address address);
-        Task<Address?> GetAddressByIdAsync(int addressId);
-        Task<IEnumerable<Address>> GetAddressesByHotelIdAsync(int hotelId);
-
+       
         // Tipos de Quarto
         Task<HotelRoomType> AddRoomTypeAsync(HotelRoomType roomType);
         Task<HotelRoomType?> GetRoomTypeByIdAsync(int roomTypeId);
@@ -47,17 +43,9 @@ namespace viaggia_server.Repositories.HotelRepository
         Task<Package?> GetPackageByIdAsync(int packageId);
         Task<Package> AddPackageAsync(Package package);
 
-        //Commodities
-        Task<IEnumerable<Commoditie>> GetCommoditiesByHotelIdAsync(int hotelId);
-        Task<Commoditie?> GetCommoditieByIdAsync(int commodityId);
-        Task<Commoditie> AddCommoditieAsync(Commoditie commodity);
+        
 
-        //CommoditieServices 
-        Task<IEnumerable<CommoditieServices>> GetCommoditieServicesByHotelIdAsync(int hotelId);
-        Task<CommoditieServices?> GetCommoditieServiceByIdAsync(int commodityServiceId);
-        Task<CommoditieServices> AddCommoditieServiceAsync(CommoditieServices commodityService);
 
-      
 
 
 

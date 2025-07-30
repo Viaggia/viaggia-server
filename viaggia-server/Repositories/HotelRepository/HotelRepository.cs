@@ -1,6 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using viaggia_server.Data;
-using viaggia_server.Models.Addresses;
 using viaggia_server.Models.Commodities;
 using viaggia_server.Models.HotelDates;
 using viaggia_server.Models.HotelRoomTypes;
@@ -73,20 +72,6 @@ namespace viaggia_server.Repositories.HotelRepository
         }
 
 
-        // Adiciona um novo endereço
-        public async Task<Address> AddAddressAsync(Address address)
-        {
-            var result = await _context.Addresses.AddAsync(address);
-            await _context.SaveChangesAsync();
-            return result.Entity;
-        }
-
-        // Busca um endereço por ID
-        public async Task<Address?> GetAddressByIdAsync(int addressId)
-        {
-            return await _context.Addresses.FindAsync(addressId);
-        }
-
         // Adiciona um novo tipo de quarto
         public async Task<HotelRoomType> AddRoomTypeAsync(HotelRoomType roomType)
         {
@@ -98,14 +83,15 @@ namespace viaggia_server.Repositories.HotelRepository
         // Busca um tipo de quarto por ID
         public async Task<HotelRoomType?> GetRoomTypeByIdAsync(int roomTypeId)
         {
-            return await _context.RoomTypes.FindAsync(roomTypeId);
+            return await _context.RoomTypes
+                .FirstOrDefaultAsync(rt => rt.RoomTypeId == roomTypeId && rt.IsActive);
         }
 
         // Retorna todos os tipos de quarto de um hotel específico
         public async Task<IEnumerable<HotelRoomType>> GetHotelRoomTypesAsync(int hotelId)
         {
             return await _context.RoomTypes
-                .Where(rt => rt.HotelId == hotelId)
+                 .Where(rt => rt.HotelId == hotelId && rt.IsActive)
                 .ToListAsync();
         }
 
@@ -120,9 +106,8 @@ namespace viaggia_server.Repositories.HotelRepository
         // Busca uma data específica de um hotel por ID
         public async Task<HotelDate?> GetHotelDateByIdAsync(int hotelDateId)
         {
-            var hotelDate = await _context.HotelDates
-                .FirstOrDefaultAsync(hd => hd.HotelDateId == hotelDateId);
-            return hotelDate;
+            return await _context.HotelDates
+                .FirstOrDefaultAsync(hd => hd.HotelDateId == hotelDateId && hd.IsActive);
         }
 
         // Adiciona uma nova data de hotel
@@ -174,7 +159,7 @@ namespace viaggia_server.Repositories.HotelRepository
 
         public async Task<Review> AddReviewAsync(Review review)
         {
-            var result = await _context.Reviews.AddAsync(review); //    Adiciona uma nova avaliação
+           var result = _context.Reviews.Add(review); // Adiciona uma nova avaliação
             await _context.SaveChangesAsync();
             return result.Entity;
 
@@ -201,55 +186,9 @@ namespace viaggia_server.Repositories.HotelRepository
             return result.Entity;
         }
 
-        public async Task<IEnumerable<Commoditie>> GetCommoditiesByHotelIdAsync(int hotelId) // Retorna todas as comodidades de um hotel específico
-        {
-            return await _context.Commodities
-                .Where(c => c.HotelId == hotelId && c.IsActive)
-                .ToListAsync();
+        
+      
 
-        }
-
-        public Task<Commoditie?> GetCommoditieByIdAsync(int commoditieId) // Busca uma comodidade específica por ID
-        {
-            return _context.Commodities
-                .FirstOrDefaultAsync(c => c.CommoditieId == commoditieId && c.IsActive);
-        }
-
-        public async Task<Commoditie> AddCommoditieAsync(Commoditie commoditie) // Adiciona uma nova comodidade
-        {
-            var result = _context.Commodities.Add(commoditie);
-            _context.SaveChangesAsync();
-            return result.Entity;
-
-        }
-
-        public async Task<IEnumerable<CommoditieServices>> GetCommoditieServicesByHotelIdAsync(int hotelId) // Retorna todos os serviços de comodidades de um hotel específico
-        {
-            return await _context.CommoditieServices
-                .Where(cs => cs.HotelId == hotelId && cs.IsActive)
-                .ToListAsync();
-        }
-
-        public async Task<CommoditieServices?> GetCommoditieServiceByIdAsync(int commoditieServicesId) // Busca um serviço de comodidade específico por ID
-        {
-           return await _context.CommoditieServices
-                .FirstOrDefaultAsync(cs => cs.CommoditieServicesId == commoditieServicesId && cs.IsActive);
-
-        }
-
-        public async Task<CommoditieServices> AddCommoditieServiceAsync(CommoditieServices commoditieService) // Adiciona um novo serviço de comodidade
-        {
-            var result = _context.CommoditieServices.Add(commoditieService);
-            _context.SaveChangesAsync();
-            return result.Entity;
-
-        }
-
-        public async Task<IEnumerable<Address>> GetAddressesByHotelIdAsync(int hotelId)
-        {
-          return await _context.Addresses
-                .Where(a => a.HotelId == hotelId && a.IsActive)
-                .ToListAsync();
-        }
+      
     }
 }

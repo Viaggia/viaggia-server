@@ -1,4 +1,4 @@
-using Stripe;
+/*using Stripe;
 using viaggia_server.DTOs.Payment;
 
 namespace viaggia_server.Services.Payment
@@ -56,3 +56,4 @@ namespace viaggia_server.Services.Payment
         Task<bool> UpdatePaymentStatusAsync(string paymentIntentId, string status, long amount);
     }
 }
+*/
