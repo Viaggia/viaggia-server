@@ -9,10 +9,6 @@ namespace viaggia_server.Services.Users
         Task<UserDTO> CreateServiceProviderAsync(CreateServiceProviderDTO request);
         Task<UserDTO> CreateAttendantAsync(CreateAttendantDTO request);
         Task<UserDTO> CreateAdminAsync(CreateAdminDTO request);
-        Task<List<UserDTO>> GetAllAsync();
-        Task<UserDTO> GetByIdAsync(int id);
-        Task SoftDeleteAsync(int id);
-        Task ReactivateAsync(int id);
         Task<UserDTO> UpdateAsync(int id, UpdateUserDTO request); // New method
     }
 

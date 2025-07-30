@@ -1,4 +1,4 @@
-﻿using viaggia_server.DTOs.User;
+﻿using viaggia_server.DTOs.Auth;
 using viaggia_server.Models.Users;
 
 namespace viaggia_server.Repositories.Auth

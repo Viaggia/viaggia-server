@@ -1,8 +1,8 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using viaggia_server.DTOs.Auth;
-using viaggia_server.DTOs.User;
 using viaggia_server.Repositories.Auth;
+using viaggia_server.Services.EmailResetPassword;
 
 namespace viaggia_server.Controllers
 {
@@ -11,10 +11,13 @@ namespace viaggia_server.Controllers
     public class AuthController : ControllerBase
     {
         private readonly IAuthRepository _authRepository;
+        private readonly IEmailService _emailService;
 
-        public AuthController(IAuthRepository authRepository)
+
+        public AuthController(IAuthRepository authRepository, IEmailService emailService)
         {
-            _authRepository = authRepository;
+            _authRepository = authRepository ?? throw new ArgumentNullException(nameof(authRepository));
+            _emailService = emailService ?? throw new ArgumentNullException(nameof(emailService));
         }
 
         [HttpPost("login")]
@@ -57,12 +60,17 @@ namespace viaggia_server.Controllers
         {
             try
             {
-                await _authRepository.GeneratePasswordResetTokenAsync(request.Email);
+                var user = await _authRepository.GetUserByEmailAsync(request.Email);
+                if (user == null)
+                    return BadRequest(new { Message = "Usuário não encontrado." });
+
+                var token = await _authRepository.GeneratePasswordResetTokenAsync(request.Email);
+                await _emailService.SendPasswordResetEmailAsync(request.Email, user.Name, token);
                 return Ok(new { Message = "E-mail de redefinição de senha enviado com sucesso." });
             }
             catch (Exception ex)
             {
-                return BadRequest(new { Message = ex.Message });
+                return BadRequest(new { Message = $"Erro ao processar a solicitação: {ex.Message}" });
             }
         }
 

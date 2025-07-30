@@ -1,50 +1,21 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using viaggia_server.Data;
 using viaggia_server.DTOs.Auth;
-using viaggia_server.Models.Users;
+using viaggia_server.DTOs.User;
+using viaggia_server.DTOs.Users;
 using viaggia_server.Models.UserRoles;
+using viaggia_server.Models.Users;
+using viaggia_server.Services.Media;
 
 namespace viaggia_server.Repositories.Users
 {
     public class UserRepository : Repository<User>, IUserRepository
     {
-        public UserRepository(AppDbContext context) : base(context)
-        {
-            
-        }
+        private readonly IImageService _imageService;
 
-        public Task<User> CreateAsync(User user, string roleName)
+        public UserRepository(AppDbContext context, IImageService imageService) : base(context)
         {
-            // Verifica se a role existe
-            var role = _context.Roles.FirstOrDefaultAsync(r => r.Name == roleName);
-            if (role == null)
-            {
-                throw new ArgumentException($"Role '{roleName}' does not exist.");
-            }
-            // Adiciona o usuário ao contexto
-            _context.Users.Add(user);
-            _context.SaveChanges();
-            // Cria a relação entre o usuário e a role
-            var userRole = new UserRole
-            {
-                UserId = user.Id,
-                RoleId = role.Result.Id
-            };
-            _context.UserRoles.Add(userRole);
-            _context.SaveChanges();
-            return Task.FromResult(user);
-        }
-
-        public async Task<bool> ReactivateAsync(int id)
-        {
-            var user = await _context.Users.FindAsync(id);
-            if (user == null)
-            {
-                return false;
-            }
-            user.IsActive = true;
-            await _context.SaveChangesAsync();
-            return true;
+            _imageService = imageService ?? throw new ArgumentNullException(nameof(imageService));
         }
 
         public async Task<bool> EmailExistsAsync(string email)
@@ -57,39 +28,240 @@ namespace viaggia_server.Repositories.Users
             return cpf != null && await _context.Users.AnyAsync(u => u.Cpf == cpf);
         }
 
+        public async Task<UserDTO> CreateClientAsync(CreateClientDTO request)
+        {
+            if (await EmailExistsAsync(request.Email))
+                throw new ArgumentException("Email already exists.");
+            if (await CpfExistsAsync(request.Cpf))
+                throw new ArgumentException("CPF already exists.");
+
+            var user = new User
+            {
+                Name = request.Name,
+                Email = request.Email,
+                PhoneNumber = request.PhoneNumber,
+                Password = BCrypt.Net.BCrypt.HashPassword(request.Password),
+                Cpf = request.Cpf,
+                IsActive = true
+            };
+
+            var created = await CreateWithRoleAsync(user, "CLIENT");
+            return ToDTO(created);
+        }
+
+        public async Task<UserDTO> CreateServiceProviderAsync(CreateServiceProviderDTO request)
+        {
+            if (await EmailExistsAsync(request.Email))
+                throw new ArgumentException("Email already exists.");
+
+            var user = new User
+            {
+                Name = request.ResponsibleName,
+                CompanyName = request.CompanyName,
+                CompanyLegalName = request.CompanyLegalName,
+                Email = request.Email,
+                PhoneNumber = request.PhoneNumber,
+                Password = BCrypt.Net.BCrypt.HashPassword(request.Password),
+                IsActive = true
+            };
+
+            var created = await CreateWithRoleAsync(user, "SERVICE_PROVIDER");
+            return ToDTO(created);
+        }
+
+        public async Task<UserDTO> CreateAttendantAsync(CreateAttendantDTO request)
+        {
+            if (await EmailExistsAsync(request.Email))
+                throw new ArgumentException("Email already exists.");
+
+            var user = new User
+            {
+                Name = request.Name,
+                EmployerCompanyName = request.EmployerCompanyName,
+                EmployeeId = request.EmployeeId,
+                Email = request.Email,
+                PhoneNumber = request.PhoneNumber,
+                Password = BCrypt.Net.BCrypt.HashPassword(request.Password),
+                IsActive = true
+            };
+
+            var created = await CreateWithRoleAsync(user, "ATTENDANT");
+            return ToDTO(created);
+        }
+
+        public async Task<UserDTO> CreateAdminAsync(CreateAdminDTO request)
+        {
+            if (string.IsNullOrWhiteSpace(request.Email) || string.IsNullOrWhiteSpace(request.Password))
+                throw new ArgumentException("Email and Password are required.");
+
+            if (await EmailExistsAsync(request.Email))
+                throw new ArgumentException("Email already exists.");
+
+            var user = new User
+            {
+                Name = request.Name,
+                Email = request.Email,
+                PhoneNumber = request.PhoneNumber,
+                Password = BCrypt.Net.BCrypt.HashPassword(request.Password),
+                IsActive = true
+            };
+
+            var created = await CreateWithRoleAsync(user, "ADMIN");
+            return ToDTO(created);
+        }
+
+        public async Task<User> CreateWithRoleAsync(User user, string roleName)
+        {
+            var role = await _context.Roles.FirstOrDefaultAsync(r => r.Name == roleName);
+            if (role == null)
+            {
+                throw new ArgumentException($"Role '{roleName}' does not exist.");
+            }
+
+            var createdUser = await AddAsync(user);
+            await _context.UserRoles.AddAsync(new UserRole
+            {
+                UserId = createdUser.Id,
+                RoleId = role.Id
+            });
+            await SaveChangesAsync();
+            return createdUser;
+        }
+
         public async Task<User> CreateOrLoginOAuth(OAuthRequest dto)
         {
-            // Tenta encontrar o usuário pelo Google ID
             var user = await _context.Users.FirstOrDefaultAsync(u => u.GoogleId == dto.GoogleUid);
             if (user == null)
             {
-                var generatedPassword = Guid.NewGuid().ToString(); // Gera uma senha padrão
-                var hashedPassword = BCrypt.Net.BCrypt.HashPassword(generatedPassword); // Criptografa a senha
+                var generatedPassword = Guid.NewGuid().ToString();
+                var hashedPassword = BCrypt.Net.BCrypt.HashPassword(generatedPassword);
 
-                // Se não encontrar, cria um novo usuário
                 user = new User
                 {
                     GoogleId = dto.GoogleUid,
                     Email = dto.Email,
                     Name = dto.Name,
                     AvatarUrl = dto.Picture,
-                    PhoneNumber = dto.PhoneNumber ?? "default-password", // Defina uma senha padrão ou gere uma
-                    Password = hashedPassword, // Senha não é necessária para OAuth
+                    PhoneNumber = dto.PhoneNumber ?? string.Empty,
+                    Password = hashedPassword,
                     IsActive = true,
                     CreateDate = DateTime.UtcNow
-
                 };
-                await _context.Users.AddAsync(user);
+                user = await CreateWithRoleAsync(user, "CLIENT");
             }
             else
             {
-                // Atualiza os dados do usuário existente
                 user.Email = dto.Email;
                 user.Name = dto.Name;
                 user.AvatarUrl = dto.Picture;
+                await UpdateAsync(user);
             }
-            await _context.SaveChangesAsync();
             return user;
+        }
+
+        public async Task<List<UserDTO>> GetAllAsync()
+        {
+            var users = await base.GetAllAsync();
+            return users.Select(ToDTO).ToList();
+        }
+
+        public async Task<UserDTO> GetByIdAsync(int id)
+        {
+            var user = await base.GetByIdAsync(id);
+            if (user == null)
+            {
+                throw new ArgumentException("User not found.");
+            }
+            return ToDTO(user);
+        }
+
+        public async Task<bool> SoftDeleteAsync(int id)
+        {
+            return await base.SoftDeleteAsync(id);
+        }
+
+        public async Task<bool> ReactivateAsync(int id)
+        {
+            var user = await _context.Users.IgnoreQueryFilters().FirstOrDefaultAsync(u => u.Id == id);
+            if (user == null)
+            {
+                return false;
+            }
+            user.IsActive = true;
+            await UpdateAsync(user);
+            return true;
+        }
+
+        public async Task<UserDTO> UpdateAsync(int id, UpdateUserDTO request)
+        {
+            var user = await base.GetByIdAsync(id)
+                ?? throw new ArgumentException("User not found.");
+
+            var roles = user.UserRoles.Select(ur => ur.Role.Name).ToList();
+            if (roles.Contains("CLIENT") && !string.IsNullOrEmpty(request.Cpf))
+            {
+                if (request.Cpf != user.Cpf && await CpfExistsAsync(request.Cpf))
+                    throw new ArgumentException("CPF already exists.");
+            }
+            else if (!roles.Contains("CLIENT") && !string.IsNullOrEmpty(request.Cpf))
+            {
+                throw new ArgumentException("CPF can only be updated for CLIENT role.");
+            }
+
+            if (roles.Contains("SERVICE_PROVIDER"))
+            {
+                if (string.IsNullOrEmpty(request.CompanyName) || string.IsNullOrEmpty(request.CompanyLegalName))
+                    throw new ArgumentException("CompanyName and CompanyLegalName are required for SERVICE_PROVIDER.");
+            }
+            else if (!string.IsNullOrEmpty(request.CompanyName) || !string.IsNullOrEmpty(request.CompanyLegalName))
+            {
+                throw new ArgumentException("CompanyName and CompanyLegalName can only be updated for SERVICE_PROVIDER role.");
+            }
+
+            if (roles.Contains("ATTENDANT"))
+            {
+                if (string.IsNullOrEmpty(request.EmployerCompanyName) || string.IsNullOrEmpty(request.EmployeeId))
+                    throw new ArgumentException("EmployerCompanyName and EmployeeId are required for ATTENDANT.");
+            }
+            else if (!string.IsNullOrEmpty(request.EmployerCompanyName) || !string.IsNullOrEmpty(request.EmployeeId))
+            {
+                throw new ArgumentException("EmployerCompanyName and EmployeeId can only be updated for ATTENDANT role.");
+            }
+
+            user.Name = request.Name;
+            user.PhoneNumber = request.PhoneNumber;
+            user.Cpf = request.Cpf;
+            user.CompanyName = request.CompanyName;
+            user.CompanyLegalName = request.CompanyLegalName;
+            user.EmployerCompanyName = request.EmployerCompanyName;
+            user.EmployeeId = request.EmployeeId;
+
+            if (request.Avatar != null)
+            {
+                user.AvatarUrl = await _imageService.UploadImageAsync(request.Avatar, id.ToString())
+                    ?? throw new Exception("Failed to upload avatar image.");
+            }
+
+            await base.UpdateAsync(user);
+            return ToDTO(user);
+        }
+
+        private UserDTO ToDTO(User user)
+        {
+            return new UserDTO
+            {
+                Id = user.Id,
+                Name = user.Name,
+                Email = user.Email,
+                PhoneNumber = user.PhoneNumber,
+                Cpf = user.Cpf,
+                CompanyName = user.CompanyName,
+                CompanyLegalName = user.CompanyLegalName,
+                EmployerCompanyName = user.EmployerCompanyName,
+                EmployeeId = user.EmployeeId,
+                IsActive = user.IsActive,
+                Roles = user.UserRoles.Select(ur => ur.Role.Name).ToList()
+            };
         }
     }
 }
