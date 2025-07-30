@@ -3,7 +3,7 @@ using System.Net;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
-namespace viaggia_server.Services
+namespace viaggia_server.Services.EmailResetPassword
 {
     public class EmailService : IEmailService
     {

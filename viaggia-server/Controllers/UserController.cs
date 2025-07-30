@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using viaggia_server.DTOs;
 using viaggia_server.DTOs.User;
 using viaggia_server.DTOs.Users;
-using viaggia_server.Services;
+using viaggia_server.Services.EmailResetPassword;
 using viaggia_server.Services.Users;
 
 namespace viaggia_server.Controllers

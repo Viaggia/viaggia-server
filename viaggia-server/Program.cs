@@ -19,10 +19,11 @@ using viaggia_server.Repositories.Commodities;
 using viaggia_server.Repositories.HotelRepository;
 using viaggia_server.Repositories.Payment;
 using viaggia_server.Repositories.Users;
-using viaggia_server.Services;
-using viaggia_server.Services.Auth;
+using viaggia_server.Services.EmailResetPassword;
+using viaggia_server.Services.Media;
 using viaggia_server.Services.Payment;
 using viaggia_server.Services.Users;
+using viaggia_server.Swagger;
 using viaggia_server.Validators;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -67,7 +68,8 @@ builder.Services.AddSwaggerGen(c =>
             new string[] { }
         }
     });
-    c.SchemaFilter<FormFileSchemaFilter>(); // For multipart/form-data file upload
+    c.OperationFilter<SecurityRequirementsOperationFilter>();
+    c.SchemaFilter<FormFileSchemaFilter>();
 });
 
 
@@ -88,7 +90,6 @@ builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
 builder.Services.AddScoped<IStripePaymentService, StripePaymentService>();
 builder.Services.AddScoped<IAuthRepository, AuthRepository>();
 builder.Services.AddScoped<IGoogleAccountRepository, GoogleAccountRepository>();
-builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IImageService, ImageService>();
 
@@ -129,9 +130,9 @@ builder.Services.AddAuthentication(options =>
     {
         OnTokenValidated = async context =>
         {
-            var authService = context.HttpContext.RequestServices.GetRequiredService<IAuthService>();
+            var authRepository = context.HttpContext.RequestServices.GetRequiredService<IAuthRepository>();
             var token = context.SecurityToken as JwtSecurityToken;
-            if (token != null && await authService.IsTokenRevokedAsync(token.RawData))
+            if (token != null && await authRepository.IsTokenRevokedAsync(token.RawData))
             {
                 context.Fail("Token foi revogado.");
             }

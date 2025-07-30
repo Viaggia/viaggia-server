@@ -215,6 +215,16 @@ namespace viaggia_server.Data
                 .WithMany()
                 .HasForeignKey(prt => prt.UserId);
 
+            // RevokedToken
+            modelBuilder.Entity<RevokedToken>(entity =>
+            {
+                entity.ToTable("RevokedTokens");
+                entity.HasKey(rt => rt.Id);
+                entity.Property(rt => rt.Id).ValueGeneratedOnAdd();
+                entity.Property(rt => rt.Token).HasColumnType("nvarchar(max)").IsRequired();
+                entity.Property(rt => rt.RevokedAt).IsRequired();
+                entity.Property(rt => rt.ExpiryDate).IsRequired(false); 
+            });
 
 
             // Configuration for Media
