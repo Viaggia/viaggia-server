@@ -13,14 +13,23 @@ namespace viaggia_server.DTOs.Packages
         public string? Description { get; set; }
 
         [Required]
+        [Range(0.01, double.MaxValue, ErrorMessage = "BasePrice must be greater than 0.")]
         public decimal BasePrice { get; set; }
 
         [Required]
-        public int HotelId { get; set; }
+        public string HotelName { get; set; } = null!;
 
         public bool IsActive { get; set; } = true;
 
-        public List<PackageDateDTO> PackageDates { get; set; } = new List<PackageDateDTO>();
+
+        [Required]
+        [RegularExpression(@"^\d{2}/\d{2}/\d{4}$", ErrorMessage = "StartDate must be in DD/MM/YYYY format.")]
+        public string StartDate { get; set; } = null!;
+
+        [Required]
+        [RegularExpression(@"^\d{2}/\d{2}/\d{4}$", ErrorMessage = "EndDate must be in DD/MM/YYYY format.")]
+        public string EndDate { get; set; } = null!;
+
         public List<IFormFile> MediaFiles { get; set; } = new List<IFormFile>();
     }
 }

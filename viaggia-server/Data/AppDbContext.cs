@@ -72,19 +72,18 @@ namespace viaggia_server.Data
                 .HasMany(p => p.PackageDates)
                 .WithOne(pd => pd.Package)
                 .HasForeignKey(pd => pd.PackageId)
-                .OnDelete(DeleteBehavior.NoAction);
-
-            modelBuilder.Entity<Package>()
-                .HasMany(p => p.Reservations)
-                .WithOne(r => r.Package)
-                .HasForeignKey(r => r.PackageId)
-                .IsRequired(false)
-                .OnDelete(DeleteBehavior.NoAction);
+                .OnDelete(DeleteBehavior.Cascade); // Enable cascade delete
 
             modelBuilder.Entity<Package>()
                 .HasMany(p => p.Medias)
                 .WithOne(m => m.Package)
                 .HasForeignKey(m => m.PackageId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Package>()
+                .HasMany(p => p.Reservations)
+                .WithOne(r => r.Package)
+                .HasForeignKey(r => r.PackageId)
                 .IsRequired(false)
                 .OnDelete(DeleteBehavior.NoAction);
 
@@ -97,7 +96,7 @@ namespace viaggia_server.Data
             // Configuration for Hotel
             modelBuilder.Entity<Hotel>()
                 .HasMany(h => h.Addresses)
-                .WithOne(a => a.Hotel) // Remove the back reference - Address doesn't have Hotel property
+                .WithOne(a => a.Hotel)
                 .HasForeignKey(h => h.AddressId)
                 .OnDelete(DeleteBehavior.NoAction);
 

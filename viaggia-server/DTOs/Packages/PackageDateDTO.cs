@@ -6,10 +6,13 @@ namespace viaggia_server.DTOs.Packages
     {
         public int PackageDateId { get; set; }
 
-        [Required(ErrorMessage = "Start date is required.")]
-        public DateTime StartDate { get; set; }
 
-        [Required(ErrorMessage = "End date is required.")]
-        public DateTime EndDate { get; set; }
+        [Required]
+        [RegularExpression(@"^\d{2}/\d{2}/\d{4}$", ErrorMessage = "StartDate must be in DD/MM/YYYY format.")]
+        public string StartDate { get; set; } = null!;
+
+        [Required]
+        [RegularExpression(@"^\d{2}/\d{2}/\d{4}$", ErrorMessage = "EndDate must be in DD/MM/YYYY format.")]
+        public string EndDate { get; set; } = null!;
     }
 }
