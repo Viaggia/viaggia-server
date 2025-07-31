@@ -323,6 +323,7 @@ namespace viaggia_server.Controllers
                 package.Medias = (await _packageRepository.GetPackageMediasAsync(id)).ToList();
                 package.PackageDates = (await _packageRepository.GetPackageDatesAsync(id)).ToList();
 
+                // Update package fields
                 package.Name = packageDTO.Name;
                 package.Destination = packageDTO.Destination;
                 package.Description = packageDTO.Description;
@@ -330,7 +331,7 @@ namespace viaggia_server.Controllers
                 package.HotelId = hotelId.Value;
                 package.IsActive = packageDTO.IsActive;
 
-                // Update PackageDates only if StartDate and EndDate are provided
+                // Update PackageDates only if both StartDate and EndDate are provided
                 if (!string.IsNullOrWhiteSpace(packageDTO.StartDate) && !string.IsNullOrWhiteSpace(packageDTO.EndDate))
                 {
                     if (!DateTime.TryParseExact(packageDTO.StartDate, "dd/MM/yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out var startDate))
@@ -349,16 +350,14 @@ namespace viaggia_server.Controllers
                         return BadRequest(new ApiResponse<PackageDTO>(false, "EndDate must be greater than or equal to StartDate."));
                     }
 
-                    // Clear existing dates
-                    var existingDates = package.PackageDates.ToList();
-                    package.PackageDates.Clear();
-                    foreach (var date in existingDates)
+                    // Soft-delete existing PackageDates
+                    foreach (var date in package.PackageDates.ToList())
                     {
                         await _genericRepository.SoftDeleteAsync<PackageDate>(date.PackageDateId);
                         _logger.LogInformation("Soft-deleted PackageDate: PackageDateId={PackageDateId}", date.PackageDateId);
                     }
 
-                    // Add new date
+                    // Add new PackageDate
                     var packageDate = new PackageDate
                     {
                         StartDate = startDate,
@@ -367,6 +366,7 @@ namespace viaggia_server.Controllers
                         IsActive = true
                     };
                     await _packageRepository.AddPackageDateAsync(packageDate);
+                    package.PackageDates.Clear(); // Clear after soft-deleting to avoid relationship issues
                     package.PackageDates.Add(packageDate);
                     _logger.LogInformation("Added PackageDate for update: PackageId={PackageId}, StartDate={StartDate}, EndDate={EndDate}", package.PackageId, startDate, endDate);
                 }
