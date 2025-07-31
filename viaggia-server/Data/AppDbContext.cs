@@ -61,7 +61,13 @@ namespace viaggia_server.Data
                 .HasMany(p => p.PackageDates)
                 .WithOne(pd => pd.Package)
                 .HasForeignKey(pd => pd.PackageId)
-                .OnDelete(DeleteBehavior.NoAction);
+                .OnDelete(DeleteBehavior.Cascade); // Enable cascade delete
+
+            modelBuilder.Entity<Package>()
+                .HasMany(p => p.Medias)
+                .WithOne(m => m.Package)
+                .HasForeignKey(m => m.PackageId)
+                .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<Package>()
                 .HasMany(p => p.Reservations)
@@ -71,18 +77,21 @@ namespace viaggia_server.Data
                 .OnDelete(DeleteBehavior.NoAction);
 
             modelBuilder.Entity<Package>()
-                .HasMany(p => p.Medias)
-                .WithOne(m => m.Package)
-                .HasForeignKey(m => m.PackageId)
-                .IsRequired(false)
-                .OnDelete(DeleteBehavior.NoAction);
-
-            modelBuilder.Entity<Package>()
                 .HasOne(p => p.Hotel)
                 .WithMany(h => h.Packages)
                 .HasForeignKey(p => p.HotelId)
                 .OnDelete(DeleteBehavior.NoAction);
 
+<<<<<<< HEAD
+=======
+            // Configuration for Hotel
+            modelBuilder.Entity<Hotel>()
+                .HasMany(h => h.Addresses)
+                .WithOne(a => a.Hotel)
+                .HasForeignKey(h => h.AddressId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+>>>>>>> 664f42f84bdb8cd29949603648bb149ab8b8f850
             modelBuilder.Entity<Hotel>()
                 .HasMany(h => h.RoomTypes)
                 .WithOne(rt => rt.Hotel)
@@ -178,6 +187,16 @@ namespace viaggia_server.Data
                 .WithMany()
                 .HasForeignKey(prt => prt.UserId);
 
+            // RevokedToken
+            modelBuilder.Entity<RevokedToken>(entity =>
+            {
+                entity.ToTable("RevokedTokens");
+                entity.HasKey(rt => rt.Id);
+                entity.Property(rt => rt.Id).ValueGeneratedOnAdd();
+                entity.Property(rt => rt.Token).HasColumnType("nvarchar(max)").IsRequired();
+                entity.Property(rt => rt.RevokedAt).IsRequired();
+                entity.Property(rt => rt.ExpiryDate).IsRequired(false); 
+            });
 
 
             // Configuration for Media

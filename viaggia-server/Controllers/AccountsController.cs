@@ -8,7 +8,6 @@ using viaggia_server.Data;
 using viaggia_server.DTOs.Auth;
 using viaggia_server.Repositories;
 using viaggia_server.Repositories.Auth;
-using viaggia_server.Services.Auth;
 
 namespace viaggia_server.Controllers
 {
@@ -16,12 +15,12 @@ namespace viaggia_server.Controllers
     [ApiController]
     public class AccountsController : ControllerBase
     {
-        private readonly IAuthService _authService;
+        private readonly IAuthRepository _authRepository;
         private readonly IGoogleAccountRepository _repository;
 
-        public AccountsController(IAuthService authService, IGoogleAccountRepository repository)
+        public AccountsController(IAuthRepository authRepository, IGoogleAccountRepository repository)
         {
-            _authService = authService;
+            _authRepository = authRepository;
             _repository = repository;
         }
 
@@ -61,7 +60,7 @@ namespace viaggia_server.Controllers
             };
 
             var user = await _repository.CreateOrLoginOAuth(oauthRequest);
-            var token = await _authService.GenerateJwtToken(user);
+            var token = await _authRepository.GenerateJwtTokenAsync(user);
 
             return Redirect($"http://localhost:5223/auth-sucess?token={token}"); //https://localhost:7164/auth-sucess?token={token}
         }

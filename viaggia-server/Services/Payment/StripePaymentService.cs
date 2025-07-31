@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Stripe;
+using Stripe.Events;
 using Stripe.Checkout;
 using viaggia_server.Data;
 using viaggia_server.DTOs.Payments;
@@ -21,6 +22,7 @@ namespace viaggia_server.Services.Payment
         private readonly IRepository<Reservation> _reservations;
         private readonly ILogger<StripePaymentService> _logger;
         private readonly string _stripeSecretKey;
+        private readonly string _stripeWebhook;
         private readonly TokenService _tokenService;
         private readonly CustomerService _customerService;
         private readonly ChargeService _chargeService;
@@ -42,9 +44,10 @@ namespace viaggia_server.Services.Payment
             _productService = productService;
             _logger = logger;
             _stripeSecretKey = _configuration["Stripe:SecretKey"];
+            _stripeWebhook = _configuration["Stripe:WebhookSecret"];
         }
 
-        public async Task<Session> CreatePaymentIntentAsync(CreateReservation createReservation)
+        public async Task<Session> CreatePaymentIntentAsync(CreateReservationDTO createReservation)
         {
             decimal total = Convert.ToInt32(createReservation.TotalPrice);
 
@@ -106,6 +109,47 @@ namespace viaggia_server.Services.Payment
             catch (Exception ex)
             {
                 throw new InvalidOperationException(ex.Message);
+            }
+        }
+
+        public async Task HandleStripeWebhookAsync(HttpRequest request)
+        {
+            var json = await new StreamReader(request.Body).ReadToEndAsync();
+            var webhookSecret = _configuration["Stripe:WebhookSecret"];
+
+            try
+            {
+                var stripeEvent = EventUtility.ConstructEvent(
+                    json,
+                    request.Headers["Stripe-Signature"],
+                    webhookSecret
+                );
+
+                if (stripeEvent.Type == Events.CheckoutSessionCompleted)
+                {
+                    var session = stripeEvent.Data.Object as Session;
+
+                    var reservation = new Reservation
+                    {
+                        PackageId = int.Parse(session.Metadata["packageId"]),
+                        UserId = int.Parse(session.Metadata["userId"]),
+                        RoomTypeId = int.Parse(session.Metadata["roomTypeId"]),
+                        StartDate = DateTime.Parse(session.Metadata["checkIn"]),
+                        EndDate = DateTime.Parse(session.Metadata["checkOut"]),
+                        NumberOfGuests = int.Parse(session.Metadata["guests"]),
+                        Status = session.Metadata["status"]
+                    };
+
+                    await _reservations.AddAsync(reservation);
+                    await _reservations.SaveChangesAsync();
+
+                    _logger.LogInformation("Reserva criada com sucesso após pagamento Stripe.");
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("Erro no webhook Stripe: " + ex.Message);
+                throw new Exception("Webhook inválido ou falhou ao processar.");
             }
         }
     }

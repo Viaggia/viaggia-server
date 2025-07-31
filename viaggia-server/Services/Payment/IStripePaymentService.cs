@@ -8,6 +8,6 @@ namespace viaggia_server.Services.Payment
         /// <summary>
         /// Cria um Payment Intent no Stripe para processar o pagamento
         /// </summary>
-        Task<Session> CreatePaymentIntentAsync(CreateReservation createResevation);
+        Task<Session> CreatePaymentIntentAsync(CreateReservationDTO createResevation);
     }
 }

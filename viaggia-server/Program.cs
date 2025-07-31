@@ -18,11 +18,15 @@ using viaggia_server.Repositories.Auth;
 using viaggia_server.Repositories.Commodities;
 using viaggia_server.Repositories.HotelRepository;
 using viaggia_server.Repositories.Users;
-using viaggia_server.Services;
-using viaggia_server.Services.Auth;
+using viaggia_server.Services.EmailResetPassword;
+using viaggia_server.Services.Media;
 using viaggia_server.Services.Payment;
+<<<<<<< HEAD
 using viaggia_server.Services.ReservationServices;
 using viaggia_server.Services.Users;
+=======
+using viaggia_server.Swagger;
+>>>>>>> 664f42f84bdb8cd29949603648bb149ab8b8f850
 using viaggia_server.Validators;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -67,7 +71,8 @@ builder.Services.AddSwaggerGen(c =>
             new string[] { }
         }
     });
-    c.SchemaFilter<FormFileSchemaFilter>(); // For multipart/form-data file upload
+    c.OperationFilter<SecurityRequirementsOperationFilter>();
+    c.SchemaFilter<FormFileSchemaFilter>();
 });
 
 
@@ -78,7 +83,6 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 // Register repositories and services
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
-builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IPackageRepository, PackageRepository>();
 builder.Services.AddScoped<IHotelRepository, HotelRepository>();
@@ -87,8 +91,11 @@ builder.Services.AddScoped<ICommoditieServicesRepository, CommoditieServicesRepo
 builder.Services.AddScoped<IStripePaymentService, StripePaymentService>();
 builder.Services.AddScoped<IAuthRepository, AuthRepository>();
 builder.Services.AddScoped<IGoogleAccountRepository, GoogleAccountRepository>();
+<<<<<<< HEAD
 // builder.Services.AddScoped<IReservationServices, ReservationServices>();
 builder.Services.AddScoped<IAuthService, AuthService>();
+=======
+>>>>>>> 664f42f84bdb8cd29949603648bb149ab8b8f850
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IImageService, ImageService>();
 builder.Services.AddScoped<Stripe.TokenService>();
@@ -136,9 +143,9 @@ builder.Services.AddAuthentication(options =>
     {
         OnTokenValidated = async context =>
         {
-            var authService = context.HttpContext.RequestServices.GetRequiredService<IAuthService>();
+            var authRepository = context.HttpContext.RequestServices.GetRequiredService<IAuthRepository>();
             var token = context.SecurityToken as JwtSecurityToken;
-            if (token != null && await authService.IsTokenRevokedAsync(token.RawData))
+            if (token != null && await authRepository.IsTokenRevokedAsync(token.RawData))
             {
                 context.Fail("Token foi revogado.");
             }

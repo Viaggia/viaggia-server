@@ -2,9 +2,10 @@
 
 namespace viaggia_server.DTOs.ReservationDTO
 {
-    public class CreateReservation
+    public class CreateReservationDTO
     {
         public int UserId { get; set; }
+        public string UserReservationName { get; set; }
         public int PackageId {  get; set; }
         public int RoomTypeId { get; set; }
         public int HotelId { get; set; }
