@@ -83,7 +83,7 @@ namespace viaggia_server.Services.Payment
 
                 Session session = service.Create(options);
 
-                if (session.StripeResponse.StatusCode.Equals(200))
+                if (session.StripeResponse.StatusCode == HttpStatusCode.OK)
                 {
                     var result = new Reservation
                     {
@@ -97,6 +97,8 @@ namespace viaggia_server.Services.Payment
                     };
                     //Deve criar uma reserva quando confirmado o pagamento
                     await _reservations.AddAsync(result);
+                    Console.WriteLine(result);
+                    await _reservations.SaveChangesAsync();
                     // enviar email de confirmaçãoEmailService;
                 }
                 return session;
