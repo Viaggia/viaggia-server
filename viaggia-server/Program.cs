@@ -22,7 +22,6 @@ using viaggia_server.Repositories.Users;
 using viaggia_server.Services.EmailResetPassword;
 using viaggia_server.Services.Media;
 using viaggia_server.Services.Payment;
-using viaggia_server.Services.Users;
 using viaggia_server.Swagger;
 using viaggia_server.Validators;
 
@@ -80,7 +79,6 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 // Register repositories and services
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
-builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IPackageRepository, PackageRepository>();
 builder.Services.AddScoped<IHotelRepository, HotelRepository>();
