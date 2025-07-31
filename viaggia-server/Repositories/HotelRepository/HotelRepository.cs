@@ -1,6 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using viaggia_server.Data;
-using viaggia_server.Models.Addresses;
 using viaggia_server.Models.Commodities;
 using viaggia_server.Models.HotelDates;
 using viaggia_server.Models.HotelRoomTypes;
@@ -70,21 +69,6 @@ namespace viaggia_server.Repositories.HotelRepository
             var exists = await _context.Hotels
                 .AnyAsync(h => h.Cnpj.Equals(cnpj, StringComparison.OrdinalIgnoreCase));
             return exists;
-        }
-
-
-        // Adiciona um novo endereço
-        public async Task<Address> AddAddressAsync(Address address)
-        {
-            var result = await _context.Addresses.AddAsync(address);
-            await _context.SaveChangesAsync();
-            return result.Entity;
-        }
-
-        // Busca um endereço por ID
-        public async Task<Address?> GetAddressByIdAsync(int addressId)
-        {
-            return await _context.Addresses.FindAsync(addressId);
         }
 
         // Adiciona um novo tipo de quarto
@@ -246,19 +230,11 @@ namespace viaggia_server.Repositories.HotelRepository
 
         }
 
-        public async Task<IEnumerable<Address>> GetAddressesByHotelIdAsync(int hotelId)
-        {
-          return await _context.Addresses
-                .Where(a => a.HotelId == hotelId && a.IsActive)
-                .ToListAsync();
-        }
-
         public async Task<Hotel?> GetHotelWithDetailsByIdAsync(int id)
         {
             return await _context.Hotels
                 .Include(h => h.RoomTypes)
                 .Include(h => h.HotelDates)
-                .Include(h => h.Addresses)
                 .Include(h => h.Medias)
                 .Include(h => h.Reviews)
                 .Include(h => h.Packages)
@@ -272,7 +248,6 @@ namespace viaggia_server.Repositories.HotelRepository
             return await _context.Hotels
                 .Include(h => h.RoomTypes)
                 .Include(h => h.HotelDates)
-                .Include(h => h.Addresses)
                 .Include(h => h.Medias)
                 .Include(h => h.Reviews)
                 .Include(h => h.Packages)
@@ -290,7 +265,6 @@ namespace viaggia_server.Repositories.HotelRepository
                 .Include(h => h.HotelDates)
                 .Include(h => h.Medias)
                 .Include(h => h.Reviews)
-                .Include(h => h.Addresses)
                 .Include(h => h.Packages)
                 .Include(h => h.Commodities)
                 .Include(h => h.CommoditieServices)

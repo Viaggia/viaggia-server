@@ -2,7 +2,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using viaggia_server.DTOs.Address;
 using viaggia_server.DTOs.Commoditie;
 using viaggia_server.DTOs.Commodity;
 using viaggia_server.DTOs.Hotels;
@@ -72,7 +71,6 @@ namespace viaggia_server.DTOs.Hotels
        public List<HotelDateDTO> HotelDates { get; set; } = new List<HotelDateDTO>();
        public List<HotelRoomTypeDTO> RoomTypes { get; set; } = new List<HotelRoomTypeDTO>();
         public List<MediaDTO> Medias { get; set; } = new List<MediaDTO>();
-        public List<CreateAddressDTO> Addresses { get; set; } = new List<CreateAddressDTO>();
         public List<PackageDTO> Packages { get; set; } = new List<PackageDTO>();
         public List<ReviewDTO> Reviews { get; set; } = new List<ReviewDTO>();
         public List<CommoditieDTO> Commodities { get; set; } = new List<CommoditieDTO>();

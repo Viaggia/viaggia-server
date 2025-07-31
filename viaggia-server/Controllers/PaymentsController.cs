@@ -9,6 +9,9 @@ using Microsoft.EntityFrameworkCore;
 using viaggia_server.Models.Reservations;
 using Stripe;
 using viaggia_server.DTOs.ReservationDTO;
+using Stripe.Checkout;
+using Stripe.BillingPortal;
+using Stripe.FinancialConnections;
 
 namespace viaggia_server.Controllers
 {
@@ -27,8 +30,9 @@ namespace viaggia_server.Controllers
         [HttpPost("create-payment-intent")]
         public async Task<IActionResult> CreatePaymentIntent([FromBody] CreateReservation createReservation)
         {
-            await _stripePaymentService.CreatePaymentIntentAsync(createReservation);
-            return Ok();
+            var session = await _stripePaymentService.CreatePaymentIntentAsync(createReservation);
+            return Ok(new { url = session.Url });
         }
+
     }
 }

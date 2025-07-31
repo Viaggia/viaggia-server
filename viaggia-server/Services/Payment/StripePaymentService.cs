@@ -9,7 +9,6 @@ using Stripe.Checkout;
 using viaggia_server.Data;
 using viaggia_server.DTOs.Payments;
 using viaggia_server.DTOs.ReservationDTO;
-using viaggia_server.Models.Addresses;
 using viaggia_server.Models.Reservations;
 using viaggia_server.Models.Users;
 using viaggia_server.Repositories;
@@ -45,12 +44,26 @@ namespace viaggia_server.Services.Payment
             _stripeSecretKey = _configuration["Stripe:SecretKey"];
         }
 
-        public async Task CreatePaymentIntentAsync(CreateReservation createReservation)
+        public async Task<Session> CreatePaymentIntentAsync(CreateReservation createReservation)
         {
+            decimal total = Convert.ToInt32(createReservation.TotalPrice);
 
             try
             {
                 StripeConfiguration.ApiKey = _stripeSecretKey;
+
+                var priceOptions = new PriceCreateOptions
+                {
+                    UnitAmount = (long)(total * 100),
+                    Currency = "brl",
+                    ProductData = new PriceProductDataOptions
+                    {
+                        Name = $"Reserva para o pacote {createReservation.PackageId}"
+                    }
+                };
+
+                var priceService = new PriceService();
+                var price = await priceService.CreateAsync(priceOptions);
 
                 var options = new SessionCreateOptions
                 {
@@ -58,12 +71,13 @@ namespace viaggia_server.Services.Payment
                     {
                         new SessionLineItemOptions
                         {
-                            Price = createReservation.TotalPrice,
+                            Price = price.Id,
+                            Quantity = createReservation.NumberGuests,
                         }
                     },
                     Mode = "payment",
-                    SuccessUrl = "https://localhost:7164/home", //redirect page sucessfull
-                    CancelUrl = "https://localhost:7164/home", //redirect page when isn't sucessfull
+                    SuccessUrl = "https://localhost:5173/api/home", //redirect page sucessfull
+                    CancelUrl = "https://localhost:5173/api/home", //redirect page when isn't sucessfull
                 };
                 var service = new SessionService();
 
@@ -81,11 +95,11 @@ namespace viaggia_server.Services.Payment
                         Status = createReservation.Status,
                         NumberOfGuests = createReservation.NumberGuests
                     };
+                    //Deve criar uma reserva quando confirmado o pagamento
                     await _reservations.AddAsync(result);
                     // enviar email de confirmaçãoEmailService;
                 }
-
-                return ;
+                return session;
             }
             catch (Exception ex)
             {

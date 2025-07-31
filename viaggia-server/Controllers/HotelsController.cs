@@ -1,11 +1,9 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using viaggia_server.DTOs;
-using viaggia_server.DTOs.Address;
 using viaggia_server.DTOs.Commoditie;
 using viaggia_server.DTOs.Hotels;
 using viaggia_server.DTOs.Packages;
 using viaggia_server.DTOs.Reviews;
-using viaggia_server.Models.Addresses;
 using viaggia_server.Models.HotelDates;
 using viaggia_server.Models.HotelRoomTypes;
 using viaggia_server.Models.Hotels;
@@ -48,7 +46,6 @@ namespace viaggia_server.Controllers
                     var hotelDates = (await _hotelRepository.GetHotelDatesAsync(hotel.HotelId)).ToList();
                     var medias = (await _hotelRepository.GetMediasByHotelIdAsync(hotel.HotelId)).ToList();
                     var reviews = (await _hotelRepository.GetReviewsByHotelIdAsync(hotel.HotelId)).ToList();
-                    var addresses = (await _hotelRepository.GetAddressesByHotelIdAsync(hotel.HotelId)).ToList();
                     var packages = (await _hotelRepository.GetPackagesByHotelIdAsync(hotel.HotelId)).ToList();
 
                     var dto = new HotelDTO
@@ -96,16 +93,7 @@ namespace viaggia_server.Controllers
                             Comment = r.Comment,
                             CreatedAt = r.CreatedAt
                         }).ToList(),
-                        Addresses = addresses.Select(a => new CreateAddressDTO
-                        {
-                            AddressId = a.AddressId,
-                            Street = a.Street,
-                            City = a.City,
-                            State = a.State,
-                            ZipCode = a.ZipCode,
-                            IsActive = a.IsActive
-                        }).ToList(),
-
+                        
                         Packages = packages.Select(p => new PackageDTO
                         {
                             PackageId = p.PackageId,
@@ -151,7 +139,6 @@ namespace viaggia_server.Controllers
                 hotel.HotelDates = (await _hotelRepository.GetHotelDatesAsync(id)).ToList();
                 hotel.Medias = (await _hotelRepository.GetMediasByHotelIdAsync(id)).ToList();
                 hotel.Reviews = (await _hotelRepository.GetReviewsByHotelIdAsync(id)).ToList();
-                hotel.Addresses = (await _hotelRepository.GetAddressesByHotelIdAsync(id)).ToList();
 
                 hotel.AverageRating = hotel.Reviews.Any() ? hotel.Reviews.Average(r => r.Rating) : 0;
 
@@ -196,15 +183,6 @@ namespace viaggia_server.Controllers
                         Rating = r.Rating,
                         Comment = r.Comment,
                         CreatedAt = r.CreatedAt
-                    }).ToList(),
-                    Addresses = hotel.Addresses.Select(a => new CreateAddressDTO
-                    {
-                        AddressId = a.AddressId,
-                        Street = a.Street,
-                        City = a.City,
-                        State = a.State,
-                        ZipCode = a.ZipCode,
-                        IsActive = a.IsActive
                     }).ToList(),
                     Packages = hotel.Packages.Select(p => new PackageDTO
                     {
@@ -260,15 +238,7 @@ namespace viaggia_server.Controllers
                     ContactPhone = createHotelDto.ContactPhone,
                     ContactEmail = createHotelDto.ContactEmail,
                     IsActive = createHotelDto.IsActive,
-                    Cnpj = createHotelDto.Cnpj,
-                    Addresses = createHotelDto.Addresses?.Select(addrDto => new Address
-                    {
-                        Street = addrDto.Street,
-                        City = addrDto.City,
-                        State = addrDto.State,
-                        ZipCode = addrDto.ZipCode,
-                        IsActive = true
-                    }).ToList() ?? new List<Address>()
+                    Cnpj = createHotelDto.Cnpj
                 };
 
                 var createdHotel = await _genericRepository.AddAsync(hotel);

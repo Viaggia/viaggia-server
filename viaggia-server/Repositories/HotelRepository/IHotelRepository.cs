@@ -1,5 +1,4 @@
 ﻿using viaggia_server.Models.Hotels;
-using viaggia_server.Models.Addresses;
 using viaggia_server.Models.HotelRoomTypes;
 using viaggia_server.Models.HotelDates;
 using viaggia_server.Models.Medias;
@@ -16,11 +15,6 @@ namespace viaggia_server.Repositories.HotelRepository
         // Verifica se um hotel já existe pelo nome
         Task<bool> NameExistsAsync(string nome);
         Task<bool> CnpjExistsAsync(string? cnpj);
-
-        // Endereços
-        Task<Address> AddAddressAsync(Address address);
-        Task<Address?> GetAddressByIdAsync(int addressId);
-        Task<IEnumerable<Address>> GetAddressesByHotelIdAsync(int hotelId);
 
         // Tipos de Quarto
         Task<HotelRoomType> AddRoomTypeAsync(HotelRoomType roomType);

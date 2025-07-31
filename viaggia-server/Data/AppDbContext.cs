@@ -1,5 +1,4 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using viaggia_server.Models.Addresses;
 using viaggia_server.Models.Commodities;
 using viaggia_server.Models.Companions;
 using viaggia_server.Models.HotelDates;
@@ -29,7 +28,6 @@ namespace viaggia_server.Data
         public DbSet<HotelRoomType> RoomTypes { get; set; } = null!;
         public DbSet<HotelDate> HotelDates { get; set; } = null!;
         public DbSet<Reservation> Reservations { get; set; } = null!;
-        public DbSet<Address> Addresses { get; set; } = null!;
         public DbSet<Media> Medias { get; set; } = null!;
         public DbSet<Review> Reviews { get; set; } = null!;
         public DbSet<Companion> Companions { get; set; } = null!;
@@ -83,13 +81,6 @@ namespace viaggia_server.Data
                 .HasOne(p => p.Hotel)
                 .WithMany(h => h.Packages)
                 .HasForeignKey(p => p.HotelId)
-                .OnDelete(DeleteBehavior.NoAction);
-
-            // Configuration for Hotel
-            modelBuilder.Entity<Hotel>()
-                .HasMany(h => h.Addresses)
-                .WithOne(a => a.Hotel) // Remove the back reference - Address doesn't have Hotel property
-                .HasForeignKey(h => h.AddressId)
                 .OnDelete(DeleteBehavior.NoAction);
 
             modelBuilder.Entity<Hotel>()
@@ -210,7 +201,6 @@ namespace viaggia_server.Data
             modelBuilder.Entity<HotelRoomType>().HasQueryFilter(rt => rt.IsActive);
             modelBuilder.Entity<HotelDate>().HasQueryFilter(hd => hd.IsActive);
             modelBuilder.Entity<Reservation>().HasQueryFilter(r => r.IsActive);
-            modelBuilder.Entity<Address>().HasQueryFilter(a => a.IsActive);
             modelBuilder.Entity<Media>().HasQueryFilter(m => m.IsActive);
             modelBuilder.Entity<Review>().HasQueryFilter(r => r.IsActive);
             modelBuilder.Entity<Companion>().HasQueryFilter(c => c.IsActive);

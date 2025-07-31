@@ -1,6 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using viaggia_server.Models.Addresses;
 using viaggia_server.Models.Commodities;
 using viaggia_server.Models.HotelDates;
 using viaggia_server.Models.HotelRoomTypes;
@@ -50,7 +49,6 @@ namespace viaggia_server.Models.Hotels
 
         // Relationships
         public virtual ICollection<HotelRoomType> RoomTypes { get; set; } = new List<HotelRoomType>();
-        public virtual ICollection<Address> Addresses { get; set; } = new List<Address>();
         public virtual ICollection<HotelDate> HotelDates { get; set; } = new List<HotelDate>();
         public virtual ICollection<Reservation> Reservations { get; set; } = new List<Reservation>();
         public virtual ICollection<Media> Medias { get; set; } = new List<Media>();
