@@ -47,4 +47,5 @@ namespace viaggia_server.DTOs.Commodity
         // Serviços extras personalizados
         public List<CommoditieServicesDTO> CommoditieServices { get; set; } = new();
     }
+
 }

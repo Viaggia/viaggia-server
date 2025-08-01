@@ -1,4 +1,4 @@
-﻿namespace viaggia_server.Services.Media
+namespace viaggia_server.Services.Media
 {
     public class ImageService : IImageService
     {

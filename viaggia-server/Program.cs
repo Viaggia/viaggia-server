@@ -1,5 +1,7 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 using System.Text;
 using FluentValidation;
 using FluentValidation.AspNetCore;
@@ -8,10 +10,13 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Stripe;
 using Viaggia.Swagger;
+using viaggia_server.Config;
 using viaggia_server.Data;
 using viaggia_server.Repositories;
 using viaggia_server.Repositories.Reservations;
@@ -21,11 +26,9 @@ using viaggia_server.Repositories.Commodities;
 using viaggia_server.Repositories.HotelRepository;
 using viaggia_server.Repositories.Payment;
 using viaggia_server.Repositories.Users;
-using viaggia_server.Services;
-using viaggia_server.Services.Reservations;
 using viaggia_server.Services.EmailResetPassword;
-using viaggia_server.Services.Media;
-using viaggia_server.Services.Payment;
+using viaggia_server.Services.HotelServices;
+using viaggia_server.Services.Medias;
 using viaggia_server.Swagger;
 using viaggia_server.Validators;
 
@@ -71,8 +74,11 @@ builder.Services.AddSwaggerGen(c =>
             new string[] { }
         }
     });
-    c.OperationFilter<SecurityRequirementsOperationFilter>();
+    c.EnableAnnotations();
+    c.SchemaFilter<EnumSchemaFilter>();
     c.SchemaFilter<FormFileSchemaFilter>();
+    c.OperationFilter<SecurityRequirementsOperationFilter>();
+    c.OperationFilter<MultipartFormDataOperationFilter>();
 });
 
 
@@ -81,14 +87,15 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"),
     sqlOptions => sqlOptions.CommandTimeout(60)));
 
+
 // Register repositories and services
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
-builder.Services.AddScoped<IReservationRepository, ReservationRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IPackageRepository, PackageRepository>();
-builder.Services.AddScoped<IReservationService, ReservationService>();
-
+builder.Services.AddScoped<IHotelServices, HotelServices>();
 builder.Services.AddScoped<IHotelRepository, HotelRepository>();
+builder.Services.AddScoped<IReservationRepository, ReservationRepository>();
+builder.Services.AddScoped<IReservationService, ReservationService>();
 builder.Services.AddScoped<ICommoditieRepository, CommoditieRepository>();
 builder.Services.AddScoped<ICommoditieServicesRepository, CommoditieServicesRepository>();
 builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
@@ -113,7 +120,7 @@ builder.Services.AddLogging(logging =>
 });
 
 // Configure authentication (JWT and Google OAuth)
-builder.Services.AddAuthentication(options =>
+ builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
     options.DefaultChallengeScheme = GoogleDefaults.AuthenticationScheme;
@@ -153,6 +160,7 @@ builder.Services.AddAuthentication(options =>
 {
     options.ClientId = builder.Configuration["Authentication:Google:ClientId"];
     options.ClientSecret = builder.Configuration["Authentication:Google:ClientSecret"];
+    options.SignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
     options.SignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
     options.SaveTokens = true;
     options.ClaimActions.MapJsonKey(ClaimTypes.NameIdentifier, "sub");
@@ -198,6 +206,7 @@ builder.Services.Configure<KestrelServerOptions>(options =>
     options.Limits.MaxRequestBodySize = 5 * 1024 * 1024; // 5MB
 });
 
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -208,12 +217,11 @@ if (app.Environment.IsDevelopment())
 }
 
 
-app.UseStaticFiles();
+
 app.UseHttpsRedirection();
 app.UseStaticFiles(); // For serving images in wwwroot
 app.UseCors("AllowFrontend");
 app.UseAuthentication();
-app.UseAuthorization();
 app.MapControllers();
 
 app.Run();

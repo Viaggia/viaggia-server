@@ -62,7 +62,7 @@ namespace viaggia_server.Controllers
             var user = await _repository.CreateOrLoginOAuth(oauthRequest);
             var token = await _authRepository.GenerateJwtTokenAsync(user);
 
-            /*return Ok(new LoginResponseDTO
+            return Ok(new LoginResponseDTO
             {
                 Token = token,
                 Name = user.Name,
@@ -70,11 +70,8 @@ namespace viaggia_server.Controllers
                 PhoneNumber = user.PhoneNumber,
                 Picture = user.AvatarUrl,
                 NeedsProfileCompletion = string.IsNullOrEmpty(user.PhoneNumber)
-            });*/
-
-            return Redirect($"http://localhost:5173/auth-success?token={token}");
+            });
         }
-
 
         [HttpPost("logout-google")]
         public async Task<IActionResult> Logout()

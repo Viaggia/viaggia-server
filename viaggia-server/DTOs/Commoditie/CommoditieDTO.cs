@@ -1,4 +1,4 @@
-﻿
+
 using viaggia_server.DTOs.Commoditie;
 using viaggia_server.DTOs.Commodity;
 
@@ -8,8 +8,6 @@ namespace viaggia_server.DTOs.Commoditie
     {
         public int CommoditieId { get; set; }
         public int HotelId { get; set; }
-
-        // Serviços fixos
         public bool HasParking { get; set; }
         public bool IsParkingPaid { get; set; }
 

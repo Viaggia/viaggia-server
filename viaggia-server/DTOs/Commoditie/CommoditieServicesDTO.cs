@@ -1,8 +1,11 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace viaggia_server.DTOs.Commoditie
+namespace viaggia_server.DTOs.Commoditie
 {
+
 
     public class CommoditieServicesDTO
     {
