@@ -36,10 +36,10 @@ namespace viaggia_server.Models.Reservations
         public virtual Hotel? Hotel { get; set; }
 
         [Required(ErrorMessage = "Start date is required.")]
-        public DateTime StartDate { get; set; }
+        public DateTime CheckInDate { get; set; }
 
         [Required(ErrorMessage = "End date is required.")]
-        public DateTime EndDate { get; set; }
+        public DateTime CheckOutDate { get; set; }
 
         [Required(ErrorMessage = "Total price is required.")]
         [Column(TypeName = "decimal(10,2)")]

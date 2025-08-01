@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using viaggia_server.Data;
-using viaggia_server.DTOs.ReservationDTO;
+using viaggia_server.DTOs.Reservation;
 using viaggia_server.Models.Reservations;
 
 namespace viaggia_server.Repositories.ReservationRepository

@@ -1,4 +1,10 @@
-﻿namespace viaggia_server.Services.Media
+﻿
+using System.Net.Mail;
+using System.Net;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
+
+namespace viaggia_server.Services.Media
 {
     public class ImageService : IImageService
     {

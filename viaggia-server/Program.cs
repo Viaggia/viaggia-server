@@ -14,20 +14,18 @@ using Stripe;
 using Viaggia.Swagger;
 using viaggia_server.Data;
 using viaggia_server.Repositories;
+using viaggia_server.Repositories.ReservationRepository;
+using viaggia_server.Repositories.Users;
 using viaggia_server.Repositories.Auth;
 using viaggia_server.Repositories.Commodities;
 using viaggia_server.Repositories.HotelRepository;
-using viaggia_server.Repositories.Users;
-using viaggia_server.Services.EmailResetPassword;
-using viaggia_server.Services.Media;
+using viaggia_server.Services;
 using viaggia_server.Services.Payment;
-<<<<<<< HEAD
-using viaggia_server.Services.ReservationServices;
-using viaggia_server.Services.Users;
-=======
 using viaggia_server.Swagger;
->>>>>>> 664f42f84bdb8cd29949603648bb149ab8b8f850
 using viaggia_server.Validators;
+using viaggia_server.Services;
+using viaggia_server.Services.Media;
+using viaggia_server.Services.Email;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -40,7 +38,6 @@ builder.Services.AddControllers()
         options.JsonSerializerOptions.DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull;
         options.JsonSerializerOptions.AllowTrailingCommas = true;
         options.JsonSerializerOptions.ReadCommentHandling = System.Text.Json.JsonCommentHandling.Skip;
-
     });
 
 // Add Swagger
@@ -59,22 +56,21 @@ builder.Services.AddSwaggerGen(c =>
     });
     c.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
     {
+    {
+        new Microsoft.OpenApi.Models.OpenApiSecurityScheme
         {
-            new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+            Reference = new Microsoft.OpenApi.Models.OpenApiReference
             {
-                Reference = new Microsoft.OpenApi.Models.OpenApiReference
-                {
-                    Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme,
-                    Id = "Bearer"
-                }
-            },
-            new string[] { }
-        }
+                Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme,
+                Id = "Bearer"
+            }
+        },
+        new string[] { }
+    }
     });
     c.OperationFilter<SecurityRequirementsOperationFilter>();
     c.SchemaFilter<FormFileSchemaFilter>();
 });
-
 
 // Configure DbContext
 builder.Services.AddDbContext<AppDbContext>(options =>
@@ -84,6 +80,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 // Register repositories and services
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IImageService, ImageService>();
 builder.Services.AddScoped<IPackageRepository, PackageRepository>();
 builder.Services.AddScoped<IHotelRepository, HotelRepository>();
 builder.Services.AddScoped<ICommoditieRepository, CommoditieRepository>();
@@ -91,20 +88,12 @@ builder.Services.AddScoped<ICommoditieServicesRepository, CommoditieServicesRepo
 builder.Services.AddScoped<IStripePaymentService, StripePaymentService>();
 builder.Services.AddScoped<IAuthRepository, AuthRepository>();
 builder.Services.AddScoped<IGoogleAccountRepository, GoogleAccountRepository>();
-<<<<<<< HEAD
-// builder.Services.AddScoped<IReservationServices, ReservationServices>();
-builder.Services.AddScoped<IAuthService, AuthService>();
-=======
->>>>>>> 664f42f84bdb8cd29949603648bb149ab8b8f850
 builder.Services.AddScoped<IEmailService, EmailService>();
-builder.Services.AddScoped<IImageService, ImageService>();
 builder.Services.AddScoped<Stripe.TokenService>();
 builder.Services.AddScoped<Stripe.CustomerService>();
 builder.Services.AddScoped<Stripe.ChargeService>();
-builder.Services.AddScoped<Stripe.PaymentIntent>();
 builder.Services.AddScoped<Stripe.PaymentIntentService>();
 builder.Services.AddScoped<Stripe.ProductService>();
-
 
 // Configure Stripe
 StripeConfiguration.ApiKey = builder.Configuration["Stripe:SecretKey"];
@@ -188,12 +177,10 @@ builder.Services.AddCors(options =>
                 "http://localhost:5173",
                 "https://your-production-frontend.com"
             ).AllowAnyOrigin()
-             .AllowAnyHeader()
-             .AllowAnyMethod();
-           
+                .AllowAnyHeader()
+                .AllowAnyMethod();
     });
 });
-
 
 // Add file upload support
 builder.Services.Configure<IISServerOptions>(options =>
@@ -213,7 +200,6 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "Viaggia Server API v1"));
 }
-
 
 app.UseStaticFiles();
 app.UseHttpsRedirection();

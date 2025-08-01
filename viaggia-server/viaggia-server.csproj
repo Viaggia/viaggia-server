@@ -32,7 +32,6 @@
     <Folder Include="wwwroot\Uploads\Avatars\" />
 
     <Folder Include="wwwroot\Uploads\Packages\" />
-
   </ItemGroup>
 
 </Project>

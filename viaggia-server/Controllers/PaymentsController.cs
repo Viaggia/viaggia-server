@@ -1,17 +1,17 @@
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
-using viaggia_server.DTOs;
-using viaggia_server.Services.Payment;
-using viaggia_server.Data;
-using viaggia_server.DTOs.Payments;
 using Microsoft.EntityFrameworkCore;
-using viaggia_server.Models.Reservations;
 using Stripe;
-using viaggia_server.DTOs.ReservationDTO;
-using Stripe.Checkout;
 using Stripe.BillingPortal;
+using Stripe.Checkout;
 using Stripe.FinancialConnections;
+using System.Security.Claims;
+using viaggia_server.Data;
+using viaggia_server.DTOs;
+using viaggia_server.DTOs.Payments;
+using viaggia_server.DTOs.Reservation;
+using viaggia_server.Models.Reservations;
+using viaggia_server.Services.Payment;
 
 namespace viaggia_server.Controllers
 {
@@ -21,18 +21,41 @@ namespace viaggia_server.Controllers
     public class PaymentsController : ControllerBase
     {
         private readonly IStripePaymentService _stripePaymentService;
-        
+
         public PaymentsController(IStripePaymentService stripePaymentService, ILogger<PaymentsController> logger)
         {
             _stripePaymentService = stripePaymentService;
         }
 
         [HttpPost("create-payment-intent")]
-        public async Task<IActionResult> CreatePaymentIntent([FromBody] CreateReservationDTO createReservation)
+        public async Task<IActionResult> CreatePaymentIntent([FromBody] ReservationCreateDTO createReservation)
         {
-            var session = await _stripePaymentService.CreatePaymentIntentAsync(createReservation); 
-            return Ok(new { url = session.Url });
+            try
+            {
+                var session = await _stripePaymentService.CreatePaymentIntentAsync(createReservation);
+
+                if (session == null)
+                {
+                    return StatusCode(500, "Falha ao criar sessão de pagamento.");
+                }
+
+                return Ok(new { url = session.Url });
+            }
+            catch (Exception ex)
+            {
+                // Loga no console da aplicação e retorna erro detalhado para debug
+                Console.WriteLine($"Erro ao criar pagamento: {ex.Message}");
+                return StatusCode(500, $"Erro ao criar pagamento: {ex.Message}");
+            }
         }
 
+        [AllowAnonymous]
+        [HttpPost("/webhook")]
+        
+        public async Task<IActionResult> Post()
+        {
+            await _stripePaymentService.HandleStripeWebhookAsync(Request);
+            return Ok();
+        }
     }
 }

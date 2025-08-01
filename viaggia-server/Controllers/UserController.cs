@@ -7,7 +7,7 @@ using viaggia_server.DTOs;
 using viaggia_server.DTOs.User;
 using viaggia_server.DTOs.Users;
 using viaggia_server.Repositories.Users;
-using viaggia_server.Services.EmailResetPassword;
+using viaggia_server.Services.Email;
 
 namespace viaggia_server.Controllers
 {
