@@ -488,6 +488,60 @@ namespace viaggia_server.Services.Payment
             };
         }
 
+        public async Task<bool> UpdatePaymentStatusAsync(string paymentIntentId, string status, long amount)
+        {
+            try
+            {
+                _logger.LogInformation("Atualizando status do pagamento {PaymentIntentId} para {Status}", paymentIntentId, status);
+
+                // Buscar o pagamento no banco de dados
+                var payment = await _context.Payments
+                    .FirstOrDefaultAsync(p => p.StripePaymentIntentId == paymentIntentId);
+
+                if (payment == null)
+                {
+                    _logger.LogWarning("Pagamento não encontrado para PaymentIntentId: {PaymentIntentId}", paymentIntentId);
+                    return false;
+                }
+
+                // Atualizar o status
+                payment.Status = MapStripeStatusToLocalStatus(status);
+                payment.Amount = amount / 100m; // Converter de centavos para decimal
+                payment.UpdatedAt = DateTime.UtcNow;
+
+                // Se o pagamento foi bem-sucedido, definir data de processamento
+                if (status == "succeeded")
+                {
+                    payment.ProcessedAt = DateTime.UtcNow;
+                }
+
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation("Status do pagamento {PaymentIntentId} atualizado com sucesso para {Status}", paymentIntentId, status);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Erro ao atualizar status do pagamento {PaymentIntentId}", paymentIntentId);
+                return false;
+            }
+        }
+
+        private string MapStripeStatusToLocalStatus(string stripeStatus)
+        {
+            return stripeStatus switch
+            {
+                "succeeded" => "Completed",
+                "failed" => "Failed",
+                "canceled" => "Cancelled",
+                "processing" => "Processing",
+                "requires_payment_method" => "Pending",
+                "requires_confirmation" => "Pending",
+                "requires_action" => "Pending",
+                _ => "Unknown"
+            };
+        }
+
         #endregion
     }
 }

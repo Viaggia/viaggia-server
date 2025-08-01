@@ -5,13 +5,14 @@ using viaggia_server.Models.Commodities;
 
 namespace viaggia_server.Repositories.Commodities
 {
-    public interface ICommoditieRepository
+    public interface ICommoditieRepository : IRepository<Commoditie>
     {
-        Task<Commodity> AddAsync(Commodity commoditie);
-        Task<Commodity?> GetByIdAsync(int id);
-        Task<IEnumerable<Commodity>> GetAllAsync();
-        Task<Commodity?> GetByHotelIdAsync(int hotelId);
-        Task<bool> UpdateAsync(Commodity commoditie);
+        Task<IEnumerable<Commoditie>> GetAllAsync();
+        Task<Commoditie?> GetByIdAsync(int id);
+        Task<Commoditie?> GetByHotelIdAsync(int hotelId);
+        Task<Commoditie> AddAsync(Commoditie entity);
+        Task<Commoditie> UpdateAsync(Commoditie entity);
+        Task<bool> SoftDeleteAsync(int id);
         Task<bool> DeleteAsync(int id);
     }
 }

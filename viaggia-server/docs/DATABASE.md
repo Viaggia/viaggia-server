@@ -202,18 +202,181 @@ CREATE TABLE Reservations (
 CREATE TABLE Payments (
     PaymentId int IDENTITY(1,1) PRIMARY KEY,
     UserId int NOT NULL,
-    ReservationId int NOT NULL,
+    ReservationId int NULL, -- Pode ser NULL para pagamentos sem reserva
+    
+    -- Integração com Stripe
+    StripePaymentIntentId nvarchar(100) UNIQUE NOT NULL, -- pi_1234567890
+    StripeChargeId nvarchar(100) NULL, -- ch_1234567890 (após confirmação)
+    StripeCustomerId nvarchar(100) NULL, -- cus_1234567890
+    
     Amount decimal(10,2) NOT NULL,
-    PaymentDate datetime2 NOT NULL,
-    PaymentMethod nvarchar(50) NOT NULL, -- 'CreditCard', 'BankTransfer', etc.
-    Status nvarchar(20) NOT NULL, -- 'Completed', 'Pending', 'Failed'
-    BillingAddressId int NOT NULL,
+    Currency nvarchar(3) NOT NULL DEFAULT 'BRL',
+    Description nvarchar(500) NULL,
+    
+    -- Status do pagamento
+    Status nvarchar(20) NOT NULL DEFAULT 'Pending', -- 'Processing', 'Completed', 'Failed', 'Cancelled', 'Refunded', 'Disputed'
+    
+    -- Metadados do Stripe (JSON)
+    Metadata nvarchar(max) NULL, -- JSON com dados adicionais
+    
+    -- Dados do cartão (últimos 4 dígitos apenas - PCI DSS Compliant)
+    LastFourDigits nvarchar(4) NULL, -- Últimos 4 dígitos do cartão
+    CardBrand nvarchar(20) NULL, -- 'visa', 'mastercard', 'amex'
+    
+    -- Timestamps
+    CreatedAt datetime2 NOT NULL DEFAULT GETUTCDATE(),
+    ProcessedAt datetime2 NULL, -- Quando foi processado com sucesso
+    UpdatedAt datetime2 NULL,
+    
+    -- Endereço de cobrança
+    BillingAddressId int NULL,
+    
+    -- Chave de idempotência para evitar pagamentos duplicados
+    IdempotencyKey nvarchar(100) UNIQUE NULL,
+    
+    -- Soft delete
     IsActive bit NOT NULL DEFAULT 1,
     
     FOREIGN KEY (UserId) REFERENCES Users(Id),
     FOREIGN KEY (ReservationId) REFERENCES Reservations(ReservationId),
     FOREIGN KEY (BillingAddressId) REFERENCES Addresses(AddressId)
 );
+
+-- Índices para performance
+CREATE INDEX IX_Payments_UserId ON Payments(UserId);
+CREATE INDEX IX_Payments_StripePaymentIntentId ON Payments(StripePaymentIntentId);
+CREATE INDEX IX_Payments_Status ON Payments(Status);
+CREATE INDEX IX_Payments_CreatedAt ON Payments(CreatedAt);
+```
+
+### 💸 **Refunds** - Reembolsos
+
+```sql
+CREATE TABLE Refunds (
+    RefundId int IDENTITY(1,1) PRIMARY KEY,
+    PaymentId int NOT NULL,
+    
+    -- Integração com Stripe
+    StripeRefundId nvarchar(100) UNIQUE NOT NULL, -- re_1234567890
+    
+    Amount decimal(10,2) NOT NULL, -- Valor reembolsado
+    Currency nvarchar(3) NOT NULL DEFAULT 'BRL',
+    Reason nvarchar(50) NULL, -- 'requested_by_customer', 'duplicate', 'fraudulent'
+    
+    -- Status do reembolso
+    Status nvarchar(20) NOT NULL DEFAULT 'Pending', -- 'Succeeded', 'Failed', 'Canceled'
+    
+    -- Metadados do reembolso
+    Metadata nvarchar(max) NULL, -- JSON com dados adicionais
+    
+    -- Timestamps
+    CreatedAt datetime2 NOT NULL DEFAULT GETUTCDATE(),
+    ProcessedAt datetime2 NULL,
+    
+    -- Soft delete
+    IsActive bit NOT NULL DEFAULT 1,
+    
+    FOREIGN KEY (PaymentId) REFERENCES Payments(PaymentId)
+);
+
+-- Índices
+CREATE INDEX IX_Refunds_PaymentId ON Refunds(PaymentId);
+CREATE INDEX IX_Refunds_StripeRefundId ON Refunds(StripeRefundId);
+```
+
+### 🚫 **Disputes** - Disputas/Chargebacks
+
+```sql
+CREATE TABLE Disputes (
+    DisputeId int IDENTITY(1,1) PRIMARY KEY,
+    PaymentId int NOT NULL,
+    
+    -- Integração com Stripe
+    StripeDisputeId nvarchar(100) UNIQUE NOT NULL, -- dp_1234567890
+    
+    Amount decimal(10,2) NOT NULL, -- Valor em disputa
+    Currency nvarchar(3) NOT NULL DEFAULT 'BRL',
+    Reason nvarchar(50) NOT NULL, -- 'fraudulent', 'subscription_canceled', etc.
+    Status nvarchar(20) NOT NULL, -- 'warning_needs_response', 'warning_under_review', etc.
+    
+    -- Evidências enviadas
+    Evidence nvarchar(max) NULL, -- JSON com evidências
+    EvidenceSubmittedAt datetime2 NULL,
+    
+    -- Timestamps
+    CreatedAt datetime2 NOT NULL DEFAULT GETUTCDATE(),
+    UpdatedAt datetime2 NULL,
+    
+    -- Soft delete
+    IsActive bit NOT NULL DEFAULT 1,
+    
+    FOREIGN KEY (PaymentId) REFERENCES Payments(PaymentId)
+);
+
+-- Índices
+CREATE INDEX IX_Disputes_PaymentId ON Disputes(PaymentId);
+CREATE INDEX IX_Disputes_Status ON Disputes(Status);
+```
+
+### 📊 **PaymentAuditLogs** - Auditoria de Pagamentos
+
+```sql
+CREATE TABLE PaymentAuditLogs (
+    AuditId int IDENTITY(1,1) PRIMARY KEY,
+    PaymentId int NULL, -- Pode ser NULL para eventos gerais
+    UserId int NULL,
+    
+    EventType nvarchar(50) NOT NULL, -- 'payment_created', 'payment_succeeded', 'webhook_received'
+    
+    Amount decimal(10,2) NULL,
+    Currency nvarchar(3) NULL,
+    
+    -- Dados da requisição
+    IPAddress nvarchar(45) NULL, -- IPv4 ou IPv6
+    UserAgent nvarchar(500) NULL,
+    
+    -- Metadados do evento
+    AdditionalData nvarchar(max) NULL, -- JSON com dados extras
+    
+    -- Hash para integridade
+    Hash nvarchar(64) NOT NULL, -- SHA-256 dos dados críticos
+    
+    -- Timestamp
+    Timestamp datetime2 NOT NULL DEFAULT GETUTCDATE(),
+    
+    FOREIGN KEY (PaymentId) REFERENCES Payments(PaymentId),
+    FOREIGN KEY (UserId) REFERENCES Users(Id)
+);
+
+-- Índices para auditoria
+CREATE INDEX IX_PaymentAuditLogs_PaymentId ON PaymentAuditLogs(PaymentId);
+CREATE INDEX IX_PaymentAuditLogs_EventType ON PaymentAuditLogs(EventType);
+CREATE INDEX IX_PaymentAuditLogs_Timestamp ON PaymentAuditLogs(Timestamp);
+CREATE INDEX IX_PaymentAuditLogs_UserId ON PaymentAuditLogs(UserId);
+```
+
+### 🔄 **ProcessedWebhooks** - Controle de Webhooks Processados
+
+```sql
+CREATE TABLE ProcessedWebhooks (
+    Id int IDENTITY(1,1) PRIMARY KEY,
+    StripeEventId nvarchar(100) UNIQUE NOT NULL, -- evt_1234567890
+    EventType nvarchar(50) NOT NULL, -- 'payment_intent.succeeded'
+    ProcessedAt datetime2 NOT NULL DEFAULT GETUTCDATE(),
+    ProcessingResult nvarchar(20) NOT NULL DEFAULT 'Success', -- 'Success', 'Failed', 'Ignored'
+    ErrorMessage nvarchar(max) NULL, -- Em caso de falha
+    
+    -- Para retry automático
+    RetryCount int NOT NULL DEFAULT 0,
+    NextRetryAt datetime2 NULL,
+    
+    FOREIGN KEY (StripeEventId) REFERENCES ProcessedWebhooks(StripeEventId)
+);
+
+-- Índices
+CREATE INDEX IX_ProcessedWebhooks_StripeEventId ON ProcessedWebhooks(StripeEventId);
+CREATE INDEX IX_ProcessedWebhooks_EventType ON ProcessedWebhooks(EventType);
+CREATE INDEX IX_ProcessedWebhooks_ProcessedAt ON ProcessedWebhooks(ProcessedAt);
 ```
 
 ### 👥 **Companions** - Acompanhantes
