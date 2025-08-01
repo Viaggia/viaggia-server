@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using viaggia_server.DTOs.Commoditie;
 using viaggia_server.DTOs.Hotels;
 using viaggia_server.DTOs.Packages;
