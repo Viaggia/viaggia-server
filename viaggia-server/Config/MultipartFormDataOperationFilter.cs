@@ -1,10 +1,10 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerGen;
+using System.Linq;
 
 namespace viaggia_server.Config
 {
-    // Filtro para suportar multipart/form-data
     public class MultipartFormDataOperationFilter : IOperationFilter
     {
         public void Apply(OpenApiOperation operation, OperationFilterContext context)
@@ -14,33 +14,35 @@ namespace viaggia_server.Config
                 .OfType<ConsumesAttribute>()
                 .Any(attr => attr.ContentTypes.Contains("multipart/form-data"));
 
-            if (isMultipartFormData)
+            if (!isMultipartFormData)
+                return;
+
+            // Get the parameter that is bound from form data (usually marked with [FromForm])
+            var formParameter = context.MethodInfo.GetParameters()
+                .FirstOrDefault(p => p.GetCustomAttributes(true).OfType<FromFormAttribute>().Any());
+
+            if (formParameter == null)
+                return;
+
+            var schema = context.SchemaGenerator.GenerateSchema(formParameter.ParameterType, context.SchemaRepository);
+
+            operation.RequestBody = new OpenApiRequestBody
             {
-                operation.RequestBody = new OpenApiRequestBody
+                Content = new Dictionary<string, OpenApiMediaType>
                 {
-                    Content = new Dictionary<string, OpenApiMediaType>
+                    ["multipart/form-data"] = new OpenApiMediaType
                     {
-                        ["multipart/form-data"] = new OpenApiMediaType
-                        {
-                            Schema = new OpenApiSchema
+                        Schema = schema,
+                        Encoding = schema.Properties.ToDictionary(
+                            prop => prop.Key,
+                            prop => new OpenApiEncoding
                             {
-                                Type = "object",
-                                Properties = context.SchemaGenerator
-                                    .GenerateSchema(context.MethodInfo.GetParameters()[0].ParameterType, context.SchemaRepository)
-                                    .Properties,
-                                Required = context.SchemaGenerator
-                                    .GenerateSchema(context.MethodInfo.GetParameters()[0].ParameterType, context.SchemaRepository)
-                                    .Required
-                            },
-                            Encoding = new Dictionary<string, OpenApiEncoding>
-                        {
-                            { "MediaFiles", new OpenApiEncoding { Style = ParameterStyle.Form } },
-                            { "RoomTypes", new OpenApiEncoding { Style = ParameterStyle.Form } }
-                        }
-                        }
+                                Style = ParameterStyle.Form,
+                                ContentType = prop.Value.Type == "string" && prop.Value.Format == "binary" ? "application/octet-stream" : null
+                            })
                     }
-                };
-            }
+                }
+            };
         }
     }
 }
