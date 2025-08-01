@@ -9,7 +9,6 @@ namespace viaggia_server.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    [ApiController]
     public class HotelController : ControllerBase
     {
         private readonly IHotelServices _hotelServices;

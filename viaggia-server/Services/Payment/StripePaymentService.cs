@@ -85,12 +85,8 @@ namespace viaggia_server.Services.Payment
             {
                 { "userId", createReservation.UserId.ToString() },
                 { "packageId", createReservation.PackageId.ToString() ?? "0" },
-                { "roomTypeId", createReservation.RoomTypeId.ToString() ?? "0" },
-                { "checkInDate", createReservation.CheckInDate.ToString("o") },
-                { "checkOutDate", createReservation.CheckOutDate.ToString("o") },
                 { "TotalPrice", total.ToString(CultureInfo.InvariantCulture) },
-                { "status", createReservation.Status },
-                { "numberOfGuests", createReservation.NumberOfGuests.ToString() }
+                { "status", createReservation.Status }
             }
                 };
 
@@ -134,11 +130,7 @@ namespace viaggia_server.Services.Payment
                         {
                             UserId = int.Parse(session.Metadata["userId"]),
                             PackageId = int.Parse(session.Metadata["packageId"]),
-                            RoomTypeId = int.Parse(session.Metadata["roomTypeId"]),
-                            CheckInDate = DateTime.Parse(session.Metadata["checkInDate"], null, DateTimeStyles.RoundtripKind),
-                            CheckOutDate = DateTime.Parse(session.Metadata["checkOutDate"], null, DateTimeStyles.RoundtripKind),
-                            Status = session.Metadata["status"],
-                            NumberOfGuests = int.Parse(session.Metadata["numberOfGuests"])
+                            RoomTypeId = int.Parse(session.Metadata["roomTypeId"])
                         };
 
                         await _reservations.AddAsync(reservation);

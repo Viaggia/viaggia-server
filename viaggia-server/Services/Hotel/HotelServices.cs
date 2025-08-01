@@ -3,12 +3,13 @@ using Microsoft.AspNetCore.Mvc;
 using viaggia_server.DTOs;
 using viaggia_server.DTOs.Commoditie;
 using viaggia_server.DTOs.Hotel;
+using viaggia_server.DTOs.Hotels;
 using viaggia_server.DTOs.Packages;
 using viaggia_server.DTOs.Reviews;
 using viaggia_server.Models.Commodities;
 using viaggia_server.Models.HotelRoomTypes;
 using viaggia_server.Models.Hotels;
-using viaggia_server.Models.Medias;
+using Media = viaggia_server.Models.Medias.Media;
 using viaggia_server.Models.Packages;
 using viaggia_server.Models.Reviews;
 using viaggia_server.Models.RoomTypeEnums;
@@ -102,7 +103,7 @@ namespace viaggia_server.Services.HotelServices
                         using var stream = new FileStream(filePath, FileMode.Create);
                         await file.CopyToAsync(stream);
 
-                        await _hotelRepository.AddMediaAsync(new Media
+                        await _hotelRepository.AddMediaAsync(new Models.Medias.Media
                         {
                             MediaUrl = $"/Uploads/Hotel/{fileName}",
                             MediaType = file.ContentType,
@@ -231,42 +232,6 @@ namespace viaggia_server.Services.HotelServices
                             Description = p.Description,
                             BasePrice = p.BasePrice,
                             IsActive = p.IsActive
-                        }).ToList(),
-                        Commodities = commodities.Select(c => new CommoditieDTO
-                        {
-                            CommoditieId = c.CommoditieId,
-                            HotelId = c.HotelId,
-                            HasParking = c.HasParking,
-                            IsParkingPaid = c.IsParkingPaid,
-                            HasBreakfast = c.HasBreakfast,
-                            IsBreakfastPaid = c.IsBreakfastPaid,
-                            HasLunch = c.HasLunch,
-                            IsLunchPaid = c.IsLunchPaid,
-                            HasDinner = c.HasDinner,
-                            IsDinnerPaid = c.IsDinnerPaid,
-                            HasSpa = c.HasSpa,
-                            IsSpaPaid = c.IsSpaPaid,
-                            HasPool = c.HasPool,
-                            IsPoolPaid = c.IsPoolPaid,
-                            HasGym = c.HasGym,
-                            IsGymPaid = c.IsGymPaid,
-                            HasWiFi = c.HasWiFi,
-                            IsWiFiPaid = c.IsWiFiPaid,
-                            HasAirConditioning = c.HasAirConditioning,
-                            IsAirConditioningPaid = c.IsAirConditioningPaid,
-                            HasAccessibilityFeatures = c.HasAccessibilityFeatures,
-                            IsAccessibilityFeaturesPaid = c.IsAccessibilityFeaturesPaid,
-                            IsPetFriendly = c.IsPetFriendly,
-                            IsPetFriendlyPaid = c.IsPetFriendlyPaid,
-                            IsActive = c.IsActive
-                        }).ToList(),
-                        CommoditieServices = commoditieServices.Select(cs => new CommoditieServicesDTO
-                        {
-                            CommoditieServicesId = cs.CommoditieServicesId,
-                            Name = cs.Name,
-                            IsPaid = cs.IsPaid,
-                            Description = cs.Description,
-                            IsActive = cs.IsActive
                         }).ToList()
                     };
 
@@ -323,25 +288,17 @@ namespace viaggia_server.Services.HotelServices
             return true;
         }
 
-        public async Task<IEnumerable<MediaModel>> GetMediaByHotelIdAsync(int hotelId)
+        public async Task<IEnumerable<Models.Medias.Media>> GetMediaByHotelIdAsync(int hotelId)
         {
             return await _hotelRepository.GetMediasByHotelIdAsync(hotelId);
         }
 
-        public async Task<MediaModel?> GetMediaByIdAsync(int mediaId)
-        {
-            return await _hotelRepository.GetMediaByIdAsync(mediaId);
-        }
 
-        public async Task<MediaModel> AddMediaToHotelAsync(MediaModel media)
+        public async Task<Models.Medias.Media> AddMediaToHotelAsync(Models.Medias.Media media)
         {
             return await _hotelRepository.AddMediaAsync(media);
         }
 
-        public async Task<bool> SoftDeleteMediaAsync(int mediaId)
-        {
-            return await _hotelRepository.SoftDeleteMediaAsync(mediaId);
-        }
 
         public async Task<ApiResponse<double>> GetHotelAverageRatingAsync(int hotelId)
         {

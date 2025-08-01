@@ -38,72 +38,39 @@ namespace viaggia_server.Services.Reservations
                 ReservationId = r.ReservationId,
                 UserId = r.UserId,
                 PackageId = r.PackageId,
-                RoomTypeId = r.RoomTypeId,
                 HotelId = r.HotelId,
-                CheckInDate = r.CheckInDate,
-                CheckOutDate = r.CheckOutDate,
                 TotalPrice = r.TotalPrice,
-                NumberOfGuests = r.NumberOfGuests,
-                Status = r.Status,
                 IsActive = r.IsActive
             }).ToList();
         }
 
         public async Task<ReservationDTO?> GetByIdAsync(int id)
         {
-            var r = await _reservationRepository.GetReservationByIdAsync(id);
+            var r = await _reservationRepository.GetByIdAsync(id);
             if (r == null) return null;
 
             return new ReservationDTO
             {
+                ReservationId = r.ReservationId,
                 UserId = r.UserId,
                 PackageId = r.PackageId,
-                RoomTypeId = r.RoomTypeId,
                 HotelId = r.HotelId,
-                CheckInDate = r.CheckInDate,
-                CheckOutDate = r.CheckOutDate,
                 TotalPrice = r.TotalPrice,
-                NumberOfGuests = r.NumberOfGuests,
-                Status = r.Status,
                 IsActive = r.IsActive
             };
         }
 
-        public async Task<ReservationDTO> CreateAsync(ReservationCreateDTO dto, Hotels hotel,User user)
+        public async Task<ReservationDTO> CreateAsync(ReservationCreateDTO dto)
         {
-            var userId = _userRepository.GetByIdAsync(dto.UserId);
+            var userId = await _userRepository.GetByIdAsync(dto.UserId);
             if (userId == null) throw new Exception("Cliente não encontrado");
-            var HotelId = _hotelRepository.GetHotelByIdWithDetailsAsync(dto.HotelId);
-            if (HotelId == null) throw new Exception("Hotel não encontrado");
-            var PackageId = _hotelRepository.GetPackageByIdAsync(dto.PackageId);
-
-            try
-            {
-
-            }
-            catch (Exception ex)
-            {
-
-            }
-
-            var CheckIn = dto.CheckInDate;
-            var CheckOut = dto.CheckOutDate;
-
-            int tempo = (CheckOut - CheckIn).Days;
-            var totalPrice = dto.TotalPrice * tempo;
-
 
             var reservation = new Reservation
             {
                 UserId = dto.UserId,
                 PackageId = dto.PackageId,
-                RoomTypeId = dto.RoomTypeId,
                 HotelId = dto.HotelId,
-                CheckInDate = dto.CheckInDate,
-                CheckOutDate = dto.CheckOutDate,
-                TotalPrice = totalPrice,
-                NumberOfGuests = dto.NumberOfGuests,
-                Status = dto.Status,
+                TotalPrice = dto.TotalPrice,
                 IsActive = dto.IsActive
             };
 
@@ -120,13 +87,8 @@ namespace viaggia_server.Services.Reservations
 
             reservation.UserId = dto.UserId;
             reservation.PackageId = dto.PackageId;
-            reservation.RoomTypeId = dto.RoomTypeId;
             reservation.HotelId = dto.HotelId;
-            reservation.CheckInDate = dto.CheckInDate;
-            reservation.CheckOutDate = dto.CheckOutDate;
             reservation.TotalPrice = dto.TotalPrice;
-            reservation.NumberOfGuests = dto.NumberOfGuests;
-            reservation.Status = dto.Status;
             reservation.IsActive = dto.IsActive;
 
             await _reservationRepository.UpdateAsync(reservation);

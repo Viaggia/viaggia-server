@@ -6,6 +6,7 @@ using viaggia_server.Models.Hotels;
 using viaggia_server.Models.Medias;
 using viaggia_server.Models.Packages;
 using viaggia_server.Models.Reviews;
+using viaggia_server.Models.RoomTypeEnums;
 
 namespace viaggia_server.Repositories.HotelRepository
 {
@@ -50,7 +51,6 @@ namespace viaggia_server.Repositories.HotelRepository
                 return false;
             return await _context.Hotels.AnyAsync(h => h.Cnpj.ToLower() == cnpj.ToLower() && h.IsActive);
         }
-
         public async Task<Hotel?> GetHotelByNameAsync(string name)
         {
             return await _context.Hotels
@@ -171,7 +171,6 @@ namespace viaggia_server.Repositories.HotelRepository
         public async Task<Commoditie?> GetCommodityByIdAsync(int commoditieId)
         {
             return await _context.Commodities
-                .Include(c => c.CommoditieServices)
                 .FirstOrDefaultAsync(c => c.CommoditieId == commoditieId && c.IsActive);
         }
 
@@ -182,7 +181,6 @@ namespace viaggia_server.Repositories.HotelRepository
             return commoditieService;
         }
 
-        public async Task<IEnumerable<CommoditieServices>> GetCommoditieServicesByHotelIdAsync(int hotelId)
         public async Task<IEnumerable<CommoditieServices>> GetCommoditieServicesByHotelIdAsync(int hotelId)
         {
             return await _context.CommoditieServices

@@ -39,34 +39,17 @@ namespace viaggia_server.DTOs.Hotels
         [StringLength(10, ErrorMessage = "Check-in time cannot exceed 10 characters.")]
         public string? CheckInTime { get; set; }
 
-            [StringLength(500, ErrorMessage = "Description cannot exceed 500 characters.")]
-            
-            public string? Description { get; set; }
+        [StringLength(10, ErrorMessage = "Check-out time cannot exceed 10 characters.")]
+        public string? CheckOutTime { get; set; }
 
-            [Required]
-            [Range(1, 5, ErrorMessage = "Star rating must be between 1 and 5.")]
-           
-            public int StarRating { get; set; }
+        [StringLength(20, ErrorMessage = "Contact phone cannot exceed 20 characters.")]
+        public string? ContactPhone { get; set; }
 
-            [StringLength(10, ErrorMessage = "Check-in time cannot exceed 10 characters.")]
-            
-            public string? CheckInTime { get; set; }
+        [StringLength(100, ErrorMessage = "Contact email cannot exceed 100 characters.")]
+        [EmailAddress(ErrorMessage = "Invalid email format.")]
+        public string? ContactEmail { get; set; }
 
-            [StringLength(10, ErrorMessage = "Check-out time cannot exceed 10 characters.")]
-           
-            public string? CheckOutTime { get; set; }
-
-            [StringLength(20, ErrorMessage = "Contact phone cannot exceed 20 characters.")]
-           
-            public string? ContactPhone { get; set; }
-
-            [StringLength(100, ErrorMessage = "Contact email cannot exceed 100 characters.")]
-            [EmailAddress(ErrorMessage = "Invalid email format.")]
-            
-            public string? ContactEmail { get; set; }
-
-             public bool IsActive { get; set; } = true;
-
+        public bool IsActive { get; set; } = true;
 
         public List<IFormFile>? MediaFiles { get; set; }
         

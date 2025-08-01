@@ -14,10 +14,7 @@ namespace viaggia_server.Services.HotelServices
         Task<ApiResponse<Hotel>> CreateHotelAsync(CreateHotelDTO createHotelDto, List<CreateHotelRoomTypeDTO> roomTypes);
         Task<Hotel> UpdateHotelAsync(UpdateHotelDto updateHotelDto);
         Task<bool> SoftDeleteHotelAsync(int id);
-        Task<IEnumerable<Media>> GetMediaByHotelIdAsync(int hotelId);
-        Task<Media?> GetMediaByIdAsync(int mediaId);
-        Task<Media> AddMediaToHotelAsync(Media media);
-        Task<bool> SoftDeleteMediaAsync(int mediaId);
+
         Task<ApiResponse<double>> GetHotelAverageRatingAsync(int hotelId);
         Task<ApiResponse<IEnumerable<PackageDTO>>> GetPackagesByHotelIdAsync(int hotelId);
     }

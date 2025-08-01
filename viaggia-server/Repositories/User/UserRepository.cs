@@ -5,7 +5,7 @@ using viaggia_server.DTOs.User;
 using viaggia_server.DTOs.Users;
 using viaggia_server.Models.UserRoles;
 using viaggia_server.Models.Users;
-using viaggia_server.Services.Medias;
+using viaggia_server.Services.Media;
 
 namespace viaggia_server.Repositories.Users
 {

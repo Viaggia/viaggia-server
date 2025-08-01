@@ -7,7 +7,7 @@ using viaggia_server.Models.HotelRoomTypes;
 using viaggia_server.Models.Hotels;
 using viaggia_server.Models.Medias;
 using viaggia_server.Models.Packages;
-using viaggia_server.Models.Payment;
+using viaggia_server.Models.Payments;
 using viaggia_server.Models.Reservations;
 using viaggia_server.Models.Reviews;
 using viaggia_server.Models.RevokedToken;
@@ -144,19 +144,6 @@ namespace viaggia_server.Data
                 .WithMany()
                 .HasForeignKey(r => r.RoomTypeId)
                 .IsRequired(false)
-                .OnDelete(DeleteBehavior.NoAction);
-
-            // Payment
-            modelBuilder.Entity<Payment>()
-                .HasOne(p => p.User)
-                .WithMany(u => u.Payments)
-                .HasForeignKey(p => p.UserId)
-                .OnDelete(DeleteBehavior.NoAction);
-
-            modelBuilder.Entity<Payment>()
-                .HasOne(p => p.Reservation)
-                .WithMany(r => r.Payments)
-                .HasForeignKey(p => p.ReservationId)
                 .OnDelete(DeleteBehavior.NoAction);
 
             // Review
