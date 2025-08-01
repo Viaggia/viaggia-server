@@ -92,11 +92,12 @@ namespace viaggia_server.Repositories.Commodities
             return Task.FromResult(false);
         }
 
-        public async Task<bool> NameExistsAsync(string name)
+       
+        public async Task<Commoditie?> GetByHotelNameAsync(string hotelName)
         {
-            var exists = await _context.Commodities
-                .AnyAsync(c => c.Name == name && c.IsActive);
-            return exists;
+            return await _context.Commodities
+                .Include(c => c.Hotel)
+                .FirstOrDefaultAsync(c => c.Hotel.Name == hotelName);
         }
     }
 }

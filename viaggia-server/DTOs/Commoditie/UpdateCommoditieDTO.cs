@@ -1,11 +1,13 @@
-﻿namespace viaggia_server.DTOs.Commoditie
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace viaggia_server.DTOs.Commoditie
 {
     public class UpdateCommoditieDTO
     {
 
-       
-        public int CommoditieId { get; set; }
-        public int HotelId { get; set; }
+
+        [Required]
+        public string HotelName { get; set; }
 
         // Serviços fixos
         public bool HasParking { get; set; }

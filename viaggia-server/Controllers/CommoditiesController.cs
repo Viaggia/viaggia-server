@@ -3,11 +3,10 @@ using viaggia_server.DTOs;
 using viaggia_server.DTOs.Commoditie;
 using viaggia_server.Models.Commodities;
 using viaggia_server.Models.Hotels;
-using viaggia_server.Models.Packages;
 using viaggia_server.Repositories;
 using viaggia_server.Repositories.Commodities;
 using viaggia_server.Repositories.HotelRepository;
-using viaggia_server.Services; // para IHotelRepository
+using viaggia_server.Services;
 
 namespace viaggia_server.Controllers
 {
@@ -19,7 +18,10 @@ namespace viaggia_server.Controllers
         private readonly IHotelRepository _hotelRepository;
         private readonly IRepository<Hotel> _genericRepository;
 
-        public CommoditieController(ICommoditieRepository commoditieRepository, IHotelRepository hotelRepository,IRepository<Hotel> genericRepository)
+        public CommoditieController(
+            ICommoditieRepository commoditieRepository,
+            IHotelRepository hotelRepository,
+            IRepository<Hotel> genericRepository)
         {
             _commoditieRepository = commoditieRepository;
             _hotelRepository = hotelRepository;
@@ -56,16 +58,7 @@ namespace viaggia_server.Controllers
             return Ok(new ApiResponse<Commoditie>(true, "Commodity do hotel encontrada.", commoditie));
         }
 
-        // Novo: GET api/commoditie/list-names (lista só nomes das commodities)
-        [HttpGet("list-names")]
-        public async Task<IActionResult> GetCommoditiesNames()
-        {
-            var commodities = await _commoditieRepository.GetAllAsync();
-            var list = commodities.Select(c => new { c.CommoditieId, c.Name }).ToList();
-            return Ok(new ApiResponse<object>(true, "Lista de commodities", list));
-        }
-
-        // Novo: GET api/commoditie/list-hotels (lista hotéis id + nome)
+        // GET: api/commoditie/list-hotels (lista hotéis id + nome)
         [HttpGet("list-hotels")]
         public async Task<IActionResult> GetHotelsList()
         {
@@ -74,6 +67,7 @@ namespace viaggia_server.Controllers
             return Ok(new ApiResponse<object>(true, "Lista de hotéis", list));
         }
 
+        // POST: api/commoditie
         [HttpPost]
         [Consumes("multipart/form-data")]
         public async Task<IActionResult> Create([FromForm] CommoditieCreateByHotelNameDTO dto)
@@ -113,41 +107,62 @@ namespace viaggia_server.Controllers
                 IsActive = dto.IsActive
             };
 
-           
             var result = await _commoditieRepository.AddAsync(commoditie);
 
-            return Ok(new ApiResponse<Commoditie>(true, "Commoditie criada com sucesso.", result));
-        }
+            // Retornar dados incluindo o nome do hotel junto com a commoditie criada
+            var response = new
+            {
+                Commoditie = result,
+                HotelName = hotel.Name
+            };
 
+            return Ok(new ApiResponse<object>(true, "Commoditie criada com sucesso.", response));
+        }
 
         // PUT: api/commoditie/{id}
         [HttpPut("{id:int}")]
         [Consumes("multipart/form-data")]
-        public async Task<IActionResult> Update(int id, [FromForm] CommoditieDTO dto)
+        public async Task<IActionResult> Update(int id, [FromForm] UpdateCommoditieDTO dto)
         {
             if (!ModelState.IsValid)
-                return BadRequest(new ApiResponse<CommoditieDTO>(false, "Dados inválidos.", null, ModelState));
+                return BadRequest(new ApiResponse<UpdateCommoditieDTO>(false, "Dados inválidos.", null, ModelState));
 
             var existing = await _commoditieRepository.GetByIdAsync(id);
             if (existing == null)
                 return NotFound(new ApiResponse<Commoditie>(false, "Commodity não encontrada."));
 
-            
-            existing.HotelId = dto.HotelId;
+            var hotel = await _hotelRepository.GetHotelByNameAsync(dto.HotelName);
+            if (hotel == null)
+                return BadRequest(new ApiResponse<object>(false, $"Hotel com nome '{dto.HotelName}' não encontrado."));
+
+            // Atualiza os dados da commodity
+            existing.HotelId = hotel.HotelId;
             existing.HasParking = dto.HasParking;
+            existing.IsParkingPaid = dto.IsParkingPaid;
             existing.HasBreakfast = dto.HasBreakfast;
+            existing.IsBreakfastPaid = dto.IsBreakfastPaid;
             existing.HasLunch = dto.HasLunch;
+            existing.IsLunchPaid = dto.IsLunchPaid;
             existing.HasDinner = dto.HasDinner;
+            existing.IsDinnerPaid = dto.IsDinnerPaid;
             existing.HasSpa = dto.HasSpa;
+            existing.IsSpaPaid = dto.IsSpaPaid;
             existing.HasPool = dto.HasPool;
+            existing.IsPoolPaid = dto.IsPoolPaid;
             existing.HasGym = dto.HasGym;
+            existing.IsGymPaid = dto.IsGymPaid;
             existing.HasWiFi = dto.HasWiFi;
+            existing.IsWiFiPaid = dto.IsWiFiPaid;
             existing.HasAirConditioning = dto.HasAirConditioning;
+            existing.IsAirConditioningPaid = dto.IsAirConditioningPaid;
             existing.HasAccessibilityFeatures = dto.HasAccessibilityFeatures;
+            existing.IsAccessibilityFeaturesPaid = dto.IsAccessibilityFeaturesPaid;
             existing.IsPetFriendly = dto.IsPetFriendly;
+            existing.IsPetFriendlyPaid = dto.IsPetFriendlyPaid;
             existing.IsActive = dto.IsActive;
 
             await _commoditieRepository.UpdateAsync(existing);
+
             return Ok(new ApiResponse<Commoditie>(true, "Commodity atualizada com sucesso.", existing));
         }
 

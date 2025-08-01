@@ -5,8 +5,9 @@ namespace viaggia_server.DTOs.Commodity
 {
     public class CreateCommoditieDTO
     {
+        [Required]
+        public string? HotelName { get; set; }
 
-        
         public int HotelId { get; set; }
 
         // Serviços fixos
