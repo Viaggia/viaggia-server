@@ -1,6 +1,3 @@
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Text;
 using FluentValidation;
 using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Authentication;
@@ -11,6 +8,9 @@ using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Stripe;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
 using Viaggia.Swagger;
 using viaggia_server.Data;
 using viaggia_server.Repositories;
@@ -20,6 +20,7 @@ using viaggia_server.Repositories.HotelRepository;
 using viaggia_server.Repositories.Users;
 using viaggia_server.Services;
 using viaggia_server.Services.Auth;
+using viaggia_server.Services.HotelServices;
 using viaggia_server.Services.Payment;
 using viaggia_server.Services.ReservationServices;
 using viaggia_server.Services.Users;
@@ -82,6 +83,7 @@ builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IPackageRepository, PackageRepository>();
 builder.Services.AddScoped<IHotelRepository, HotelRepository>();
+builder.Services.AddScoped<IHotelServices, HotelServices>();
 builder.Services.AddScoped<ICommoditieRepository, CommoditieRepository>();
 builder.Services.AddScoped<ICommoditieServicesRepository, CommoditieServicesRepository>();
 builder.Services.AddScoped<IStripePaymentService, StripePaymentService>();
@@ -97,6 +99,7 @@ builder.Services.AddScoped<Stripe.ChargeService>();
 builder.Services.AddScoped<Stripe.PaymentIntent>();
 builder.Services.AddScoped<Stripe.PaymentIntentService>();
 builder.Services.AddScoped<Stripe.ProductService>();
+
 
 
 // Configure Stripe
@@ -184,7 +187,7 @@ builder.Services.AddCors(options =>
         policy.AllowAnyOrigin()
               .AllowAnyHeader()
               .AllowAnyMethod();
-           
+
     });
 });
 
@@ -218,3 +221,4 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+

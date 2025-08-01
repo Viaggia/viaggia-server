@@ -1,10 +1,8 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 
 namespace viaggia_server.DTOs.Commoditie
 {
-
-    public class CommoditieServicesDTO
+    public class CreateCommoditieServicesDTO
     {
         // Nome do serviço personalizado (ex: "Lavanderia", "Translado", etc.)
         [Required(ErrorMessage = "ServiceName is required.")]
@@ -25,9 +23,7 @@ namespace viaggia_server.DTOs.Commoditie
         // Indica se o serviço está ativo
         public bool IsActive { get; set; } = true;
 
-        public int CommoditieId { get; set; }
-
-        public int HotelId { get; set; }
+       
 
     }
 }

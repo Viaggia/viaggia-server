@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using SendGrid.Helpers.Mail;
 using viaggia_server.Data;
 using viaggia_server.Models.Commodities;
 
@@ -24,6 +25,7 @@ namespace viaggia_server.Repositories.Commodities
         public async Task<CommoditieServices?> GetByIdAsync(int id)
         {
             return await _context.CommoditieServices
+                 .Include(cs => cs.Hotel)
                 .FirstOrDefaultAsync(s => s.CommoditieServicesId == id && s.IsActive);
         }
 
@@ -31,6 +33,7 @@ namespace viaggia_server.Repositories.Commodities
         {
             return await _context.CommoditieServices
                 .Where(s => s.CommoditieId == commoditieId && s.IsActive)
+                .Include(s => s.Hotel)
                 .OrderBy(s => s.CommoditieServicesId)
                 .ToListAsync();
         }
@@ -60,14 +63,12 @@ namespace viaggia_server.Repositories.Commodities
             return await _context.SaveChangesAsync() > 0;
         }
 
-        public Task<IEnumerable<CommoditieServices>> GetByCommodityIdAsync(int commodityId)
+       
+       
+        public async Task<bool> SaveChangesAsync()
         {
-            throw new NotImplementedException();
-        }
-
-        public Task<bool> SaveChangesAsync()
-        {
-            throw new NotImplementedException();
+           var changes = await _context.SaveChangesAsync();
+            return changes > 0;
         }
 
         Task<T2?> IRepository<CommoditieServices>.GetByIdAsync<T2>(int id) where T2 : class
@@ -79,6 +80,27 @@ namespace viaggia_server.Repositories.Commodities
         {
             throw new NotImplementedException();
         }
+
+        public async Task<IEnumerable<CommoditieServices>> GetAllWithHotelAsync()
+        {
+            return await _context.CommoditieServices
+                .Include(cs => cs.Hotel)
+                .ToListAsync();
+        }
+
+        public async Task<Commoditie?> GetCommoditieByHotelIdAsync(int hotelId)
+        {
+            return await _context.Commodities
+                .FirstOrDefaultAsync(c => c.HotelId == hotelId);
+        }
+
+         Task<CommoditieServices?> ICommoditieServicesRepository.GetCommoditieByHotelIdAsync(int hotelId)
+         {
+           return _context.CommoditieServices
+                .Include(cs => cs.Hotel)
+                .FirstOrDefaultAsync(cs => cs.HotelId == hotelId && cs.IsActive);
+
+         }
     }
 }
 

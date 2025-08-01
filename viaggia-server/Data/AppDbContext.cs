@@ -1,5 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
-using viaggia_server.Models.Addresses;
+﻿using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
 using viaggia_server.Models.Commodities;
 using viaggia_server.Models.Companions;
 using viaggia_server.Models.HotelDates;
@@ -7,7 +7,7 @@ using viaggia_server.Models.HotelRoomTypes;
 using viaggia_server.Models.Hotels;
 using viaggia_server.Models.Medias;
 using viaggia_server.Models.Packages;
-using viaggia_server.Models.Payments;
+using viaggia_server.Models.Payment;
 using viaggia_server.Models.Reservations;
 using viaggia_server.Models.Reviews;
 using viaggia_server.Models.RevokedToken;
@@ -30,9 +30,7 @@ namespace viaggia_server.Data
         public DbSet<HotelRoomType> RoomTypes { get; set; } = null!;
         public DbSet<HotelDate> HotelDates { get; set; } = null!;
         public DbSet<Reservation> Reservations { get; set; } = null!;
-        public DbSet<Payment> Payments { get; set; } = null!;
-       
-        public DbSet<BillingAddress> BillingAddresses { get; set; } = null!;
+  
         public DbSet<Media> Medias { get; set; } = null!;
         public DbSet<Review> Reviews { get; set; } = null!;
         public DbSet<Companion> Companions { get; set; } = null!;
@@ -124,10 +122,10 @@ namespace viaggia_server.Data
 
             // Configuration for HotelDate -> HotelRoomType
             modelBuilder.Entity<HotelDate>()
-                .HasOne(hd => hd.HotelRoomType)
-                .WithMany()
-                .HasForeignKey(hd => hd.RoomTypeId)
-                .OnDelete(DeleteBehavior.NoAction);
+               .HasMany(hd => hd.RoomTypes)
+               .WithOne(rt => rt.HotelDate)
+               .HasForeignKey(rt => rt.HotelDateId) // <- Aqui está o fix
+               .OnDelete(DeleteBehavior.NoAction);
 
             // Configuration for Reservation
             modelBuilder.Entity<Reservation>()
@@ -136,32 +134,14 @@ namespace viaggia_server.Data
                 .HasForeignKey(r => r.UserId)
                 .OnDelete(DeleteBehavior.NoAction);
 
-            modelBuilder.Entity<Reservation>()
-                .HasOne(r => r.HotelRoomType)
-                .WithMany()
-                .HasForeignKey(r => r.RoomTypeId)
-                .IsRequired(false)
-                .OnDelete(DeleteBehavior.NoAction);
+            //modelBuilder.Entity<Reservation>()
+            //    .HasOne(r => r.RoomType)
+            //    .WithMany()
+            //    .HasForeignKey(r => r.RoomTypeId)
+            //    .IsRequired(false)
+            //    .OnDelete(DeleteBehavior.NoAction);
 
-            // Configuration for Payment
-            modelBuilder.Entity<Payment>()
-                .HasOne(p => p.User)
-                .WithMany(u => u.Payments)
-                .HasForeignKey(p => p.UserId)
-                .OnDelete(DeleteBehavior.NoAction);
-
-            modelBuilder.Entity<Payment>()
-                .HasOne(p => p.Reservation)
-                .WithMany(r => r.Payments)
-                .HasForeignKey(p => p.ReservationId)
-                .OnDelete(DeleteBehavior.NoAction);
-
-            modelBuilder.Entity<Payment>()
-                .HasOne(p => p.BillingAddress)
-                .WithMany()
-                .HasForeignKey(p => p.BillingAddressId)
-                .OnDelete(DeleteBehavior.NoAction);
-
+           
             // Configuration for Review
             modelBuilder.Entity<Review>()
                 .HasOne(r => r.User)
@@ -224,8 +204,7 @@ namespace viaggia_server.Data
             modelBuilder.Entity<Hotel>().HasQueryFilter(h => h.IsActive);
             modelBuilder.Entity<HotelRoomType>().HasQueryFilter(rt => rt.IsActive);
             modelBuilder.Entity<HotelDate>().HasQueryFilter(hd => hd.IsActive);
-            modelBuilder.Entity<Reservation>().HasQueryFilter(r => r.IsActive);
-            modelBuilder.Entity<Payment>().HasQueryFilter(p => p.IsActive);
+            modelBuilder.Entity<Reservation>().HasQueryFilter(r => r.IsActive);     
             modelBuilder.Entity<Media>().HasQueryFilter(m => m.IsActive);
             modelBuilder.Entity<Review>().HasQueryFilter(r => r.IsActive);
             modelBuilder.Entity<Companion>().HasQueryFilter(c => c.IsActive);

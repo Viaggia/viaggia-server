@@ -21,11 +21,11 @@ namespace viaggia_server.Models.HotelDates
         [Range(0, int.MaxValue, ErrorMessage = "Available rooms must be non-negative.")]
         public int AvailableRooms { get; set; }
 
-        [Required]
-        public int RoomTypeId { get; set; }
+        //[Required]
+        //public int RoomTypeId { get; set; }
 
-        [ForeignKey("RoomTypeId")]
-        public virtual HotelRoomType HotelRoomType { get; set; } = null!;
+        //[ForeignKey("RoomTypeId")]
+        //public virtual HotelRoomType RoomTypes { get; set; } = null!;
 
         [Required]
         public int HotelId { get; set; }
@@ -34,5 +34,7 @@ namespace viaggia_server.Models.HotelDates
         public virtual Hotel Hotel { get; set; } = null!;
 
         public bool IsActive { get; set; } = true;
+
+        public virtual ICollection<HotelRoomType> RoomTypes { get; set; }
     }
 }

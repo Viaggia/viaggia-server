@@ -1,12 +1,10 @@
-﻿using System.ComponentModel.DataAnnotations;
-using viaggia_server.DTOs.Commoditie;
-
-namespace viaggia_server.DTOs.Commodity
+﻿namespace viaggia_server.DTOs.Commoditie
 {
-    public class CreateCommoditieDTO
+    public class UpdateCommoditieDTO
     {
 
-        
+       
+        public int CommoditieId { get; set; }
         public int HotelId { get; set; }
 
         // Serviços fixos
@@ -44,8 +42,5 @@ namespace viaggia_server.DTOs.Commodity
         public bool IsPetFriendlyPaid { get; set; }
 
         public bool IsActive { get; set; } = true;
-
-        // Serviços extras personalizados
-        public List<CommoditieServicesDTO> CommoditieServices { get; set; } = new();
     }
 }

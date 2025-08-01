@@ -9,7 +9,7 @@ using Stripe.Checkout;
 using viaggia_server.Data;
 using viaggia_server.DTOs.Payments;
 using viaggia_server.DTOs.ReservationDTO;
-using viaggia_server.Models.Addresses;
+
 using viaggia_server.Models.Reservations;
 using viaggia_server.Models.Users;
 using viaggia_server.Repositories;
@@ -94,4 +94,3 @@ namespace viaggia_server.Services.Payment
         }
     }
 }
-*/

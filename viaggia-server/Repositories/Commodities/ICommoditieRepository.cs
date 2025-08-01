@@ -14,5 +14,7 @@ namespace viaggia_server.Repositories.Commodities
         Task<Commoditie> UpdateAsync(Commoditie entity);
         Task<bool> SoftDeleteAsync(int id);
         Task<bool> DeleteAsync(int id);
+        Task<bool> NameExistsAsync(string name);
+
     }
 }

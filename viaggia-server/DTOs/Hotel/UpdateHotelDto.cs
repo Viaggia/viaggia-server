@@ -1,14 +1,10 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using viaggia_server.DTOs.Commoditie;
-using viaggia_server.DTOs.Packages;
-using viaggia_server.DTOs.Reviews;
-using viaggia_server.DTOs.Hotel;
 
-namespace viaggia_server.DTOs.Hotels
+namespace viaggia_server.DTOs.Hotel
 {
-    public class HotelDTO
+    public class UpdateHotelDto
     {
-        [Required]
+       
         public int HotelId { get; set; }
 
         [Required(ErrorMessage = "Name is required.")]
@@ -54,19 +50,5 @@ namespace viaggia_server.DTOs.Hotels
         public string? ContactEmail { get; set; }
 
         public bool IsActive { get; set; } = true;
-
-        public List<HotelRoomTypeDTO> RoomTypes { get; set; } = new List<HotelRoomTypeDTO>();
-        public List<HotelDateDTO> HotelDates { get; set; } = new List<HotelDateDTO>();
-        public List<MediaDTO> Medias { get; set; } = new List<MediaDTO>();
-        public List<IFormFile> MediaFiles { get; set; } = new List<IFormFile>();
-        public List<ReviewDTO> Reviews { get; set; } = new List<ReviewDTO>(); 
-        public List<PackageDTO> Packages { get; set; } = new List<PackageDTO>();
-
-        public List<CommoditieDTO> Commodities { get; set; } = new List<CommoditieDTO>();
-        
-
-
-        public double AverageRating { get; set; } // Média das avaliações
-
     }
 }
