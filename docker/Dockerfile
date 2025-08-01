@@ -5,7 +5,6 @@ WORKDIR /app
 # Copy the solution file and project files
 COPY viaggia-server.sln ./
 COPY viaggia-server/viaggia-server.csproj ./viaggia-server/
-COPY viaggia-server.tests/viaggia-server.tests.csproj ./viaggia-server.tests/
 
 # Restore dependencies
 RUN dotnet restore

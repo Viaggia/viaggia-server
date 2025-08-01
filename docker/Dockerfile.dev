@@ -9,7 +9,7 @@ ENV PATH="$PATH:/root/.dotnet/tools"
 # Copy project files and restore dependencies
 COPY viaggia-server.sln ./
 COPY viaggia-server/viaggia-server.csproj ./viaggia-server/
-COPY viaggia-server.tests/viaggia-server.tests.csproj ./viaggia-server.tests/
+
 RUN dotnet restore
 
 # Copy the rest of the source code
