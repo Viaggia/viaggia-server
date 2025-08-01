@@ -210,7 +210,7 @@ namespace viaggia_server.Controllers
             }
         }
 
-        [HttpDelete("{id}")]
+        [HttpDelete("{id}/deactivate")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]

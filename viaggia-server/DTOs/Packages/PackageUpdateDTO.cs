@@ -6,9 +6,6 @@ namespace viaggia_server.DTOs.Packages
     public class PackageUpdateDTO
     {
         [Required]
-        public int PackageId { get; set; }
-
-        [Required]
         public string Name { get; set; } = null!;
 
         [Required]
