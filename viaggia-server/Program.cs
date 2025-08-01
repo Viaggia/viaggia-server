@@ -1,6 +1,3 @@
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Text;
 using FluentValidation;
 using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Authentication;
@@ -11,21 +8,26 @@ using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Stripe;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
 using Viaggia.Swagger;
+using viaggia_server.Config;
 using viaggia_server.Data;
 using viaggia_server.Repositories;
-using viaggia_server.Repositories.Reservations;
-using viaggia_server.Repositories.Users;
 using viaggia_server.Repositories.Auth;
 using viaggia_server.Repositories.Commodities;
 using viaggia_server.Repositories.HotelRepository;
 using viaggia_server.Repositories.Payment;
+using viaggia_server.Repositories.Reservations;
+using viaggia_server.Repositories.Users;
 using viaggia_server.Repositories.Users;
 using viaggia_server.Services;
-using viaggia_server.Services.Reservations;
+using viaggia_server.Services.Commodities;
 using viaggia_server.Services.EmailResetPassword;
-using viaggia_server.Services.Media;
-using viaggia_server.Services.Payment;
+using viaggia_server.Services.HotelServices;
+using viaggia_server.Services.Medias;
+using viaggia_server.Services.Reservations;
 using viaggia_server.Swagger;
 using viaggia_server.Validators;
 
@@ -71,8 +73,11 @@ builder.Services.AddSwaggerGen(c =>
             new string[] { }
         }
     });
-    c.OperationFilter<SecurityRequirementsOperationFilter>();
+    c.EnableAnnotations();
+    c.SchemaFilter<EnumSchemaFilter>();
     c.SchemaFilter<FormFileSchemaFilter>();
+    c.OperationFilter<SecurityRequirementsOperationFilter>();
+    c.OperationFilter<MultipartFormDataOperationFilter>();
 });
 
 
@@ -88,15 +93,17 @@ builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IPackageRepository, PackageRepository>();
 builder.Services.AddScoped<IReservationService, ReservationService>();
 
+builder.Services.AddScoped<IHotelServices, HotelServices>();
 builder.Services.AddScoped<IHotelRepository, HotelRepository>();
 builder.Services.AddScoped<ICommoditieRepository, CommoditieRepository>();
 builder.Services.AddScoped<ICommoditieServicesRepository, CommoditieServicesRepository>();
 builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
-builder.Services.AddScoped<IStripePaymentService, StripePaymentService>();
+//builder.Services.AddScoped<IStripePaymentService, StripePaymentService>();
 builder.Services.AddScoped<IAuthRepository, AuthRepository>();
 builder.Services.AddScoped<IGoogleAccountRepository, GoogleAccountRepository>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IImageService, ImageService>();
+builder.Services.AddScoped<ICommoditieService, CommoditieService>();
 
 // Configure Stripe
 StripeConfiguration.ApiKey = builder.Configuration["Stripe:SecretKey"];
@@ -183,7 +190,7 @@ builder.Services.AddCors(options =>
         policy.AllowAnyOrigin()
               .AllowAnyHeader()
               .AllowAnyMethod();
-           
+
     });
 });
 

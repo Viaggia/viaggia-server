@@ -24,11 +24,8 @@ namespace viaggia_server.Services.Reservations
                 PackageId = r.PackageId,
                 RoomTypeId = r.RoomTypeId,
                 HotelId = r.HotelId,
-                StartDate = r.StartDate,
-                EndDate = r.EndDate,
                 TotalPrice = r.TotalPrice,
                 NumberOfGuests = r.NumberOfGuests,
-                Status = r.Status,
                 IsActive = r.IsActive
             }).ToList();
         }
@@ -45,11 +42,8 @@ namespace viaggia_server.Services.Reservations
                 PackageId = r.PackageId,
                 RoomTypeId = r.RoomTypeId,
                 HotelId = r.HotelId,
-                StartDate = r.StartDate,
-                EndDate = r.EndDate,
                 TotalPrice = r.TotalPrice,
                 NumberOfGuests = r.NumberOfGuests,
-                Status = r.Status,
                 IsActive = r.IsActive
             };
         }
@@ -62,11 +56,8 @@ namespace viaggia_server.Services.Reservations
                 PackageId = dto.PackageId,
                 RoomTypeId = dto.RoomTypeId,
                 HotelId = dto.HotelId,
-                StartDate = dto.StartDate,
-                EndDate = dto.EndDate,
                 TotalPrice = dto.TotalPrice,
                 NumberOfGuests = dto.NumberOfGuests,
-                Status = dto.Status,
                 IsActive = dto.IsActive
             };
 
@@ -85,11 +76,8 @@ namespace viaggia_server.Services.Reservations
             reservation.PackageId = dto.PackageId;
             reservation.RoomTypeId = dto.RoomTypeId;
             reservation.HotelId = dto.HotelId;
-            reservation.StartDate = dto.StartDate;
-            reservation.EndDate = dto.EndDate;
             reservation.TotalPrice = dto.TotalPrice;
             reservation.NumberOfGuests = dto.NumberOfGuests;
-            reservation.Status = dto.Status;
             reservation.IsActive = dto.IsActive;
 
             await _genericRepository.UpdateAsync(reservation);

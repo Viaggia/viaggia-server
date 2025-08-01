@@ -21,6 +21,11 @@ namespace viaggia_server.Models.Reservations
         [ForeignKey("UserId")]
         public virtual User User { get; set; } = null!;
 
+        public int? HotelId { get; set; }
+
+        [ForeignKey("HotelId")]
+        public virtual Hotel? Hotel { get; set; }
+
         public int? PackageId { get; set; }
 
         [ForeignKey("PackageId")]
@@ -31,28 +36,19 @@ namespace viaggia_server.Models.Reservations
         [ForeignKey("RoomTypeId")]
         public virtual HotelRoomType? HotelRoomType { get; set; }
 
-        public int? HotelId { get; set; }
+        [Required]
+        public DateTime CheckInDate { get; set; }
 
-        [ForeignKey("HotelId")]
-        public virtual Hotel? Hotel { get; set; }
+        [Required]
+        public DateTime CheckOutDate { get; set; }
 
-        [Required(ErrorMessage = "Start date is required.")]
-        public DateTime StartDate { get; set; }
-
-        [Required(ErrorMessage = "End date is required.")]
-        public DateTime EndDate { get; set; }
-
-        [Required(ErrorMessage = "Total price is required.")]
-        [Column(TypeName = "decimal(10,2)")]
-        public decimal TotalPrice { get; set; }
-
-        [Required(ErrorMessage = "Number of guests is required.")]
-        [Range(1, 10, ErrorMessage = "Number of guests must be between 1 and 10.")]
+        [Required]
+        [Range(1, int.MaxValue, ErrorMessage = "Number of guests must be at least 1.")]
         public int NumberOfGuests { get; set; }
 
-        [Required(ErrorMessage = "Status is required.")]
-        [StringLength(20, ErrorMessage = "Status cannot exceed 20 characters.")]
-        public string Status { get; set; } = null!; // Ex.: "Confirmed", "Cancelled", "Pending"
+        [Required]
+        [Column(TypeName = "decimal(10,2)")]
+        public decimal TotalPrice { get; set; }
 
         public bool IsActive { get; set; } = true;
 

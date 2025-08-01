@@ -1,20 +1,11 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using viaggia_server.Models.Commodities;
-using viaggia_server.Models.HotelRoomTypes;
-using viaggia_server.Models.Medias;
-using viaggia_server.Models.Packages;
-using viaggia_server.Models.Reservations;
-using viaggia_server.Models.Reviews;
-using viaggia_server.Repositories;
+using viaggia_server.DTOs.Hotel;
 
-namespace viaggia_server.Models.Hotels
+namespace viaggia_server.DTOs.Hotels
 {
-    public class Hotel : ISoftDeletable
+    public class CreateHotelDTO
     {
-        [Key]
-        public int HotelId { get; set; }
-
         [Required(ErrorMessage = "Name is required.")]
         [StringLength(100, ErrorMessage = "Name cannot exceed 100 characters.")]
         public string Name { get; set; } = null!;
@@ -59,15 +50,9 @@ namespace viaggia_server.Models.Hotels
 
         public bool IsActive { get; set; } = true;
 
-        public double AverageRating { get; set; }
-
-        // Relationships
-        public virtual ICollection<HotelRoomType> RoomTypes { get; set; } = new List<HotelRoomType>();
-        public virtual ICollection<Reservation> Reservations { get; set; } = new List<Reservation>();
-        public virtual ICollection<Media> Medias { get; set; } = new List<Media>();
-        public virtual ICollection<Review> Reviews { get; set; } = new List<Review>();
-        public virtual ICollection<Package> Packages { get; set; } = new List<Package>();
-        public virtual ICollection<Commoditie> Commodities { get; set; } = new List<Commoditie>();
-        public virtual ICollection<CommoditieServices> CommoditieServices { get; set; } = new List<CommoditieServices>();
+        public List<IFormFile>? MediaFiles { get; set; }
+        
+        [Required(ErrorMessage = "RoomTypesJson is required.")]
+        public string RoomTypesJson { get; set; } = null!;
     }
 }

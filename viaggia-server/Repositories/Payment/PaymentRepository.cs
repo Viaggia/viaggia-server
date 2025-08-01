@@ -13,7 +13,7 @@ namespace viaggia_server.Repositories.Payment
         public async Task<IEnumerable<Models.Payments.Payment>> GetPaymentsByUserIdAsync(int userId, int page = 1, int pageSize = 10)
         {
             return await _context.Payments
-                .Include(p => p.BillingAddress)
+                
                 .Include(p => p.Reservation)
                 .Where(p => p.UserId == userId && p.IsActive)
                 .OrderByDescending(p => p.PaymentDate)
@@ -25,7 +25,7 @@ namespace viaggia_server.Repositories.Payment
         public async Task<IEnumerable<Models.Payments.Payment>> GetPaymentsByReservationIdAsync(int reservationId)
         {
             return await _context.Payments
-                .Include(p => p.BillingAddress)
+                
                 .Include(p => p.User)
                 .Where(p => p.ReservationId == reservationId && p.IsActive)
                 .OrderByDescending(p => p.PaymentDate)
@@ -35,7 +35,7 @@ namespace viaggia_server.Repositories.Payment
         public async Task<Models.Payments.Payment?> GetPaymentByStripeIntentIdAsync(string stripePaymentIntentId)
         {
             return await _context.Payments
-                .Include(p => p.BillingAddress)
+                
                 .Include(p => p.User)
                 .Include(p => p.Reservation)
                 .FirstOrDefaultAsync(p => p.StripePaymentIntentId == stripePaymentIntentId && p.IsActive);
@@ -44,7 +44,7 @@ namespace viaggia_server.Repositories.Payment
         public async Task<IEnumerable<Models.Payments.Payment>> GetPaymentsByStatusAsync(string status)
         {
             return await _context.Payments
-                .Include(p => p.BillingAddress)
+               
                 .Include(p => p.User)
                 .Include(p => p.Reservation)
                 .Where(p => p.Status == status && p.IsActive)
@@ -55,7 +55,7 @@ namespace viaggia_server.Repositories.Payment
         public async Task<IEnumerable<Models.Payments.Payment>> GetPaymentsByDateRangeAsync(DateTime startDate, DateTime endDate)
         {
             return await _context.Payments
-                .Include(p => p.BillingAddress)
+               
                 .Include(p => p.User)
                 .Include(p => p.Reservation)
                 .Where(p => p.PaymentDate >= startDate && p.PaymentDate <= endDate && p.IsActive)
@@ -73,7 +73,7 @@ namespace viaggia_server.Repositories.Payment
         public async Task<IEnumerable<Models.Payments.Payment>> GetRefundablePaymentsAsync()
         {
             return await _context.Payments
-                .Include(p => p.BillingAddress)
+               
                 .Include(p => p.User)
                 .Include(p => p.Reservation)
                 .Where(p => p.Status == "Completed" && 
