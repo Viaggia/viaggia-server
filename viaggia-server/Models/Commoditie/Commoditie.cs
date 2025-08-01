@@ -10,12 +10,8 @@ namespace viaggia_server.Models.Commodities
         [Key]
         public int CommoditieId { get; set; }
 
-        [Required(ErrorMessage = "Hotel ID is required.")]
-        public int HotelId { get; set; } // Added HotelId
-
-        [ForeignKey("HotelId")]
-        public virtual Hotel Hotel { get; set; } = null!; // Navigation property
-
+    
+        // Serviços padrões
         public bool HasParking { get; set; }
         public bool IsParkingPaid { get; set; }
         public bool HasBreakfast { get; set; }
@@ -39,7 +35,10 @@ namespace viaggia_server.Models.Commodities
         public bool IsPetFriendly { get; set; }
         public bool IsPetFriendlyPaid { get; set; }
         public bool IsActive { get; set; } = true;
+        public int HotelId { get; set; }
 
+        [ForeignKey("HotelId")]
+        public virtual Hotel Hotel { get; set; } = null!;
         public virtual ICollection<CommoditieServices> CommoditieServices { get; set; } = new List<CommoditieServices>();
     }
 }

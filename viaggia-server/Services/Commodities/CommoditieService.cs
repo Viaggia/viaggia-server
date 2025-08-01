@@ -52,7 +52,7 @@ namespace viaggia_server.Services
 
             return new CommoditieDTO
             {
-                CommoditieId = commoditie.CommoditieId,
+                
                 HotelId = commoditie.HotelId,
                 HasParking = commoditie.HasParking,
                 IsParkingPaid = !commoditie.IsParkingPaid,
@@ -239,7 +239,7 @@ namespace viaggia_server.Services
         {
             return new CommoditieDTO
             {
-                CommoditieId = commodity.CommoditieId,
+                
                 HotelId = commodity.HotelId,
                 HasParking = commodity.HasParking,
                 IsParkingPaid = !commodity.IsParkingPaid,

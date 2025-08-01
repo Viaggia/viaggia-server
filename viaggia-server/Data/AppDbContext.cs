@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
 using viaggia_server.Models;
 using viaggia_server.Models.Commodities;
 using viaggia_server.Models.Companions;
@@ -6,7 +7,7 @@ using viaggia_server.Models.HotelRoomTypes;
 using viaggia_server.Models.Hotels;
 using viaggia_server.Models.Medias;
 using viaggia_server.Models.Packages;
-using viaggia_server.Models.Payments;
+using viaggia_server.Models.Payment;
 using viaggia_server.Models.Reservations;
 using viaggia_server.Models.Reviews;
 using viaggia_server.Models.RevokedToken;

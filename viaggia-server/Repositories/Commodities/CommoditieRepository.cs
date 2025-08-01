@@ -68,19 +68,36 @@ namespace viaggia_server.Repositories.Commodities
             return await _context.SaveChangesAsync() > 0;
         }
 
-        public Task<bool> SaveChangesAsync()
+        public async Task<bool> SaveChangesAsync()
         {
-            throw new NotImplementedException();
+            return await _context.SaveChangesAsync() > 0;
         }
 
         Task<T2?> IRepository<Commoditie>.GetByIdAsync<T2>(int id) where T2 : class
         {
-            throw new NotImplementedException();
+            return _context.Set<T2>().FindAsync(id).AsTask();
         }
 
         Task<bool> IRepository<Commoditie>.SoftDeleteAsync<T2>(int id)
         {
-            throw new NotImplementedException();
+           var entity = _context.Set<T2>().Find(id);
+            if (entity == null)
+                return Task.FromResult(false);
+            if (entity is ISoftDeletable softDeletableEntity)
+            {
+                softDeletableEntity.IsActive = false;
+                _context.Set<T2>().Update(entity);
+                return _context.SaveChangesAsync().ContinueWith(t => t.Result > 0);
+            }
+            return Task.FromResult(false);
+        }
+
+       
+        public async Task<Commoditie?> GetByHotelNameAsync(string hotelName)
+        {
+            return await _context.Commodities
+                .Include(c => c.Hotel)
+                .FirstOrDefaultAsync(c => c.Hotel.Name == hotelName);
         }
     }
 }

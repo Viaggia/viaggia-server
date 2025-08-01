@@ -65,21 +65,8 @@ namespace viaggia_server.DTOs.Hotels
             
             public string? ContactEmail { get; set; }
 
-           
-            public bool IsActive { get; set; } = true;
+             public bool IsActive { get; set; } = true;
 
-
-        /// <summary>
-        /// Lista de datas do hotel em formato JSON. Exemplo: [{"startDate":"2025-07-29","endDate":"2025-07-30","availableRooms":10,"isActive":true}]
-        /// </summary>
-        public string? HotelDatesJson { get; set; }
-
-        /// <summary>
-        /// Lista de tipos de quarto em formato JSON. Exemplo: [{"name":"Standard","price":100,"capacity":2,"bedType":"Casal","isActive":true}]
-        /// </summary>
-        public string? RoomTypesJson { get; set; }
-
-        public string? CommoditieJson { get; set; }
 
         public List<IFormFile>? MediaFiles { get; set; }
         

@@ -2,6 +2,7 @@ using viaggia_server.DTOs.Commoditie;
 using viaggia_server.DTOs.Hotels;
 using viaggia_server.DTOs.Packages;
 using viaggia_server.DTOs.Reviews;
+using viaggia_server.DTOs.Hotel;
 
 namespace viaggia_server.DTOs.Hotel
 {
@@ -27,6 +28,7 @@ namespace viaggia_server.DTOs.Hotel
         public List<MediaDTO> Medias { get; set; } = new List<MediaDTO>();
         public List<ReviewDTO> Reviews { get; set; } = new List<ReviewDTO>();
         public List<PackageDTO> Packages { get; set; } = new List<PackageDTO>();
+
         public List<CommoditieDTO> Commodities { get; set; } = new List<CommoditieDTO>();
         public List<CommoditieServicesDTO> CommoditieServices { get; set; } = new List<CommoditieServicesDTO>();
     }

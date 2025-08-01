@@ -30,6 +30,9 @@
 
     <Folder Include="wwwroot\Uploads\Avatars\" />
     <Folder Include="wwwroot\Uploads\Hotels\" />
+
+    <Folder Include="wwwroot\Uploads\Hotel\" />
+
     <Folder Include="wwwroot\Uploads\Packages\" />
   </ItemGroup>
 

@@ -171,6 +171,7 @@ namespace viaggia_server.Repositories.HotelRepository
         public async Task<Commoditie?> GetCommodityByIdAsync(int commoditieId)
         {
             return await _context.Commodities
+                .Include(c => c.CommoditieServices)
                 .FirstOrDefaultAsync(c => c.CommoditieId == commoditieId && c.IsActive);
         }
 
@@ -181,6 +182,7 @@ namespace viaggia_server.Repositories.HotelRepository
             return commoditieService;
         }
 
+        public async Task<IEnumerable<CommoditieServices>> GetCommoditieServicesByHotelIdAsync(int hotelId)
         public async Task<IEnumerable<CommoditieServices>> GetCommoditieServicesByHotelIdAsync(int hotelId)
         {
             return await _context.CommoditieServices

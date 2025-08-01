@@ -1,9 +1,8 @@
-﻿using System.Text.Json;
+using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
 using viaggia_server.DTOs;
 using viaggia_server.DTOs.Commoditie;
 using viaggia_server.DTOs.Hotel;
-using viaggia_server.DTOs.Hotels;
 using viaggia_server.DTOs.Packages;
 using viaggia_server.DTOs.Reviews;
 using viaggia_server.Models.Commodities;
@@ -324,17 +323,17 @@ namespace viaggia_server.Services.HotelServices
             return true;
         }
 
-        public async Task<IEnumerable<Media>> GetMediaByHotelIdAsync(int hotelId)
+        public async Task<IEnumerable<MediaModel>> GetMediaByHotelIdAsync(int hotelId)
         {
             return await _hotelRepository.GetMediasByHotelIdAsync(hotelId);
         }
 
-        public async Task<Media?> GetMediaByIdAsync(int mediaId)
+        public async Task<MediaModel?> GetMediaByIdAsync(int mediaId)
         {
             return await _hotelRepository.GetMediaByIdAsync(mediaId);
         }
 
-        public async Task<Media> AddMediaToHotelAsync(Media media)
+        public async Task<MediaModel> AddMediaToHotelAsync(MediaModel media)
         {
             return await _hotelRepository.AddMediaAsync(media);
         }

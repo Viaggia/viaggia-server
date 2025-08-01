@@ -38,5 +38,9 @@ namespace viaggia_server.Models.HotelRoomTypes
 
         [ForeignKey("HotelId")]
         public virtual Hotel Hotel { get; set; } = null!;
+
+        public int HotelDateId { get; set; }
+        [ForeignKey("HotelDateId")]
+        public virtual HotelDate HotelDate { get; set; }
     }
 }
