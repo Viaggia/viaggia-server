@@ -8,9 +8,11 @@ namespace viaggia_server.Swagger
     {
         public void Apply(OpenApiOperation operation, OperationFilterContext context)
         {
-            var hasAuthorize = context.MethodInfo.GetCustomAttributes(true).OfType<AuthorizeAttribute>().Any() ||
-                              context.MethodInfo.DeclaringType!.GetCustomAttributes(true).OfType<AuthorizeAttribute>().Any();
-            if (hasAuthorize)
+            var authAttributes = context.MethodInfo.GetCustomAttributes(true)
+                .OfType<Microsoft.AspNetCore.Authorization.AuthorizeAttribute>()
+                .Any();
+
+            if (authAttributes)
             {
                 operation.Security.Add(new OpenApiSecurityRequirement
             {

@@ -1,12 +1,16 @@
 ﻿using viaggia_server.DTOs.Commoditie;
-using viaggia_server.DTOs.Commodity;
-
 
 namespace viaggia_server.Services.Commodities
 {
     public interface ICommoditieService
     {
+        Task<List<CommoditieDTO>> GetAllAsync();
+        Task<CommoditieDTO?> GetByIdAsync(int id);
         Task<CommoditieDTO?> GetByHotelIdAsync(int hotelId);
-        Task<bool> ToggleActiveStatusAsync(int id); // Alterna o status ativo/inativo de uma comodidade
+        Task<IEnumerable<CommoditieDTO>> GetByHotelIdListAsync(int hotelId);
+        Task<CommoditieDTO> CreateAsync(CreateCommoditieDTO createDto);
+        Task<CommoditieDTO> UpdateAsync(int id, CreateCommoditieDTO updateDto);
+        Task<bool> DeleteAsync(int id);
+        Task<bool> ToggleActiveStatusAsync(int id);
     }
 }

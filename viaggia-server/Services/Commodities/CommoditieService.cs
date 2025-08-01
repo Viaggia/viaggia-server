@@ -1,14 +1,10 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using viaggia_server.Data;
 using viaggia_server.DTOs.Commoditie;
-using viaggia_server.DTOs.Commodity;
 using viaggia_server.Models.Commodities;
-using viaggia_server.Services.Commodities;
+using viaggia_server.Models.Hotels;
 
-namespace viaggia_server.Services
+namespace viaggia_server.Services.Commodities
 {
     public class CommoditieService : ICommoditieService
     {
@@ -29,106 +25,76 @@ namespace viaggia_server.Services
             return commodities.Select(c => MapToDTO(c)).ToList();
         }
 
-        public async Task<CommoditieDTO> GetByIdAsync(int id)
+        public async Task<CommoditieDTO?> GetByIdAsync(int id)
         {
             var commodity = await _context.Commodities
                 .Include(c => c.CommoditieServices.Where(s => s.IsActive))
                 .FirstOrDefaultAsync(c => c.CommoditieId == id && c.IsActive);
 
-            if (commodity == null)
-                return null!;
-
-            return MapToDTO(commodity);
+            return commodity == null ? null : MapToDTO(commodity);
         }
 
         public async Task<CommoditieDTO?> GetByHotelIdAsync(int hotelId)
         {
-            var commoditie = await _context.Commodities
-                .Include(c => c.CommoditieServices) // Inclui os serviços personalizados
+            var commodity = await _context.Commodities
+                .Include(c => c.CommoditieServices.Where(s => s.IsActive))
                 .FirstOrDefaultAsync(c => c.HotelId == hotelId && c.IsActive);
 
-            if (commoditie == null)
-                return null;
+            return commodity == null ? null : MapToDTO(commodity);
+        }
 
-            return new CommoditieDTO
-            {
-                CommoditieId = commoditie.CommoditieId,
-                HotelId = commoditie.HotelId,
-                HasParking = commoditie.HasParking,
-                IsParkingPaid = !commoditie.IsParkingPaid,
-                HasBreakfast = commoditie.HasBreakfast,
-                IsBreakfastPaid = !commoditie.IsBreakfastPaid,
-                HasLunch = commoditie.HasLunch,
-                IsLunchPaid = !commoditie.IsLunchPaid,
-                HasDinner = commoditie.HasDinner,
-                IsDinnerPaid = !commoditie.IsDinnerPaid,
-                HasSpa = commoditie.HasSpa,
-                IsSpaPaid = !commoditie.IsSpaPaid,
-                HasPool = commoditie.HasPool,
-                IsPoolPaid = !commoditie.IsPoolPaid,
-                HasGym = commoditie.HasGym,
-                IsGymPaid = !commoditie.IsGymPaid,
-                HasWiFi = commoditie.HasWiFi,
-                IsWiFiPaid = !commoditie.IsWiFiPaid,
-                HasAirConditioning = commoditie.HasAirConditioning,
-                IsAirConditioningPaid = !commoditie.IsAirConditioningPaid,
-                HasAccessibilityFeatures = commoditie.HasAccessibilityFeatures,
-                IsAccessibilityFeaturesPaid = !commoditie.IsAccessibilityFeaturesPaid,
-                IsPetFriendly = commoditie.IsPetFriendly,
-                IsPetFriendlyPaid = !commoditie.IsPetFriendlyPaid,
-                IsActive = commoditie.IsActive,
+        public async Task<IEnumerable<CommoditieDTO>> GetByHotelIdListAsync(int hotelId)
+        {
+            var commodities = await _context.Commodities
+                .Where(c => c.HotelId == hotelId && c.IsActive)
+                .Include(c => c.CommoditieServices.Where(s => s.IsActive))
+                .ToListAsync();
 
-                CommoditieServices = commoditie.CommoditieServices?.Select(s => new CommoditieServicesDTO
-                {
-                    Name = s.Name,
-                    IsPaid = !s.IsPaid,
-                    Description = s.Description,
-                    IsActive = s.IsActive
-                }).ToList() ?? new List<CommoditieServicesDTO>()
-            };
+            return commodities.Select(c => MapToDTO(c));
         }
 
         public async Task<CommoditieDTO> CreateAsync(CreateCommoditieDTO createDto)
         {
+            // Validate HotelId
+            var hotel = await _context.Hotels.FindAsync(createDto.HotelId);
+            if (hotel == null)
+                throw new ArgumentException("Hotel not found.");
+
             var commodity = new Commoditie
             {
                 HotelId = createDto.HotelId,
                 HasParking = createDto.HasParking,
-                IsParkingPaid = !createDto.IsParkingPaid,
+                IsParkingPaid = createDto.IsParkingPaid,
                 HasBreakfast = createDto.HasBreakfast,
-                IsBreakfastPaid = !createDto.IsBreakfastPaid,
+                IsBreakfastPaid = createDto.IsBreakfastPaid,
                 HasLunch = createDto.HasLunch,
-                IsLunchPaid = !createDto.IsLunchPaid,
+                IsLunchPaid = createDto.IsLunchPaid,
                 HasDinner = createDto.HasDinner,
-                IsDinnerPaid = !createDto.IsDinnerPaid,
+                IsDinnerPaid = createDto.IsDinnerPaid,
                 HasSpa = createDto.HasSpa,
-                IsSpaPaid = !createDto.IsSpaPaid,
+                IsSpaPaid = createDto.IsSpaPaid,
                 HasPool = createDto.HasPool,
-                IsPoolPaid = !createDto.IsPoolPaid,
+                IsPoolPaid = createDto.IsPoolPaid,
                 HasGym = createDto.HasGym,
-                IsGymPaid = !createDto.IsGymPaid,
+                IsGymPaid = createDto.IsGymPaid,
                 HasWiFi = createDto.HasWiFi,
-                IsWiFiPaid = !createDto.IsWiFiPaid,
+                IsWiFiPaid = createDto.IsWiFiPaid,
                 HasAirConditioning = createDto.HasAirConditioning,
-                IsAirConditioningPaid = !createDto.IsAirConditioningPaid,
+                IsAirConditioningPaid = createDto.IsAirConditioningPaid,
                 HasAccessibilityFeatures = createDto.HasAccessibilityFeatures,
-                IsAccessibilityFeaturesPaid = !createDto.IsAccessibilityFeaturesPaid,
+                IsAccessibilityFeaturesPaid = createDto.IsAccessibilityFeaturesPaid,
                 IsPetFriendly = createDto.IsPetFriendly,
-                IsPetFriendlyPaid = !createDto.IsPetFriendlyPaid,
+                IsPetFriendlyPaid = createDto.IsPetFriendlyPaid,
                 IsActive = true,
-            };
-
-            // Adiciona serviços personalizados se houver
-            if (createDto.CommoditieServices != null && createDto.CommoditieServices.Any())
-            {
-                commodity.CommoditieServices = createDto.CommoditieServices.Select(s => new CommoditieServices
+                CommoditieServices = createDto.CommoditieServices?.Select(s => new CommoditieServices
                 {
                     Name = s.Name,
-                    IsPaid = !s.IsPaid,
+                    IsPaid = s.IsPaid,
                     Description = s.Description,
-                    IsActive = true
-                }).ToList();
-            }
+                    IsActive = true,
+                    HotelId = createDto.HotelId // Assign HotelId to CommoditieServices
+                }).ToList() ?? new List<CommoditieServices>()
+            };
 
             await _context.Commodities.AddAsync(commodity);
             await _context.SaveChangesAsync();
@@ -143,37 +109,44 @@ namespace viaggia_server.Services
                 .FirstOrDefaultAsync(c => c.CommoditieId == id && c.IsActive);
 
             if (commodity == null)
-                return null!;
+                throw new ArgumentException("Commodity not found.");
 
-            // Atualiza campos básicos
+            // Validate HotelId
+            var hotel = await _context.Hotels.FindAsync(updateDto.HotelId);
+            if (hotel == null)
+                throw new ArgumentException("Hotel not found.");
+
+            // Update fields
+            commodity.HotelId = updateDto.HotelId;
             commodity.HasParking = updateDto.HasParking;
-            commodity.IsParkingPaid = !updateDto.IsParkingPaid;
+            commodity.IsParkingPaid = updateDto.IsParkingPaid;
             commodity.HasBreakfast = updateDto.HasBreakfast;
-            commodity.IsBreakfastPaid = !updateDto.IsBreakfastPaid;
+            commodity.IsBreakfastPaid = updateDto.IsBreakfastPaid;
             commodity.HasLunch = updateDto.HasLunch;
-            commodity.IsLunchPaid = !updateDto.IsLunchPaid;
+            commodity.IsLunchPaid = updateDto.IsLunchPaid;
             commodity.HasDinner = updateDto.HasDinner;
-            commodity.IsDinnerPaid = !updateDto.IsDinnerPaid;
+            commodity.IsDinnerPaid = updateDto.IsDinnerPaid;
             commodity.HasSpa = updateDto.HasSpa;
-            commodity.IsSpaPaid = !updateDto.IsSpaPaid;
+            commodity.IsSpaPaid = updateDto.IsSpaPaid;
             commodity.HasPool = updateDto.HasPool;
-            commodity.IsPoolPaid = !updateDto.IsPoolPaid;
+            commodity.IsPoolPaid = updateDto.IsPoolPaid;
             commodity.HasGym = updateDto.HasGym;
-            commodity.IsGymPaid = !updateDto.IsGymPaid;
+            commodity.IsGymPaid = updateDto.IsGymPaid;
             commodity.HasWiFi = updateDto.HasWiFi;
-            commodity.IsWiFiPaid = !updateDto.IsWiFiPaid;
+            commodity.IsWiFiPaid = updateDto.IsWiFiPaid;
             commodity.HasAirConditioning = updateDto.HasAirConditioning;
-            commodity.IsAirConditioningPaid = !updateDto.IsAirConditioningPaid;
+            commodity.IsAirConditioningPaid = updateDto.IsAirConditioningPaid;
             commodity.HasAccessibilityFeatures = updateDto.HasAccessibilityFeatures;
-            commodity.IsAccessibilityFeaturesPaid = !updateDto.IsAccessibilityFeaturesPaid;
+            commodity.IsAccessibilityFeaturesPaid = updateDto.IsAccessibilityFeaturesPaid;
             commodity.IsPetFriendly = updateDto.IsPetFriendly;
-            commodity.IsPetFriendlyPaid = !updateDto.IsPetFriendlyPaid;
+            commodity.IsPetFriendlyPaid = updateDto.IsPetFriendlyPaid;
 
-            // Atualiza serviços personalizados
+            // Update CommoditieServices
             if (updateDto.CommoditieServices != null)
             {
                 var servicesToKeep = updateDto.CommoditieServices.Select(s => s.Name).ToHashSet();
 
+                // Soft-delete services not in the update DTO
                 foreach (var existingService in commodity.CommoditieServices)
                 {
                     if (!servicesToKeep.Contains(existingService.Name))
@@ -182,56 +155,54 @@ namespace viaggia_server.Services
                     }
                 }
 
+                // Add or update services
                 foreach (var newServiceDto in updateDto.CommoditieServices)
                 {
                     var existingService = commodity.CommoditieServices.FirstOrDefault(s => s.Name == newServiceDto.Name);
-
                     if (existingService != null)
                     {
-                        existingService.IsPaid = !newServiceDto.IsPaid;
+                        existingService.IsPaid = newServiceDto.IsPaid;
+                        existingService.Description = newServiceDto.Description;
                         existingService.IsActive = true;
+                        existingService.HotelId = updateDto.HotelId;
                     }
                     else
                     {
                         commodity.CommoditieServices.Add(new CommoditieServices
                         {
                             Name = newServiceDto.Name,
-                            IsPaid = !newServiceDto.IsPaid,
+                            IsPaid = newServiceDto.IsPaid,
                             Description = newServiceDto.Description,
                             IsActive = true,
+                            HotelId = updateDto.HotelId
                         });
                     }
                 }
             }
 
             await _context.SaveChangesAsync();
-
             return MapToDTO(commodity);
         }
 
         public async Task<bool> DeleteAsync(int id)
         {
             var commodity = await _context.Commodities.FindAsync(id);
-
             if (commodity == null || !commodity.IsActive)
                 return false;
 
             commodity.IsActive = false;
             _context.Commodities.Update(commodity);
-
             return await _context.SaveChangesAsync() > 0;
         }
 
         public async Task<bool> ToggleActiveStatusAsync(int id)
         {
             var commodity = await _context.Commodities.FindAsync(id);
-
             if (commodity == null)
                 return false;
 
             commodity.IsActive = !commodity.IsActive;
             _context.Commodities.Update(commodity);
-
             return await _context.SaveChangesAsync() > 0;
         }
 
@@ -242,40 +213,39 @@ namespace viaggia_server.Services
                 CommoditieId = commodity.CommoditieId,
                 HotelId = commodity.HotelId,
                 HasParking = commodity.HasParking,
-                IsParkingPaid = !commodity.IsParkingPaid,
+                IsParkingPaid = commodity.IsParkingPaid,
                 HasBreakfast = commodity.HasBreakfast,
-                IsBreakfastPaid = !commodity.IsBreakfastPaid,
+                IsBreakfastPaid = commodity.IsBreakfastPaid,
                 HasLunch = commodity.HasLunch,
-                IsLunchPaid = !commodity.IsLunchPaid,
+                IsLunchPaid = commodity.IsLunchPaid,
                 HasDinner = commodity.HasDinner,
-                IsDinnerPaid = !commodity.IsDinnerPaid,
+                IsDinnerPaid = commodity.IsDinnerPaid,
                 HasSpa = commodity.HasSpa,
-                IsSpaPaid = !commodity.IsSpaPaid,
+                IsSpaPaid = commodity.IsSpaPaid,
                 HasPool = commodity.HasPool,
-                IsPoolPaid = !commodity.IsPoolPaid,
+                IsPoolPaid = commodity.IsPoolPaid,
                 HasGym = commodity.HasGym,
-                IsGymPaid = !commodity.IsGymPaid,
+                IsGymPaid = commodity.IsGymPaid,
                 HasWiFi = commodity.HasWiFi,
-                IsWiFiPaid = !commodity.IsWiFiPaid,
+                IsWiFiPaid = commodity.IsWiFiPaid,
                 HasAirConditioning = commodity.HasAirConditioning,
-                IsAirConditioningPaid = !commodity.IsAirConditioningPaid,
+                IsAirConditioningPaid = commodity.IsAirConditioningPaid,
                 HasAccessibilityFeatures = commodity.HasAccessibilityFeatures,
-                IsAccessibilityFeaturesPaid = !commodity.IsAccessibilityFeaturesPaid,
+                IsAccessibilityFeaturesPaid = commodity.IsAccessibilityFeaturesPaid,
                 IsPetFriendly = commodity.IsPetFriendly,
-                IsPetFriendlyPaid = !commodity.IsPetFriendlyPaid,
+                IsPetFriendlyPaid = commodity.IsPetFriendlyPaid,
                 IsActive = commodity.IsActive,
                 CommoditieServices = commodity.CommoditieServices?
                     .Where(s => s.IsActive)
                     .Select(s => new CommoditieServicesDTO
                     {
+                        CommoditieServicesId = s.CommoditieServicesId,
                         Name = s.Name,
-                        IsPaid = !s.IsPaid,
+                        IsPaid = s.IsPaid,
                         Description = s.Description,
                         IsActive = s.IsActive
                     }).ToList() ?? new List<CommoditieServicesDTO>()
             };
         }
-
-      
     }
 }

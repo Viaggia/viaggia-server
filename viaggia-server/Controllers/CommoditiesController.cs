@@ -1,9 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using viaggia_server.DTOs;
 using viaggia_server.DTOs.Commoditie;
-using viaggia_server.DTOs.Commodity;
-using viaggia_server.Models.Commodities;
-using viaggia_server.Repositories.Commodities;
+using viaggia_server.Services.Commodities;
 
 namespace viaggia_server.Controllers
 {
@@ -11,99 +9,88 @@ namespace viaggia_server.Controllers
     [Route("api/[controller]")]
     public class CommoditieController : ControllerBase
     {
-        private readonly ICommoditieRepository _commoditieRepository;
+        private readonly ICommoditieService _commoditieService;
 
-        public CommoditieController(ICommoditieRepository commoditieRepository)
+        public CommoditieController(ICommoditieService commoditieService)
         {
-            _commoditieRepository = commoditieRepository;
+            _commoditieService = commoditieService;
         }
 
-        // GET: api/commoditie
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
-            var commodities = await _commoditieRepository.GetAllAsync();
-            return Ok(new ApiResponse<IEnumerable<Commoditie>>(true, "Commodities recuperadas com sucesso.", commodities));
+            var commodities = await _commoditieService.GetAllAsync();
+            return Ok(new ApiResponse<IEnumerable<CommoditieDTO>>(true, "Commodities retrieved successfully.", commodities));
         }
 
-        // GET: api/commoditie/{id}
         [HttpGet("{id:int}")]
         public async Task<IActionResult> GetById(int id)
         {
-            var commoditie = await _commoditieRepository.GetByIdAsync(id);
+            var commoditie = await _commoditieService.GetByIdAsync(id);
             if (commoditie == null)
-                return NotFound(new ApiResponse<Commoditie>(false, "Commodity não encontrada."));
+                return NotFound(new ApiResponse<CommoditieDTO>(false, "Commodity not found."));
 
-            return Ok(new ApiResponse<Commoditie>(true, "Commodity encontrada.", commoditie));
+            return Ok(new ApiResponse<CommoditieDTO>(true, "Commodity found.", commoditie));
         }
 
-        // GET: api/commoditie/hotel/{hotelId}
         [HttpGet("hotel/{hotelId:int}")]
         public async Task<IActionResult> GetByHotelId(int hotelId)
         {
-            var commoditie = await _commoditieRepository.GetByHotelIdAsync(hotelId);
+            var commoditie = await _commoditieService.GetByHotelIdAsync(hotelId);
             if (commoditie == null)
-                return NotFound(new ApiResponse<Commoditie>(false, "Commodity não encontrada para este hotel."));
+                return NotFound(new ApiResponse<CommoditieDTO>(false, "Commodity not found for this hotel."));
 
-            return Ok(new ApiResponse<Commoditie>(true, "Commodity do hotel encontrada.", commoditie));
+            return Ok(new ApiResponse<CommoditieDTO>(true, "Commodity found.", commoditie));
         }
 
-        // POST: api/commoditie
+        [HttpGet("hotel/{hotelId:int}/list")]
+        public async Task<IActionResult> GetByHotelIdList(int hotelId)
+        {
+            var commodities = await _commoditieService.GetByHotelIdListAsync(hotelId);
+            return Ok(new ApiResponse<IEnumerable<CommoditieDTO>>(true, "Commodities found.", commodities));
+        }
+
         [HttpPost]
-        public async Task<IActionResult> Create([FromBody] CommoditieDTO dto)
+        public async Task<IActionResult> Create([FromBody] CreateCommoditieDTO dto)
         {
             if (!ModelState.IsValid)
-                return BadRequest(new ApiResponse<CommoditieDTO>(false, "Dados inválidos.", null, ModelState));
+                return BadRequest(new ApiResponse<CommoditieDTO>(false, "Invalid data.", null, ModelState));
 
-            var commoditie = new Commoditie
+            try
             {
-                HotelId = dto.HotelId,
-                HasParking = dto.HasParking,
-                HasBreakfast = dto.HasBreakfast,
-                HasLunch = dto.HasLunch,
-                HasDinner = dto.HasDinner,
-                HasSpa = dto.HasSpa,
-                HasPool = dto.HasPool,
-                HasGym = dto.HasGym,
-                IsActive = true
-            };
-
-            var created = await _commoditieRepository.AddAsync(commoditie);
-            return CreatedAtAction(nameof(GetById), new { id = created.CommoditieId },
-                new ApiResponse<Commoditie>(true, "Commodity criada com sucesso.", created));
+                var created = await _commoditieService.CreateAsync(dto);
+                return CreatedAtAction(nameof(GetById), new { id = created.CommoditieId },
+                    new ApiResponse<CommoditieDTO>(true, "Commodity created successfully.", created));
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new ApiResponse<CommoditieDTO>(false, ex.Message));
+            }
         }
 
-        // PUT: api/commoditie/{id}
         [HttpPut("{id:int}")]
-        public async Task<IActionResult> Update(int id, [FromBody] CommoditieDTO dto)
+        public async Task<IActionResult> Update(int id, [FromBody] CreateCommoditieDTO dto)
         {
             if (!ModelState.IsValid)
-                return BadRequest(new ApiResponse<CommoditieDTO>(false, "Dados inválidos.", null, ModelState));
+                return BadRequest(new ApiResponse<CommoditieDTO>(false, "Invalid data.", null, ModelState));
 
-            var existing = await _commoditieRepository.GetByIdAsync(id);
-            if (existing == null)
-                return NotFound(new ApiResponse<Commoditie>(false, "Commodity não encontrada."));
-
-            existing.HasParking = dto.HasParking;
-            existing.HasBreakfast = dto.HasBreakfast;
-            existing.HasLunch = dto.HasLunch;
-            existing.HasDinner = dto.HasDinner;
-            existing.HasSpa = dto.HasSpa;
-            existing.HasPool = dto.HasPool;
-            existing.HasGym = dto.HasGym;
-            existing.IsActive = dto.IsActive;
-
-            await _commoditieRepository.UpdateAsync(existing);
-            return Ok(new ApiResponse<Commoditie>(true, "Commodity atualizada com sucesso.", existing));
+            try
+            {
+                var updated = await _commoditieService.UpdateAsync(id, dto);
+                return Ok(new ApiResponse<CommoditieDTO>(true, "Commodity updated successfully.", updated));
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new ApiResponse<CommoditieDTO>(false, ex.Message));
+            }
         }
 
-        // DELETE: api/commoditie/{id}
         [HttpDelete("{id:int}")]
         public async Task<IActionResult> Delete(int id)
         {
-            var deleted = await _commoditieRepository.SoftDeleteAsync(id);
+            var deleted = await _commoditieService.DeleteAsync(id);
             if (!deleted)
-                return NotFound(new ApiResponse<Commoditie>(false, "Commodity não encontrada ou já removida."));
+                return NotFound(new ApiResponse<CommoditieDTO>(false, "Commodity not found or already deleted."));
 
             return NoContent();
         }

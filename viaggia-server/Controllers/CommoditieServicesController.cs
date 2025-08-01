@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using viaggia_server.DTOs;
 using viaggia_server.DTOs.Commoditie;
-using viaggia_server.DTOs.Commodity;
 using viaggia_server.Models.Commodities;
 using viaggia_server.Repositories.Commodities;
 
