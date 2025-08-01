@@ -1,4 +1,4 @@
-﻿namespace viaggia_server.Services.EmailResetPassword
+﻿namespace viaggia_server.Services.Email
 {
     public interface IEmailService
     {
