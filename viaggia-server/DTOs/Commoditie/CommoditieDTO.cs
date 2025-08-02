@@ -7,12 +7,14 @@ namespace viaggia_server.DTOs.Commoditie
 {
     public class CommoditieDTO
     {
+
         [Required]
-        public string? HotelName { get; set; }
+        public int CommoditieId { get; set; }
 
-        public int HotelId { get; set; }
+        public int? HotelId { get; set; } // Tornar opcional
 
-        // Serviços fixos
+        public string HotelName { get; set; } = string.Empty;
+
         public bool HasParking { get; set; }
         public bool IsParkingPaid { get; set; }
 

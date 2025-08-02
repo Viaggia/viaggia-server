@@ -16,6 +16,7 @@ namespace viaggia_server.Repositories.Commodities
         public async Task<IEnumerable<Commoditie>> GetAllAsync()
         {
             return await _context.Commodities
+                .Include(c => c.Hotel)
                 .Where(c => c.IsActive)
                 .ToListAsync();
         }
@@ -23,8 +24,10 @@ namespace viaggia_server.Repositories.Commodities
         public async Task<Commoditie?> GetByIdAsync(int id)
         {
             return await _context.Commodities
+                .Include(c => c.Hotel) // Inclui os dados do hotel
                 .FirstOrDefaultAsync(c => c.CommoditieId == id && c.IsActive);
         }
+
 
         public async Task<Commoditie?> GetByHotelIdAsync(int hotelId)
         {
@@ -93,11 +96,14 @@ namespace viaggia_server.Repositories.Commodities
         }
 
        
-        public async Task<Commoditie?> GetByHotelNameAsync(string hotelName)
+        public async Task<IEnumerable<CommoditieServices>> GetAllWithHotelAsync()
         {
-            return await _context.Commodities
-                .Include(c => c.Hotel)
-                .FirstOrDefaultAsync(c => c.Hotel.Name == hotelName);
+            return await _context.CommoditieServices
+               .Include(cs => cs.Hotel)
+               .ToListAsync();
         }
+
+       
+       
     }
 }

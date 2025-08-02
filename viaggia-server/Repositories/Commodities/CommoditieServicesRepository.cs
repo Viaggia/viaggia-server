@@ -71,15 +71,7 @@ namespace viaggia_server.Repositories.Commodities
             return changes > 0;
         }
 
-        Task<T2?> IRepository<CommoditieServices>.GetByIdAsync<T2>(int id) where T2 : class
-        {
-            throw new NotImplementedException();
-        }
-
-        Task<bool> IRepository<CommoditieServices>.SoftDeleteAsync<T2>(int id)
-        {
-            throw new NotImplementedException();
-        }
+       
 
         public async Task<IEnumerable<CommoditieServices>> GetAllWithHotelAsync()
         {
@@ -101,6 +93,16 @@ namespace viaggia_server.Repositories.Commodities
                 .FirstOrDefaultAsync(cs => cs.HotelId == hotelId && cs.IsActive);
 
          }
+
+        Task<T2?> IRepository<CommoditieServices>.GetByIdAsync<T2>(int id) where T2 : class
+        {
+            throw new NotImplementedException();
+        }
+
+        Task<bool> IRepository<CommoditieServices>.SoftDeleteAsync<T2>(int id)
+        {
+            throw new NotImplementedException();
+        }
     }
 }
 

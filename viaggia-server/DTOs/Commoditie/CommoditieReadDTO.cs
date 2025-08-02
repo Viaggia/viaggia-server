@@ -3,7 +3,9 @@
     public class CommoditieReadDTO
     {
         public int CommoditieId { get; set; }
-       
+
+        public int HotelId { get; set; }
+
         public string HotelName { get; set; } = string.Empty;
 
         public bool HasParking { get; set; }

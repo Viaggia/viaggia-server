@@ -47,7 +47,7 @@ namespace viaggia_server.Controllers
                 HotelName = s.Hotel?.Name ?? string.Empty
             });
 
-            return Ok(new ApiResponse<IEnumerable<CommoditieServicesResponseDTO>>(true, "Serviços personalizados encontrados.", response));
+            return Ok(new ApiResponse<IEnumerable<CommoditieServicesResponseDTO>>(true, "Comodidades encontradas.", response));
         }
 
         [HttpGet("{id:int}")]
@@ -55,7 +55,7 @@ namespace viaggia_server.Controllers
         {
             var service = await _serviceRepository.GetByIdAsync(id);
             if (service == null)
-                return NotFound(new ApiResponse<CommoditieServicesResponseDTO>(false, "Serviço personalizado não encontrado."));
+                return NotFound(new ApiResponse<CommoditieServicesResponseDTO>(false, "Comodidade não encontrada."));
 
             var response = new CommoditieServicesResponseDTO
             {
@@ -67,7 +67,7 @@ namespace viaggia_server.Controllers
                 HotelName = service.Hotel?.Name ?? string.Empty
             };
 
-            return Ok(new ApiResponse<CommoditieServicesResponseDTO>(true, "Serviço personalizado encontrado.", response));
+            return Ok(new ApiResponse<CommoditieServicesResponseDTO>(true, "Comodidade personalizado encontrado.", response));
         }
 
         [HttpGet("commoditie/{commoditieId:int}")]
@@ -75,9 +75,9 @@ namespace viaggia_server.Controllers
         {
             var services = await _serviceRepository.GetByCommoditieIdAsync(commoditieId);
             if (!services.Any())
-                return NotFound(new ApiResponse<IEnumerable<CommoditieServices>>(false, "Nenhum serviço encontrado para esta commodity."));
+                return NotFound(new ApiResponse<IEnumerable<CommoditieServices>>(false, "Nenhum serviço encontrado para esta comoditie."));
 
-            return Ok(new ApiResponse<IEnumerable<CommoditieServices>>(true, "Serviços encontrados para a commodity.", services));
+            return Ok(new ApiResponse<IEnumerable<CommoditieServices>>(true, "Serviços encontrados para a comodi.", services));
         }
 
         [HttpPost]
