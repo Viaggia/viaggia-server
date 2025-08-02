@@ -23,7 +23,6 @@ using viaggia_server.Repositories.Reservations;
 using viaggia_server.Repositories.Users;
 using viaggia_server.Repositories.Users;
 using viaggia_server.Services;
-using viaggia_server.Services.Commodities;
 using viaggia_server.Services.EmailResetPassword;
 using viaggia_server.Services.HotelServices;
 using viaggia_server.Services.Medias;
@@ -86,7 +85,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"),
     sqlOptions => sqlOptions.CommandTimeout(60)));
 
-// Register repositories and services
+// Repositories
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 builder.Services.AddScoped<IReservationRepository, ReservationRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
@@ -98,12 +97,13 @@ builder.Services.AddScoped<IHotelRepository, HotelRepository>();
 builder.Services.AddScoped<ICommoditieRepository, CommoditieRepository>();
 builder.Services.AddScoped<ICommoditieServicesRepository, CommoditieServicesRepository>();
 builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
-//builder.Services.AddScoped<IStripePaymentService, StripePaymentService>();
 builder.Services.AddScoped<IAuthRepository, AuthRepository>();
 builder.Services.AddScoped<IGoogleAccountRepository, GoogleAccountRepository>();
+
+//Services
+builder.Services.AddScoped<IHotelServices, HotelServices>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IImageService, ImageService>();
-builder.Services.AddScoped<ICommoditieService, CommoditieService>();
 
 // Configure Stripe
 StripeConfiguration.ApiKey = builder.Configuration["Stripe:SecretKey"];

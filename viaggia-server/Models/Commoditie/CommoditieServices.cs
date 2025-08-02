@@ -34,4 +34,3 @@ namespace viaggia_server.Models.Commodities
 
     }
 }
-

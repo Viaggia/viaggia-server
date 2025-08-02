@@ -10,9 +10,11 @@ namespace viaggia_server.Repositories.Commodities
         Task<IEnumerable<Commoditie>> GetAllAsync();
         Task<Commoditie?> GetByIdAsync(int id);
         Task<Commoditie?> GetByHotelIdAsync(int hotelId);
+        Task<Commoditie?> GetByHotelNameAsync(string hotelName);
         Task<Commoditie> AddAsync(Commoditie entity);
         Task<Commoditie> UpdateAsync(Commoditie entity);
         Task<bool> SoftDeleteAsync(int id);
         Task<bool> DeleteAsync(int id);
+
     }
 }
