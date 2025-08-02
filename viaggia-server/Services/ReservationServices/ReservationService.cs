@@ -60,18 +60,29 @@ namespace viaggia_server.Services.Reservations
             };
         }
 
-        public async Task<ReservationDTO> CreateAsync(ReservationCreateDTO dto)
+        public async Task<ReservationDTO> CreateAsync(ReservationCreateDTO dto, Hotel hotel,User user)
         {
             var userId = await _userRepository.GetByIdAsync(dto.UserId);
             if (userId == null) throw new Exception("Cliente não encontrado");
+            var HotelId = _hotelRepository.GetHotelByIdWithDetailsAsync(dto.HotelId);
+            if (HotelId == null) throw new Exception("Hotel não encontrado");
+            var PackageId = _hotelRepository.GetPackageByIdAsync(dto.PackageId);
+
+            try
+            {
+                
+            }
+            catch (Exception ex)
+            {
 
             var reservation = new Reservation
             {
                 UserId = dto.UserId,
                 PackageId = dto.PackageId,
                 HotelId = dto.HotelId,
-                TotalPrice = dto.TotalPrice,
-                IsActive = dto.IsActive
+                TotalPrice = totalPrice,
+                NumberOfGuests = dto.NumberOfGuests,
+                Status = dto.Status
             };
 
             await _reservationRepository.AddAsync(reservation);
