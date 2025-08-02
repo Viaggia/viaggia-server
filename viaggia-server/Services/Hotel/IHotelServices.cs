@@ -10,7 +10,7 @@ namespace viaggia_server.Services.HotelServices
     public interface IHotelServices
     {
         Task<ApiResponse<List<HotelDTO>>> GetAllHotelAsync();
-        Task<Hotel?> GetHotelByIdAsync(int id);
+        Task<ApiResponse<HotelDTO>> GetHotelByIdAsync(int id); 
         Task<ApiResponse<Hotel>> CreateHotelAsync(CreateHotelDTO createHotelDto, List<CreateHotelRoomTypeDTO> roomTypes);
         Task<Hotel> UpdateHotelAsync(UpdateHotelDto updateHotelDto);
         Task<bool> SoftDeleteHotelAsync(int id);

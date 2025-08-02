@@ -1,4 +1,5 @@
-﻿using viaggia_server.Models.Commodities;
+﻿using System.Linq.Expressions;
+using viaggia_server.Models.Commodities;
 
 namespace viaggia_server.Repositories
 {
@@ -11,7 +12,9 @@ namespace viaggia_server.Repositories
         Task<bool> SoftDeleteAsync(int id);
         Task<bool> SaveChangesAsync();
         Task<T2?> GetByIdAsync<T2>(int id) where T2 : class, ISoftDeletable;
-        Task<bool> SoftDeleteAsync<T2>(int id) where T2 : class, ISoftDeletable; // New method for cross-entity soft delete
-       
+        Task<bool> SoftDeleteAsync<T2>(int id) where T2 : class, ISoftDeletable;
+
+        Task<T?> GetByIdWithIncludesAsync(int id, params Expression<Func<T, object>>[] includes);
+
     }
 }

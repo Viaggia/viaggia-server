@@ -15,15 +15,14 @@ namespace viaggia_server.Repositories.HotelRepository
         Task<bool> CnpjExistsAsync(string? cnpj);
         Task<HotelRoomType> AddRoomTypeAsync(HotelRoomType roomType);
         Task<Media> AddMediaAsync(Media media);
+        Task<Hotel?> GetHotelByNameAsync(string name);
         Task<IEnumerable<HotelRoomType>> GetHotelRoomTypesAsync(int hotelId);
         Task<IEnumerable<Media>> GetMediasByHotelIdAsync(int hotelId);
         Task<IEnumerable<Review>> GetReviewsByHotelIdAsync(int hotelId);
         Task<IEnumerable<Package>> GetPackagesByHotelIdAsync(int hotelId);
         Task<IEnumerable<Commoditie>> GetCommoditiesByHotelIdAsync(int hotelId);
         Task<IEnumerable<CommoditieServices>> GetCommoditieServicesByHotelIdAsync(int hotelId);
-        Task<IEnumerable<Hotel>> FilterHotelsAsync(HotelFilterDTO filter);
-
-
+        Task<IEnumerable<Hotel>> GetHotelsWithRelatedDataAsync();
 
         //Task<CommoditieServices?> GetCommoditieServiceByIdAsync(int commoditieServiceId);
         //Task<Commoditie?> GetCommodityByIdAsync(int commoditieId);
@@ -33,7 +32,6 @@ namespace viaggia_server.Repositories.HotelRepository
         //Task<Review?> GetReviewByIdAsync(int reviewId);
         //Task<Package> AddPackageAsync(Package package);
         //Task<HotelRoomType?> GetRoomTypeByIdAsync(int roomTypeId);
-        //Task<Hotel?> GetHotelByNameAsync(string name);
         //Task<bool> UpdateRoomAvailabilityAsync(int roomTypeId, int roomsToReserve);
         //Task<Media?> GetMediaByIdAsync(int mediaId);
         //Task<bool> SoftDeleteMediaAsync(int mediaId);
