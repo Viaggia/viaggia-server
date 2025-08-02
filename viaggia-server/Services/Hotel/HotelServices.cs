@@ -1,4 +1,4 @@
-﻿namespace viaggia_server.Services.Hotel
+﻿namespace viaggia_server.Services.HotelServices
 {
     public class HotelServices
     {

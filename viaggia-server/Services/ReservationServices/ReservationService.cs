@@ -69,7 +69,7 @@ namespace viaggia_server.Services.Reservations
             };
         }
 
-        public async Task<ReservationDTO> CreateAsync(ReservationCreateDTO dto, Hotels hotel,User user)
+        public async Task<ReservationDTO> CreateAsync(ReservationCreateDTO dto, Hotel hotel,User user)
         {
             var userId = _userRepository.GetByIdAsync(dto.UserId);
             if (userId == null) throw new Exception("Cliente não encontrado");
@@ -79,7 +79,7 @@ namespace viaggia_server.Services.Reservations
 
             try
             {
-
+                
             }
             catch (Exception ex)
             {
@@ -99,12 +99,9 @@ namespace viaggia_server.Services.Reservations
                 PackageId = dto.PackageId,
                 RoomTypeId = dto.RoomTypeId,
                 HotelId = dto.HotelId,
-                CheckInDate = dto.CheckInDate,
-                CheckOutDate = dto.CheckOutDate,
                 TotalPrice = totalPrice,
                 NumberOfGuests = dto.NumberOfGuests,
-                Status = dto.Status,
-                IsActive = dto.IsActive
+                Status = dto.Status
             };
 
             await _reservationRepository.AddAsync(reservation);

@@ -54,7 +54,5 @@ namespace viaggia_server.Models.Reservations
         public string Status { get; set; } = null!; // Ex.: "Confirmed", "Cancelled", "Pending"
 
         public bool IsActive { get; set; } = true;
-
-        public virtual ICollection<Companion> Companions { get; set; } = new List<Companion>();
     }
 }
