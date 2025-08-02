@@ -60,7 +60,7 @@ namespace viaggia_server.Services.Reservations
             };
         }
 
-        public async Task<ReservationDTO> CreateAsync(ReservationCreateDTO dto, Hotel hotel,User user)
+        public async Task<ReservationDTO> CreateAsync(ReservationCreateDTO dto, Hotel hotel, User user)
         {
             var userId = await _userRepository.GetByIdAsync(dto.UserId);
             if (userId == null) throw new Exception("Cliente não encontrado");
@@ -70,25 +70,26 @@ namespace viaggia_server.Services.Reservations
 
             try
             {
-                
+
             }
             catch (Exception ex)
             {
 
-            var reservation = new Reservation
-            {
-                UserId = dto.UserId,
-                PackageId = dto.PackageId,
-                HotelId = dto.HotelId,
-                TotalPrice = totalPrice,
-                NumberOfGuests = dto.NumberOfGuests,
-                Status = dto.Status
-            };
+                var reservation = new Reservation
+                {
+                    UserId = dto.UserId,
+                    PackageId = dto.PackageId,
+                    HotelId = dto.HotelId,
+                    TotalPrice = totalPrice,
+                    NumberOfGuests = dto.NumberOfGuests,
+                    Status = dto.Status
+                };
 
-            await _reservationRepository.AddAsync(reservation);
-            await _reservationRepository.SaveChangesAsync();
+                await _reservationRepository.AddAsync(reservation);
+                await _reservationRepository.SaveChangesAsync();
 
-            return await GetByIdAsync(reservation.ReservationId) ?? throw new Exception("Erro ao criar reserva.");
+                return await GetByIdAsync(reservation.ReservationId) ?? throw new Exception("Erro ao criar reserva.");
+            }
         }
 
         public async Task<ReservationDTO> UpdateAsync(int id, ReservationUpdateDTO dto)
