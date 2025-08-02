@@ -1,0 +1,76 @@
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Docker
+Dockerfile*
+docker-compose*
+.dockerignore
+
+# Documentation
+README.md
+DOCKER.md
+docs/
+
+# IDE
+.vs/
+.vscode/
+*.user
+*.suo
+*.userprefs
+
+# Build artifacts
+bin/
+obj/
+out/
+TestResults/
+Migrations/
+**/Migrations/
+*.Designer.cs
+*ModelSnapshot.cs
+
+# Packages
+*.nupkg
+*.snupkg
+packages/
+
+# Environment files
+.env
+.env.local
+.env.development
+.env.production
+
+# Logs
+logs/
+*.log
+
+# Runtime files
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory used by tools like istanbul
+coverage/
+
+# Temporary folders
+tmp/
+temp/
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Upload directories (will be mounted as volume)
+uploads/
+wwwroot/Uploads/
+
+# SSL certificates
+*.pem
+*.key
+*.crt

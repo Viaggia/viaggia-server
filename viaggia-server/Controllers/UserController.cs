@@ -1,10 +1,13 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Security.Claims;
 using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using viaggia_server.DTOs;
+using viaggia_server.DTOs.User;
 using viaggia_server.DTOs.Users;
-using viaggia_server.Services.Users;
+using viaggia_server.Repositories.Users;
+using viaggia_server.Services.Email;
 
 namespace viaggia_server.Controllers
 {
@@ -12,11 +15,27 @@ namespace viaggia_server.Controllers
     [Route("api/users")]
     public class UsersController : ControllerBase
     {
-        private readonly IUserService _service;
+        private readonly IUserRepository _userRepository;
+        private readonly IEmailService _emailService;
+        private readonly IValidator<CreateClientDTO> _clientValidator;
+        private readonly IValidator<CreateServiceProviderDTO> _serviceProviderValidator;
+        private readonly IValidator<CreateAttendantDTO> _attendantValidator;
+        private readonly IValidator<UpdateUserDTO> _updateUserValidator;
 
-        public UsersController(IUserService service)
+        public UsersController(
+            IUserRepository userRepository,
+            IEmailService emailService,
+            IValidator<CreateClientDTO> clientValidator,
+            IValidator<CreateServiceProviderDTO> serviceProviderValidator,
+            IValidator<CreateAttendantDTO> attendantValidator,
+            IValidator<UpdateUserDTO> updateUserValidator)
         {
-            _service = service ?? throw new ArgumentNullException(nameof(service));
+            _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
+            _emailService = emailService ?? throw new ArgumentNullException(nameof(emailService));
+            _clientValidator = clientValidator ?? throw new ArgumentNullException(nameof(clientValidator));
+            _serviceProviderValidator = serviceProviderValidator ?? throw new ArgumentNullException(nameof(serviceProviderValidator));
+            _attendantValidator = attendantValidator ?? throw new ArgumentNullException(nameof(attendantValidator));
+            _updateUserValidator = updateUserValidator ?? throw new ArgumentNullException(nameof(updateUserValidator));
         }
 
         [HttpPost("client")]
@@ -27,7 +46,20 @@ namespace viaggia_server.Controllers
         {
             try
             {
-                var result = await _service.CreateClientAsync(request);
+                var validationResult = await _clientValidator.ValidateAsync(request);
+                if (!validationResult.IsValid)
+                    throw new FluentValidation.ValidationException(validationResult.Errors);
+
+                var result = await _userRepository.CreateClientAsync(request);
+                try
+                {
+                    await _emailService.SendWelcomeEmailAsync(result.Email, result.Name);
+                }
+                catch (Exception emailEx)
+                {
+                    Console.WriteLine($"Falha ao enviar e-mail de boas-vindas: {emailEx.Message}");
+                }
+
                 return CreatedAtAction(nameof(GetById), new { id = result.Id },
                     new ApiResponse<UserDTO>(true, "Client created successfully.", result));
             }
@@ -47,7 +79,6 @@ namespace viaggia_server.Controllers
         }
 
         [HttpPost("service-provider")]
-        //[Authorize(Roles = "ADMIN")]
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
@@ -55,7 +86,11 @@ namespace viaggia_server.Controllers
         {
             try
             {
-                var result = await _service.CreateServiceProviderAsync(request);
+                var validationResult = await _serviceProviderValidator.ValidateAsync(request);
+                if (!validationResult.IsValid)
+                    throw new FluentValidation.ValidationException(validationResult.Errors);
+
+                var result = await _userRepository.CreateServiceProviderAsync(request);
                 return CreatedAtAction(nameof(GetById), new { id = result.Id },
                     new ApiResponse<UserDTO>(true, "Service provider created successfully.", result));
             }
@@ -75,7 +110,6 @@ namespace viaggia_server.Controllers
         }
 
         [HttpPost("attendant")]
-        //[Authorize(Roles = "ADMIN")]
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
@@ -83,7 +117,11 @@ namespace viaggia_server.Controllers
         {
             try
             {
-                var result = await _service.CreateAttendantAsync(request);
+                var validationResult = await _attendantValidator.ValidateAsync(request);
+                if (!validationResult.IsValid)
+                    throw new FluentValidation.ValidationException(validationResult.Errors);
+
+                var result = await _userRepository.CreateAttendantAsync(request);
                 return CreatedAtAction(nameof(GetById), new { id = result.Id },
                     new ApiResponse<UserDTO>(true, "Attendant created successfully.", result));
             }
@@ -103,7 +141,6 @@ namespace viaggia_server.Controllers
         }
 
         [HttpPost("admin")]
-        //[Authorize(Roles = "ADMIN")]
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
@@ -111,7 +148,7 @@ namespace viaggia_server.Controllers
         {
             try
             {
-                var result = await _service.CreateAdminAsync(request);
+                var result = await _userRepository.CreateAdminAsync(request);
                 return CreatedAtAction(nameof(GetById), new { id = result.Id },
                     new ApiResponse<UserDTO>(true, "Admin user created successfully.", result));
             }
@@ -130,16 +167,14 @@ namespace viaggia_server.Controllers
             }
         }
 
-
         [HttpGet]
-        //[Authorize(Roles = "ADMIN")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> GetAll()
         {
             try
             {
-                var result = await _service.GetAllAsync();
+                var result = await _userRepository.GetAllAsync();
                 return Ok(new ApiResponse<List<UserDTO>>(true, "Users retrieved successfully.", result));
             }
             catch (Exception ex)
@@ -150,7 +185,6 @@ namespace viaggia_server.Controllers
         }
 
         [HttpGet("{id}")]
-        //[Authorize(Roles = "ADMIN,CLIENT,SERVICE_PROVIDER,ATTENDANT")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -162,7 +196,7 @@ namespace viaggia_server.Controllers
 
             try
             {
-                var result = await _service.GetByIdAsync(id);
+                var result = await _userRepository.GetByIdAsync(id);
                 return Ok(new ApiResponse<UserDTO>(true, "User retrieved successfully.", result));
             }
             catch (ArgumentException ex)
@@ -176,8 +210,7 @@ namespace viaggia_server.Controllers
             }
         }
 
-        [HttpDelete("{id}")]
-        //[Authorize(Roles = "ADMIN")]
+        [HttpDelete("{id}/deactivate")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -189,16 +222,10 @@ namespace viaggia_server.Controllers
 
             try
             {
-                await _service.SoftDeleteAsync(id);
-
-                return Ok(new ApiResponse<string>(
-                    true,
-                    $"Usuário com ID {id} foi desativado com sucesso."
-                ));
-            }
-            catch (ArgumentException ex)
-            {
-                return NotFound(new ApiResponse<string>(false, ex.Message));
+                var deleted = await _userRepository.SoftDeleteAsync(id);
+                if (!deleted)
+                    return NotFound(new ApiResponse<UserDTO>(false, "User not found."));
+                return Ok(new ApiResponse<string>(true, $"Usuário com ID {id} foi desativado com sucesso."));
             }
             catch (Exception ex)
             {
@@ -207,9 +234,7 @@ namespace viaggia_server.Controllers
             }
         }
 
-
         [HttpPatch("{id}/reactivate")]
-        //[Authorize(Roles = "ADMIN")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -221,8 +246,49 @@ namespace viaggia_server.Controllers
 
             try
             {
-                await _service.ReactivateAsync(id);
+                var reactivated = await _userRepository.ReactivateAsync(id);
+                if (!reactivated)
+                    return NotFound(new ApiResponse<UserDTO>(false, "User not found."));
                 return Ok(new ApiResponse<UserDTO>(true, "User reactivated successfully."));
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    new ApiResponse<UserDTO>(false, $"Error reactivating user: {ex.Message}"));
+            }
+        }
+
+        [HttpPut("{id}")]
+        [Authorize(Roles = "ADMIN,CLIENT,SERVICE_PROVIDER,ATTENDANT")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        [Consumes("multipart/form-data")]
+        [Produces("application/json")]
+        public async Task<IActionResult> Update(int id, [FromForm] UpdateUserDTO request)
+        {
+            if (id <= 0)
+                return BadRequest(new ApiResponse<UserDTO>(false, "ID de usuário inválido."));
+
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (!User.IsInRole("ADMIN") && (userIdClaim == null || userIdClaim != id.ToString()))
+                return StatusCode(StatusCodes.Status403Forbidden, new ApiResponse<UserDTO>(false, "Você só pode editar o seu próprio perfil a menos que seja um Admin."));
+
+            try
+            {
+                var validationResult = await _updateUserValidator.ValidateAsync(request);
+                if (!validationResult.IsValid)
+                    throw new FluentValidation.ValidationException(validationResult.Errors);
+
+                var result = await _userRepository.UpdateAsync(id, request);
+                return Ok(new ApiResponse<UserDTO>(true, "Usuário atualizado com sucesso.", result));
+            }
+            catch (FluentValidation.ValidationException ex)
+            {
+                return BadRequest(new ApiResponse<UserDTO>(false, "Falha de validação.", null, ex.Errors));
             }
             catch (ArgumentException ex)
             {
@@ -231,7 +297,7 @@ namespace viaggia_server.Controllers
             catch (Exception ex)
             {
                 return StatusCode(StatusCodes.Status500InternalServerError,
-                    new ApiResponse<UserDTO>(false, $"Error reactivating user: {ex.Message}"));
+                    new ApiResponse<UserDTO>(false, $"Erro ao atualizar usuário: {ex.Message}"));
             }
         }
     }

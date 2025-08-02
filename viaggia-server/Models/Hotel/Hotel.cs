@@ -1,8 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using viaggia_server.Models.Addresses;
 using viaggia_server.Models.Commodities;
-using viaggia_server.Models.HotelDates;
 using viaggia_server.Models.HotelRoomTypes;
 using viaggia_server.Models.Medias;
 using viaggia_server.Models.Packages;
@@ -22,7 +20,23 @@ namespace viaggia_server.Models.Hotels
         public string Name { get; set; } = null!;
 
         [Required(ErrorMessage = "CNPJ is required.")]
-        public string Cnpj { get; set; } = null!; // CNPJ for service providers
+        public string Cnpj { get; set; } = null!;
+
+        [Required(ErrorMessage = "Street is required.")]
+        [StringLength(100, ErrorMessage = "Street cannot exceed 100 characters.")]
+        public string Street { get; set; } = null!;
+
+        [Required(ErrorMessage = "City is required.")]
+        [StringLength(50, ErrorMessage = "City cannot exceed 50 characters.")]
+        public string City { get; set; } = null!;
+
+        [Required(ErrorMessage = "State is required.")]
+        [StringLength(50, ErrorMessage = "State cannot exceed 50 characters.")]
+        public string State { get; set; } = null!;
+
+        [Required(ErrorMessage = "Zip code is required.")]
+        [StringLength(20, ErrorMessage = "Zip code cannot exceed 20 characters.")]
+        public string ZipCode { get; set; } = null!;
 
         [StringLength(500, ErrorMessage = "Description cannot exceed 500 characters.")]
         public string? Description { get; set; }
@@ -45,22 +59,15 @@ namespace viaggia_server.Models.Hotels
 
         public bool IsActive { get; set; } = true;
 
-        [Required(ErrorMessage = "Address is required.")]
-        public int AddressId { get; set; }
-
-        [ForeignKey("AddressId")]
-        public Address? Address { get; set; }
-
-        [ForeignKey("CommodityId")]
-        public Commodity? Commodities { get; set; } = null!;
+        public double AverageRating { get; set; }
 
         // Relationships
         public virtual ICollection<HotelRoomType> RoomTypes { get; set; } = new List<HotelRoomType>();
-        public virtual ICollection<HotelDate> HotelDates { get; set; } = new List<HotelDate>();
         public virtual ICollection<Reservation> Reservations { get; set; } = new List<Reservation>();
         public virtual ICollection<Media> Medias { get; set; } = new List<Media>();
         public virtual ICollection<Review> Reviews { get; set; } = new List<Review>();
-        public virtual ICollection<Package> Packages { get; set; } = new List<Package>(); // New collection
-        // public virtual ICollection<Address> Addresses { get; set; } = new List<Address>(); // New collection for addresses - Necessariamente o mesmo hotel com o mesmo nome na barra da tijuca não é o de copacabana
+        public virtual ICollection<Package> Packages { get; set; } = new List<Package>();
+        public virtual ICollection<Commoditie> Commodities { get; set; } = new List<Commoditie>();
+        public virtual ICollection<CommoditieServices> CommoditieServices { get; set; } = new List<CommoditieServices>();
     }
 }

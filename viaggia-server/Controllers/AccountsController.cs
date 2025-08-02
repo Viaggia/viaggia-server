@@ -1,12 +1,13 @@
-﻿using Microsoft.AspNetCore.Authentication;
+﻿using System.Security.Claims;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
 using viaggia_server.Data;
 using viaggia_server.DTOs.Auth;
-using viaggia_server.Repositories.Users;
+using viaggia_server.Repositories;
+using viaggia_server.Repositories.Auth;
 
 namespace viaggia_server.Controllers
 {
@@ -14,23 +15,28 @@ namespace viaggia_server.Controllers
     [ApiController]
     public class AccountsController : ControllerBase
     {
-        private readonly IUserRepository _repository;
+        private readonly IAuthRepository _authRepository;
+        private readonly IGoogleAccountRepository _repository;
 
-        public AccountsController(IUserRepository repository)
+        public AccountsController(IAuthRepository authRepository, IGoogleAccountRepository repository)
         {
+            _authRepository = authRepository;
             _repository = repository;
         }
 
         [HttpGet("login-google")]
         public IActionResult LoginWithGoogle()
         {
-            var properties = new AuthenticationProperties 
+            var properties = new AuthenticationProperties
             {
                 RedirectUri = "/api/Accounts/google-callback"
             };
+
+            properties.Items["prompt"] = "select_account";
+
             return Challenge(properties, GoogleDefaults.AuthenticationScheme);
         }
-        
+
         [HttpGet("google-callback")]
         public async Task<IActionResult> GoogleCallback()
         {
@@ -47,25 +53,23 @@ namespace viaggia_server.Controllers
             if (string.IsNullOrWhiteSpace(email))
                 return BadRequest("O login do Google não retornou um e-mail.");
 
-            var user = await _repository.CreateOrLoginOAuth(new OAuthRequest
+            var oauthRequest = new OAuthRequest
             {
                 GoogleUid = googleUid,
                 Email = email,
                 Name = name,
                 Picture = picture,
                 PhoneNumber = phoneNumber
-            });
+            };
 
-            return Ok(new
-            {
-                Name = user.Name,
-                Email = user.Email,
-                PhoneNumber = user.PhoneNumber,
-                Picture = user.AvatarUrl
-            });
+            var user = await _repository.CreateOrLoginOAuth(oauthRequest);
+            var token = await _authRepository.GenerateJwtTokenAsync(user);
+
+            return Redirect($"http://localhost:5173/auth-success?token={token}");
         }
 
-        [HttpPost("logout")]
+
+        [HttpPost("logout-google")]
         public async Task<IActionResult> Logout()
         {
             await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);

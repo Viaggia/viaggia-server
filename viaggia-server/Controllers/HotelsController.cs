@@ -1,181 +1,169 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using Microsoft.AspNetCore.Mvc;
+using viaggia_server.DTOs;
+using viaggia_server.DTOs.Hotel;
+using viaggia_server.DTOs.HotelFilterDTO;
 using viaggia_server.DTOs.Hotels;
-using viaggia_server.DTOs.Commodities;
-using viaggia_server.Models.Commodities;
-using viaggia_server.Models.Hotels;
-using viaggia_server.Repositories;
-using viaggia_server.Repositories.HotelRepository;
+using viaggia_server.Services.HotelServices;
 
 namespace viaggia_server.Controllers
 {
-    [Route("api/[controller]")]
     [ApiController]
-    public class HotelsController : ControllerBase
+    [Route("api/[controller]")]
+    public class HotelController : ControllerBase
     {
-        private readonly IRepository<Hotel> _hotelRepository;
-        private readonly IRepository<Commodity> _commoditieRepository;
-        private readonly IHotelRepository _hotelRepositorySpecific; // só para Address e RoomType
+        private readonly IHotelServices _hotelServices;
+        private readonly ILogger<HotelController> _logger;
 
-        public HotelsController(
-            IRepository<Hotel> hotelRepository,
-            IRepository<Commodity> commoditieRepository,
-            IHotelRepository hotelRepositorySpecific)
+        public HotelController(IHotelServices hotelServices, ILogger<HotelController> logger)
         {
-            _hotelRepository = hotelRepository;
-            _commoditieRepository = commoditieRepository;
-            _hotelRepositorySpecific = hotelRepositorySpecific;
+            _hotelServices = hotelServices;
+            _logger = logger;
+        }
+
+        [HttpPost("create")]
+        [Consumes("multipart/form-data")]
+        public async Task<IActionResult> CreateHotel([FromForm] CreateHotelDTO createHotelDto)
+        {
+            if (!ModelState.IsValid)
+            {
+                _logger.LogError("ModelState is invalid: {Errors}", ModelState);
+                return BadRequest(ModelState);
+            }
+
+            List<CreateHotelRoomTypeDTO> roomTypes;
+
+            try
+            {
+                var options = new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true,
+                    Converters = { new JsonStringEnumConverter() }
+                };
+
+                roomTypes = JsonSerializer.Deserialize<List<CreateHotelRoomTypeDTO>>(createHotelDto.RoomTypesJson, options)!;
+
+                if (roomTypes == null || !roomTypes.Any())
+                {
+                    _logger.LogWarning("No room types provided in JSON.");
+                    return BadRequest("At least one room type must be provided.");
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Invalid RoomTypesJson");
+                return BadRequest("RoomTypesJson is invalid or malformed.");
+            }
+
+            var response = await _hotelServices.CreateHotelAsync(createHotelDto, roomTypes);
+
+            if (!response.Success)
+            {
+                _logger.LogError("Failed to create hotel: {Message}", response.Message);
+                return BadRequest(response.Message);
+            }
+
+            return CreatedAtAction(nameof(GetHotelById), new { id = response.Data.HotelId }, response.Data);
+        }
+
+
+        [HttpGet("getAll")]
+        public async Task<IActionResult> GetAllHotels()
+        {
+            var response = await _hotelServices.GetAllHotelAsync();
+            if (!response.Success)
+                return BadRequest(response.Message);
+            return Ok(response.Data);
         }
 
         [HttpGet("{id}")]
-        public async Task<IActionResult> GetById(int id)
+        public async Task<IActionResult> GetHotelById(int id)
         {
-            var hotel = await _hotelRepository.GetByIdAsync(id);
+            var hotel = await _hotelServices.GetHotelByIdAsync(id);
             if (hotel == null)
-                return NotFound();
-
-            var address = await _hotelRepositorySpecific.GetAddressByHotelIdAsync(id);
-
-            var commoditieList = await _commoditieRepository.GetAllAsync();
-            var commoditie = commoditieList.FirstOrDefault(c => c.HotelId == id);
-
-            var dto = new HotelDTO
-            {
-                HotelId = hotel.HotelId,
-                Name = hotel.Name,
-                Description = hotel.Description,
-                StarRating = hotel.StarRating,
-                CheckInTime = hotel.CheckInTime,
-                CheckOutTime = hotel.CheckOutTime,
-                ContactPhone = hotel.ContactPhone,
-                ContactEmail = hotel.ContactEmail,
-                Street = address?.Street ?? "",
-                City = address?.City ?? "",
-                State = address?.State ?? "",
-                ZipCode = address?.ZipCode ?? "",
-                Commoditie = commoditie != null ? new CommoditieDTO
-                {
-                    HasBreakfast = commoditie.HasBreakfast,
-                    HasParking = commoditie.HasParking,
-                    HasSpa = commoditie.HasSpa,
-                    HasPool = commoditie.HasPool,
-                    IsActive = commoditie.IsActive
-                } : new CommoditieDTO(),
-                IsActive = hotel.IsActive
-            };
-
-            return Ok(dto);
+                return NotFound("Hotel not found.");
+            return Ok(hotel);
         }
 
-        [HttpPost]
-        public async Task<IActionResult> CreateHotel([FromBody] CreateHotelDTO dto)
+        [HttpPut("update")]
+        public async Task<IActionResult> UpdateHotel([FromBody] UpdateHotelDto updateHotelDto)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
             try
             {
-                // Criar endereço via HotelRepository específico
-                var address = new viaggia_server.Models.Addresses.Address
-                {
-                    Street = dto.Street,
-                    City = dto.City,
-                    State = dto.State,
-                    ZipCode = dto.ZipCode,
-                    IsActive = true
-                };
-
-                var createdAddress = await _hotelRepositorySpecific.AddAddressAsync(address);
-
-                // Criar hotel usando o endereço criado
-                var hotel = new Hotel
-                {
-                    Name = dto.Name,
-                    Description = dto.Description,
-                    StarRating = dto.StarRating,
-                    CheckInTime = dto.CheckInTime,
-                    CheckOutTime = dto.CheckOutTime,
-                    ContactPhone = dto.ContactPhone,
-                    ContactEmail = dto.ContactEmail,
-                    AddressId = createdAddress.AddressId,
-                    IsActive = true
-                };
-
-                var createdHotel = await _hotelRepository.AddAsync(hotel);
-
-                // Criar commoditie via repositório genérico
-                if (dto.Commoditie != null)
-                {
-                    var commoditie = new Commodity
-                    {
-                        HotelId = createdHotel.HotelId,
-                        HasBreakfast = dto.Commoditie.HasBreakfast,
-                        HasParking = dto.Commoditie.HasParking,
-                        HasSpa = dto.Commoditie.HasSpa,
-                        HasPool = dto.Commoditie.HasPool,
-                        IsActive = true
-                    };
-                    await _commoditieRepository.AddAsync(commoditie);
-                }
-
-                return CreatedAtAction(nameof(GetById), new { id = createdHotel.HotelId }, createdHotel);
+                var hotel = await _hotelServices.UpdateHotelAsync(updateHotelDto);
+                return Ok(hotel);
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { success = false, message = $"Error creating hotel: {ex.Message}" });
+                return BadRequest(ex.Message);
             }
         }
 
-        [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateHotel(int id, [FromBody] CreateHotelDTO dto)
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteHotel(int id)
         {
-            var hotel = await _hotelRepository.GetByIdAsync(id);
-            if (hotel == null)
-                return NotFound();
+            var result = await _hotelServices.SoftDeleteHotelAsync(id);
+            if (!result)
+                return NotFound("Hotel not found.");
+            return NoContent();
+        }
 
+        [HttpGet("{hotelId}/averageRating")]
+        public async Task<IActionResult> GetHotelAverageRating(int hotelId)
+        {
+            var response = await _hotelServices.GetHotelAverageRatingAsync(hotelId);
+            if (!response.Success)
+                return BadRequest(response.Message);
+            return Ok(response.Data);
+        }
+
+        [HttpGet("{hotelId}/packages")]
+        public async Task<IActionResult> GetPackagesByHotelId(int hotelId)
+        {
+            var response = await _hotelServices.GetPackagesByHotelIdAsync(hotelId);
+            if (!response.Success)
+                return BadRequest(response.Message);
+            return Ok(response.Data);
+        }
+
+        [HttpGet("filter")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> FilterHotels([FromQuery] List<string> commodities, [FromQuery] List<string> commoditieServices, [FromQuery] List<string> roomTypes)
+        {
             try
             {
-                hotel.Name = dto.Name;
-                hotel.Description = dto.Description;
-                hotel.StarRating = dto.StarRating;
-                hotel.CheckInTime = dto.CheckInTime;
-                hotel.CheckOutTime = dto.CheckOutTime;
-                hotel.ContactPhone = dto.ContactPhone;
-                hotel.ContactEmail = dto.ContactEmail;
-
-                await _hotelRepository.UpdateAsync(hotel);
-
-                // Atualizar endereço via HotelRepository específico
-                var address = await _hotelRepositorySpecific.GetAddressByHotelIdAsync(id);
-                if (address != null)
+                if ((commodities == null || !commodities.Any()) &&
+                    (commoditieServices == null || !commoditieServices.Any()) &&
+                    (roomTypes == null || !roomTypes.Any()))
                 {
-                    address.Street = dto.Street;
-                    address.City = dto.City;
-                    address.State = dto.State;
-                    address.ZipCode = dto.ZipCode;
-
-                    // Atualiza endereço
-                    await _hotelRepositorySpecific.AddAddressAsync(address); // Se tiver UpdateAddressAsync, usar ele, senão terá que implementar
+                    _logger.LogWarning("At least one filter parameter (commodities, commoditieServices, or roomTypes) must be provided.");
+                    return BadRequest(new ApiResponse<List<HotelDTO>>(false, "At least one filter parameter must be provided."));
                 }
 
-                // Atualizar commoditie via repositório genérico
-                var commoditieList = await _commoditieRepository.GetAllAsync();
-                var commoditie = commoditieList.FirstOrDefault(c => c.HotelId == id);
-                if (commoditie != null && dto.Commoditie != null)
+                var filter = new HotelFilterDTO
                 {
-                    commoditie.HasBreakfast = dto.Commoditie.HasBreakfast;
-                    commoditie.HasParking = dto.Commoditie.HasParking;
-                    commoditie.HasSpa = dto.Commoditie.HasSpa;
-                    commoditie.HasPool = dto.Commoditie.HasPool;
+                    Commodities = commodities ?? new List<string>(),
+                    CommoditieServices = commoditieServices ?? new List<string>(),
+                    RoomTypes = roomTypes ?? new List<string>()
+                };
 
-                    await _commoditieRepository.UpdateAsync(commoditie);
+                var response = await _hotelServices.FilterHotelsAsync(filter);
+                if (!response.Success)
+                {
+                    _logger.LogWarning("Failed to filter hotels: {Message}", response.Message);
+                    return BadRequest(new ApiResponse<List<HotelDTO>>(false, response.Message));
                 }
 
-                return NoContent();
+                return Ok(response);
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { success = false, message = $"Error updating hotel: {ex.Message}" });
+                _logger.LogError(ex, "Error filtering hotels");
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    new ApiResponse<List<HotelDTO>>(false, $"Error filtering hotels: {ex.Message}"));
             }
         }
     }

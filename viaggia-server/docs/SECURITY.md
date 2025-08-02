@@ -187,7 +187,298 @@ public class EncryptionService
 }
 ```
 
-## 🛡️ Segurança da API
+## � Segurança de Pagamentos
+
+### 🔐 Integração Stripe
+
+#### Chaves de API Seguras
+```csharp
+// Configuração segura de chaves
+public void ConfigureServices(IServiceCollection services)
+{
+    // Usar variáveis de ambiente para chaves sensíveis
+    var stripeSecretKey = Environment.GetEnvironmentVariable("STRIPE_SECRET_KEY")
+        ?? throw new InvalidOperationException("Stripe Secret Key não configurada");
+    
+    var webhookSecret = Environment.GetEnvironmentVariable("STRIPE_WEBHOOK_SECRET")
+        ?? throw new InvalidOperationException("Stripe Webhook Secret não configurada");
+    
+    StripeConfiguration.ApiKey = stripeSecretKey;
+}
+```
+
+#### Validação de Webhooks
+```csharp
+[HttpPost("stripe")]
+public async Task<IActionResult> StripeWebhook()
+{
+    var json = await new StreamReader(HttpContext.Request.Body).ReadToEndAsync();
+    var endpointSecret = _configuration["Stripe:WebhookSecret"];
+
+    try
+    {
+        // CRÍTICO: Sempre validar assinatura do webhook
+        var stripeEvent = EventUtility.ConstructEvent(
+            json,
+            Request.Headers["Stripe-Signature"],
+            endpointSecret
+        );
+
+        // Verificar timestamp para prevenir replay attacks
+        var eventTime = DateTimeOffset.FromUnixTimeSeconds(stripeEvent.Created);
+        var timeDifference = DateTimeOffset.UtcNow - eventTime;
+        
+        if (timeDifference.TotalMinutes > 5)
+        {
+            _logger.LogWarning("Webhook event muito antigo: {EventId}", stripeEvent.Id);
+            return BadRequest("Event too old");
+        }
+
+        await ProcessWebhookEvent(stripeEvent);
+        return Ok();
+    }
+    catch (StripeException ex)
+    {
+        _logger.LogError(ex, "Falha na validação do webhook Stripe");
+        return BadRequest();
+    }
+}
+```
+
+### 🛡️ Proteção de Dados Financeiros
+
+#### PCI DSS Compliance
+```csharp
+// NUNCA armazenar dados de cartão no servidor
+public class CreatePaymentIntentDTO
+{
+    public decimal Amount { get; set; }
+    public string Currency { get; set; } = "brl";
+    public string Description { get; set; } = string.Empty;
+    
+    // ❌ NUNCA incluir dados do cartão
+    // public string CardNumber { get; set; }
+    // public string CVV { get; set; }
+    
+    // ✅ Apenas dados não sensíveis
+    public BillingAddressDTO? BillingAddress { get; set; }
+    public Dictionary<string, string>? Metadata { get; set; }
+}
+```
+
+#### Criptografia de Dados Sensíveis
+```csharp
+public class Payment
+{
+    public int Id { get; set; }
+    
+    [EncryptedColumn] // Criptografar dados sensíveis no banco
+    public string StripePaymentIntentId { get; set; } = string.Empty;
+    
+    public decimal Amount { get; set; }
+    public string Currency { get; set; } = "brl";
+    public string Status { get; set; } = string.Empty;
+    
+    // Último 4 dígitos apenas (permitido pelo PCI DSS)
+    public string? LastFourDigits { get; set; }
+    
+    // Dados não sensíveis do endereço de cobrança
+    public BillingAddress? BillingAddress { get; set; }
+}
+```
+
+### 🔒 Idempotência de Pagamentos
+
+#### Prevenção de Pagamentos Duplicados
+```csharp
+public class IdempotentPaymentService
+{
+    private readonly IMemoryCache _cache;
+    
+    public async Task<PaymentResult> ProcessPaymentAsync(
+        CreatePaymentIntentDTO request, 
+        string idempotencyKey)
+    {
+        // Verificar se já foi processado
+        if (_cache.TryGetValue($"payment_{idempotencyKey}", out PaymentResult? cachedResult))
+        {
+            _logger.LogInformation("Pagamento idempotente detectado: {Key}", idempotencyKey);
+            return cachedResult!;
+        }
+
+        // Verificar no banco de dados
+        var existingPayment = await _context.Payments
+            .FirstOrDefaultAsync(p => p.IdempotencyKey == idempotencyKey);
+            
+        if (existingPayment != null)
+        {
+            return MapToPaymentResult(existingPayment);
+        }
+
+        // Processar novo pagamento
+        var result = await CreateNewPaymentAsync(request);
+        
+        // Cache por 1 hora
+        _cache.Set($"payment_{idempotencyKey}", result, TimeSpan.FromHours(1));
+        
+        return result;
+    }
+}
+```
+
+### 🚨 Detecção de Fraude
+
+#### Validações Anti-Fraude
+```csharp
+public class FraudDetectionService
+{
+    public async Task<FraudRiskLevel> AnalyzePaymentAsync(PaymentRequest request)
+    {
+        var riskFactors = new List<string>();
+        var riskScore = 0;
+
+        // 1. Verificar velocidade de transações
+        var recentPayments = await GetRecentPaymentsAsync(request.UserId, TimeSpan.FromMinutes(10));
+        if (recentPayments.Count > 5)
+        {
+            riskFactors.Add("Muitas transações em pouco tempo");
+            riskScore += 30;
+        }
+
+        // 2. Verificar valor atípico
+        var avgPayment = await GetUserAveragePaymentAsync(request.UserId);
+        if (request.Amount > avgPayment * 3)
+        {
+            riskFactors.Add("Valor muito acima da média do usuário");
+            riskScore += 20;
+        }
+
+        // 3. Verificar geolocalização (IP)
+        var ipLocation = await GetIpLocationAsync(request.UserIP);
+        var userLocation = await GetUserLocationAsync(request.UserId);
+        if (IsLocationSuspicious(ipLocation, userLocation))
+        {
+            riskFactors.Add("Localização suspeita");
+            riskScore += 25;
+        }
+
+        // 4. Verificar horário atípico
+        if (IsUnusualTime(DateTime.UtcNow, request.UserId))
+        {
+            riskFactors.Add("Horário atípico para o usuário");
+            riskScore += 10;
+        }
+
+        return new FraudRiskLevel
+        {
+            Score = riskScore,
+            Level = GetRiskLevel(riskScore),
+            Factors = riskFactors
+        };
+    }
+}
+```
+
+### 🔍 Auditoria de Pagamentos
+
+#### Log Completo de Transações
+```csharp
+public class PaymentAuditService
+{
+    public async Task LogPaymentEventAsync(PaymentAuditEvent auditEvent)
+    {
+        var logEntry = new PaymentAuditLog
+        {
+            EventType = auditEvent.EventType,
+            PaymentId = auditEvent.PaymentId,
+            UserId = auditEvent.UserId,
+            Amount = auditEvent.Amount,
+            Currency = auditEvent.Currency,
+            IPAddress = auditEvent.IPAddress,
+            UserAgent = auditEvent.UserAgent,
+            Timestamp = DateTime.UtcNow,
+            AdditionalData = JsonSerializer.Serialize(auditEvent.Metadata),
+            
+            // Hash para verificar integridade
+            Hash = ComputeAuditHash(auditEvent)
+        };
+
+        await _context.PaymentAuditLogs.AddAsync(logEntry);
+        await _context.SaveChangesAsync();
+
+        // Log crítico para monitoramento externo
+        _logger.LogInformation("PAYMENT_AUDIT: {EventType} - " +
+            "Payment: {PaymentId} - User: {UserId} - Amount: {Amount}",
+            auditEvent.EventType, auditEvent.PaymentId, 
+            auditEvent.UserId, auditEvent.Amount);
+    }
+}
+```
+
+### 🛡️ Rate Limiting Específico para Pagamentos
+
+#### Limites de Tentativas de Pagamento
+```csharp
+[EnableRateLimiting("PaymentRateLimit")]
+[HttpPost("create-intent")]
+public async Task<IActionResult> CreatePaymentIntent([FromBody] CreatePaymentIntentDTO request)
+{
+    // Rate limiting específico:
+    // - 5 tentativas por minuto por usuário
+    // - 20 tentativas por hora por IP
+    // - 100 tentativas por hora por cartão (hash dos últimos 4 dígitos)
+}
+
+// Configuração no Program.cs
+services.AddRateLimiter(options =>
+{
+    options.AddPolicy("PaymentRateLimit", context =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: $"{context.User.Identity?.Name}_{context.Connection.RemoteIpAddress}",
+            factory: _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 5,
+                Window = TimeSpan.FromMinutes(1)
+            }));
+});
+```
+
+### 🔐 Webhook Security Headers
+
+#### Configuração de Headers de Segurança
+```csharp
+[HttpPost("stripe")]
+[SkipAntiforgeryToken] // Webhooks não podem ter CSRF token
+public async Task<IActionResult> StripeWebhook()
+{
+    // Validar origem
+    var stripeSignature = Request.Headers["Stripe-Signature"].FirstOrDefault();
+    if (string.IsNullOrEmpty(stripeSignature))
+    {
+        return BadRequest("Missing Stripe signature");
+    }
+
+    // Validar User-Agent
+    var userAgent = Request.Headers["User-Agent"].FirstOrDefault();
+    if (!IsValidStripeUserAgent(userAgent))
+    {
+        _logger.LogWarning("Webhook com User-Agent suspeito: {UserAgent}", userAgent);
+        return BadRequest("Invalid User-Agent");
+    }
+
+    // Verificar IP de origem (Stripe IPs conhecidos)
+    var clientIP = GetClientIPAddress();
+    if (!IsStripeIPAddress(clientIP))
+    {
+        _logger.LogWarning("Webhook de IP não autorizado: {IP}", clientIP);
+        return BadRequest("Unauthorized IP");
+    }
+
+    // Processar webhook...
+}
+```
+
+## �🛡️ Segurança da API
 
 ### 🔥 Rate Limiting
 

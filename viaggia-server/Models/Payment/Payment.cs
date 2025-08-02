@@ -1,6 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using viaggia_server.Models.Addresses;
 using viaggia_server.Models.Reservations;
 using viaggia_server.Models.Users;
 using viaggia_server.Repositories;
@@ -43,7 +42,6 @@ namespace viaggia_server.Models.Payments
         public int BillingAddressId { get; set; }
 
         [ForeignKey("BillingAddressId")]
-        public virtual BillingAddress BillingAddress { get; set; } = null!;
 
         // ✅ Campos específicos do Stripe
         [StringLength(100, ErrorMessage = "Stripe Payment Intent ID cannot exceed 100 characters.")]
@@ -74,6 +72,11 @@ namespace viaggia_server.Models.Payments
 
         [StringLength(100, ErrorMessage = "Refund ID cannot exceed 100 characters.")]
         public string? StripeRefundId { get; set; }
+
+        // Timestamps adicionais
+        public DateTime? ProcessedAt { get; set; }
+        public DateTime? UpdatedAt { get; set; }
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         public bool IsActive { get; set; } = true;
     }
