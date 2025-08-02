@@ -40,7 +40,6 @@ namespace viaggia_server.Services.Reservations
                 PackageId = r.PackageId,
                 HotelId = r.HotelId,
                 TotalPrice = r.TotalPrice,
-                NumberOfGuests = r.NumberOfGuests,
                 IsActive = r.IsActive
             }).ToList();
         }
@@ -57,7 +56,6 @@ namespace viaggia_server.Services.Reservations
                 PackageId = r.PackageId,
                 HotelId = r.HotelId,
                 TotalPrice = r.TotalPrice,
-                NumberOfGuests = r.NumberOfGuests,
                 IsActive = r.IsActive
             };
         }
@@ -73,7 +71,6 @@ namespace viaggia_server.Services.Reservations
                 PackageId = dto.PackageId,
                 HotelId = dto.HotelId,
                 TotalPrice = dto.TotalPrice,
-                NumberOfGuests = dto.NumberOfGuests,
                 IsActive = dto.IsActive
             };
 
@@ -92,7 +89,6 @@ namespace viaggia_server.Services.Reservations
             reservation.PackageId = dto.PackageId;
             reservation.HotelId = dto.HotelId;
             reservation.TotalPrice = dto.TotalPrice;
-            reservation.NumberOfGuests = dto.NumberOfGuests;
             reservation.IsActive = dto.IsActive;
 
             await _reservationRepository.UpdateAsync(reservation);

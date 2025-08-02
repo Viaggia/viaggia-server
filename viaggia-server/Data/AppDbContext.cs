@@ -30,7 +30,6 @@ namespace viaggia_server.Data
         public DbSet<Payment> Payments { get; set; } = null!;
         public DbSet<Media> Medias { get; set; } = null!;
         public DbSet<Review> Reviews { get; set; } = null!;
-        public DbSet<Companion> Companions { get; set; } = null!;
         public DbSet<Commoditie> Commodities { get; set; } = null!;
         public DbSet<CommoditieServices> CommoditieServices { get; set; } = null!;
         public DbSet<RevokedToken> RevokedTokens { get; set; } = null!;
@@ -166,13 +165,6 @@ namespace viaggia_server.Data
                 .HasForeignKey(r => r.UserId)
                 .OnDelete(DeleteBehavior.NoAction);
 
-            // PasswordResetToken
-            // Companion
-            modelBuilder.Entity<Companion>()
-                .HasOne(c => c.Reservation)
-                .WithMany(r => r.Companions)
-                .HasForeignKey(c => c.ReservationId)
-                .OnDelete(DeleteBehavior.NoAction);
 
             // Hotel 1:N Commoditie
             modelBuilder.Entity<Hotel>()
