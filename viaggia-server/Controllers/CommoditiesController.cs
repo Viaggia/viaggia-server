@@ -17,16 +17,15 @@ namespace viaggia_server.Controllers
     {
         private readonly ICommoditieRepository _commoditieRepository;
         private readonly IHotelRepository _hotelRepository;
-        private readonly IRepository<Hotel> _genericRepository;
+       
 
         public CommoditieController(
             ICommoditieRepository commoditieRepository,
-            IHotelRepository hotelRepository,
-            IRepository<Hotel> genericRepository)
+            IHotelRepository hotelRepository)
         {
             _commoditieRepository = commoditieRepository;
             _hotelRepository = hotelRepository;
-            _genericRepository = genericRepository;
+            
         }
 
         [HttpGet]

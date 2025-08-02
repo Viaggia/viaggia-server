@@ -18,16 +18,20 @@ namespace viaggia_server.Repositories.Commodities
         {
             return await _context.CommoditieServices
                 .Where(s => s.IsActive)
+                .Include(cs => cs.Hotel)
                 .OrderBy(s => s.CommoditieServicesId)
                 .ToListAsync();
         }
 
+
         public async Task<CommoditieServices?> GetByIdAsync(int id)
         {
             return await _context.CommoditieServices
-                 .Include(cs => cs.Hotel)
+                .Include(cs => cs.Hotel)
+                .Include(cs => cs.Commoditie) // Adiciona a comodidade
                 .FirstOrDefaultAsync(s => s.CommoditieServicesId == id && s.IsActive);
         }
+
 
         public async Task<IEnumerable<CommoditieServices>> GetByCommoditieIdAsync(int commoditieId)
         {
@@ -72,27 +76,13 @@ namespace viaggia_server.Repositories.Commodities
         }
 
        
-
-        public async Task<IEnumerable<CommoditieServices>> GetAllWithHotelAsync()
-        {
-            return await _context.CommoditieServices
-                .Include(cs => cs.Hotel)
-                .ToListAsync();
-        }
-
         public async Task<Commoditie?> GetCommoditieByHotelIdAsync(int hotelId)
         {
             return await _context.Commodities
                 .FirstOrDefaultAsync(c => c.HotelId == hotelId);
         }
 
-         Task<CommoditieServices?> ICommoditieServicesRepository.GetCommoditieByHotelIdAsync(int hotelId)
-         {
-           return _context.CommoditieServices
-                .Include(cs => cs.Hotel)
-                .FirstOrDefaultAsync(cs => cs.HotelId == hotelId && cs.IsActive);
-
-         }
+        
 
         Task<T2?> IRepository<CommoditieServices>.GetByIdAsync<T2>(int id) where T2 : class
         {

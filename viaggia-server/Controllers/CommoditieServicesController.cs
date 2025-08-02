@@ -17,25 +17,21 @@ namespace viaggia_server.Controllers
     {
         private readonly ICommoditieServicesRepository _serviceRepository;
         private readonly IHotelRepository _hotelRepository;
-        private readonly IRepository<Hotel> _genericRepository;
         private readonly AppDbContext _context;
 
         public CommoditieServicesController(
             ICommoditieServicesRepository serviceRepository,
-            IHotelRepository hotelRepository,
-            IRepository<Hotel> genericRepo,
-            AppDbContext context)
+            IHotelRepository hotelRepository)
         {
             _serviceRepository = serviceRepository;
             _hotelRepository = hotelRepository;
-            _genericRepository = genericRepo;
-            _context = context;
+           
         }
 
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
-            var services = await _serviceRepository.GetAllWithHotelAsync();
+            var services = await _serviceRepository.GetAllAsync();
 
             var response = services.Select(s => new CommoditieServicesResponseDTO
             {
@@ -55,30 +51,25 @@ namespace viaggia_server.Controllers
         {
             var service = await _serviceRepository.GetByIdAsync(id);
             if (service == null)
-                return NotFound(new ApiResponse<CommoditieServicesResponseDTO>(false, "Comodidade não encontrada."));
+                return NotFound(new ApiResponse<CommoditieServicesDTO>(false, "Comodidade não encontrada."));
 
-            var response = new CommoditieServicesResponseDTO
+
+            var response = new CommoditieServicesDTO
             {
                 CommoditieServicesId = service.CommoditieServicesId,
                 Name = service.Name,
                 Description = service.Description,
                 IsPaid = service.IsPaid,
                 IsActive = service.IsActive,
-                HotelName = service.Hotel?.Name ?? string.Empty
+                HotelName = service.Hotel?.Name ?? string.Empty,
+                HotelId = service.HotelId,
+                CommoditieId = service.CommoditieId
             };
 
-            return Ok(new ApiResponse<CommoditieServicesResponseDTO>(true, "Comodidade personalizado encontrado.", response));
+
+            return Ok(new ApiResponse<CommoditieServicesDTO>(true, "Comodidade encontrada.", response));
         }
 
-        [HttpGet("commoditie/{commoditieId:int}")]
-        public async Task<IActionResult> GetByCommoditieId(int commoditieId)
-        {
-            var services = await _serviceRepository.GetByCommoditieIdAsync(commoditieId);
-            if (!services.Any())
-                return NotFound(new ApiResponse<IEnumerable<CommoditieServices>>(false, "Nenhum serviço encontrado para esta comoditie."));
-
-            return Ok(new ApiResponse<IEnumerable<CommoditieServices>>(true, "Serviços encontrados para a comodi.", services));
-        }
 
         [HttpPost]
         [Consumes("multipart/form-data")]
@@ -97,7 +88,7 @@ namespace viaggia_server.Controllers
                 .FirstOrDefaultAsync(c => c.HotelId == hotel.HotelId);
 
             if (commoditie == null)
-                return BadRequest(new ApiResponse<object>(false, $"Commoditie associada ao hotel '{hotel.Name}' não encontrada."));
+                return BadRequest(new ApiResponse<object>(false, $"Comodida associada ao hotel '{hotel.Name}' não encontrada."));
 
             var service = new CommoditieServices
             {
@@ -112,7 +103,7 @@ namespace viaggia_server.Controllers
             var created = await _serviceRepository.AddAsync(service);
 
             return CreatedAtAction(nameof(GetById), new { id = created.CommoditieServicesId },
-                new ApiResponse<CommoditieServices>(true, "Serviço personalizado criado com sucesso.", created));
+                new ApiResponse<CommoditieServices>(true, "Comodidade criada com sucesso.", created));
         }
 
         [HttpPut("{id:int}")]
@@ -124,7 +115,7 @@ namespace viaggia_server.Controllers
 
             var existing = await _serviceRepository.GetByIdAsync(id);
             if (existing == null)
-                return NotFound(new ApiResponse<CommoditieServices>(false, "Serviço personalizado não encontrado."));
+                return NotFound(new ApiResponse<CommoditieServices>(false, "Comodidade não encontrada."));
 
             // Atualiza apenas os campos permitidos
             existing.Name = dto.Name;
@@ -134,7 +125,7 @@ namespace viaggia_server.Controllers
 
             var updated = await _serviceRepository.UpdateAsync(existing);
 
-            return Ok(new ApiResponse<CommoditieServices>(true, "Serviço personalizado atualizado com sucesso.", updated));
+            return Ok(new ApiResponse<CommoditieServices>(true, "Comodidade atualizada com sucesso.", updated));
         }
 
 
@@ -143,9 +134,10 @@ namespace viaggia_server.Controllers
         {
             var deleted = await _serviceRepository.SoftDeleteAsync(id);
             if (!deleted)
-                return NotFound(new ApiResponse<CommoditieServices>(false, "Serviço não encontrado ou já desativado."));
+                return NotFound(new ApiResponse<CommoditieServices>(false, "Comodidade não encontrada ou já desativada."));
 
-            return NoContent();
+            return Ok(new ApiResponse<string>(true, "Comodidade desativada com sucesso."));
         }
+
     }
 }

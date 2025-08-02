@@ -29,5 +29,7 @@ namespace viaggia_server.DTOs.Commoditie
 
         public int HotelId { get; set; }
 
+        public int CommoditieServicesId { get; set; }
+
     }
 }
