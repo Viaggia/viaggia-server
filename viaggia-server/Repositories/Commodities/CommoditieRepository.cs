@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using System.Linq.Expressions;
+using Microsoft.EntityFrameworkCore;
 using viaggia_server.Data;
 using viaggia_server.Models.Commodities;
 
@@ -80,7 +81,7 @@ namespace viaggia_server.Repositories.Commodities
 
         Task<bool> IRepository<Commoditie>.SoftDeleteAsync<T2>(int id)
         {
-           var entity = _context.Set<T2>().Find(id);
+            var entity = _context.Set<T2>().Find(id);
             if (entity == null)
                 return Task.FromResult(false);
             if (entity is ISoftDeletable softDeletableEntity)
@@ -92,12 +93,17 @@ namespace viaggia_server.Repositories.Commodities
             return Task.FromResult(false);
         }
 
-       
+
         public async Task<Commoditie?> GetByHotelNameAsync(string hotelName)
         {
             return await _context.Commodities
                 .Include(c => c.Hotel)
                 .FirstOrDefaultAsync(c => c.Hotel.Name == hotelName);
+        }
+
+        public Task<Commoditie?> GetByIdWithIncludesAsync(int id, params Expression<Func<Commoditie, object>>[] includes)
+        {
+            throw new NotImplementedException();
         }
     }
 }

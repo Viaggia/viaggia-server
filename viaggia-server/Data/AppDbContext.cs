@@ -1,8 +1,6 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
-using viaggia_server.Models;
 using viaggia_server.Models.Commodities;
-using viaggia_server.Models.Companions;
 using viaggia_server.Models.HotelRoomTypes;
 using viaggia_server.Models.Hotels;
 using viaggia_server.Models.Medias;
@@ -118,19 +116,34 @@ namespace viaggia_server.Data
                 .HasForeignKey(c => c.HotelId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            // Commoditie
-            modelBuilder.Entity<Commoditie>()
-                .HasMany(c => c.CommoditieServices)
-                .WithOne(cs => cs.Commoditie)
-                .HasForeignKey(cs => cs.CommoditieId)
-                .OnDelete(DeleteBehavior.NoAction);
+            // Configure RoomTypeEnum
+            modelBuilder.Entity<HotelRoomType>()
+                .Property(rt => rt.Name)
+                .HasConversion(
+                    v => v.ToString(),
+                    v => (RoomTypeEnum)Enum.Parse(typeof(RoomTypeEnum), v));
 
+            // Commoditie
+            modelBuilder.Entity<Hotel>()
+                .HasMany(h => h.Commodities)
+                .WithOne(c => c.Hotel)
+                .HasForeignKey(c => c.HotelId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Commodity 1:N CommoditiesServices
+            modelBuilder.Entity<Commoditie>()
+              .HasMany(c => c.CommoditieServices)
+              .WithOne(cs => cs.Commoditie)
+              .HasForeignKey(cs => cs.CommoditieId)
+              .OnDelete(DeleteBehavior.NoAction); 
+
+            // CommoditieServices 1:N Hotel
             modelBuilder.Entity<CommoditieServices>()
                 .HasOne(cs => cs.Hotel)
                 .WithMany(h => h.CommoditieServices)
                 .HasForeignKey(cs => cs.HotelId)
-                .IsRequired(false)
                 .OnDelete(DeleteBehavior.NoAction);
+
 
             // Reservation
             modelBuilder.Entity<Reservation>()
@@ -153,6 +166,7 @@ namespace viaggia_server.Data
                 .HasForeignKey(r => r.UserId)
                 .OnDelete(DeleteBehavior.NoAction);
 
+            // PasswordResetToken
             // Companion
             modelBuilder.Entity<Companion>()
                 .HasOne(c => c.Reservation)
@@ -204,12 +218,6 @@ namespace viaggia_server.Data
                 .ToTable(t => t.HasCheckConstraint("CK_Media_OneEntity",
                     "([PackageId] IS NOT NULL AND [HotelId] IS NULL) OR ([PackageId] IS NULL AND [HotelId] IS NOT NULL)"));
 
-            // Configure RoomTypeEnum
-            modelBuilder.Entity<HotelRoomType>()
-                .Property(rt => rt.Name)
-                .HasConversion(
-                    v => v.ToString(),
-                    v => (RoomTypeEnum)Enum.Parse(typeof(RoomTypeEnum), v));
 
             // Seed Roles
             modelBuilder.Entity<Role>().HasData(
@@ -229,7 +237,6 @@ namespace viaggia_server.Data
             modelBuilder.Entity<Payment>().HasQueryFilter(p => p.IsActive);
             modelBuilder.Entity<Media>().HasQueryFilter(m => m.IsActive);
             modelBuilder.Entity<Review>().HasQueryFilter(r => r.IsActive);
-            modelBuilder.Entity<Companion>().HasQueryFilter(c => c.IsActive);
             modelBuilder.Entity<Commoditie>().HasQueryFilter(c => c.IsActive);
             modelBuilder.Entity<CommoditieServices>().HasQueryFilter(cs => cs.IsActive);
         }

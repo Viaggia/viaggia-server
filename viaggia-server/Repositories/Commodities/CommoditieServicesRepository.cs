@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+using System.Linq.Expressions;
+using Microsoft.EntityFrameworkCore;
 using SendGrid.Helpers.Mail;
 using viaggia_server.Data;
 using viaggia_server.Models.Commodities;
@@ -63,11 +64,11 @@ namespace viaggia_server.Repositories.Commodities
             return await _context.SaveChangesAsync() > 0;
         }
 
-       
-       
+
+
         public async Task<bool> SaveChangesAsync()
         {
-           var changes = await _context.SaveChangesAsync();
+            var changes = await _context.SaveChangesAsync();
             return changes > 0;
         }
 
@@ -94,14 +95,18 @@ namespace viaggia_server.Repositories.Commodities
                 .FirstOrDefaultAsync(c => c.HotelId == hotelId);
         }
 
-         Task<CommoditieServices?> ICommoditieServicesRepository.GetCommoditieByHotelIdAsync(int hotelId)
-         {
-           return _context.CommoditieServices
-                .Include(cs => cs.Hotel)
-                .FirstOrDefaultAsync(cs => cs.HotelId == hotelId && cs.IsActive);
+        Task<CommoditieServices?> ICommoditieServicesRepository.GetCommoditieByHotelIdAsync(int hotelId)
+        {
+            return _context.CommoditieServices
+                 .Include(cs => cs.Hotel)
+                 .FirstOrDefaultAsync(cs => cs.HotelId == hotelId && cs.IsActive);
 
-         }
+        }
+
+        public Task<CommoditieServices?> GetByIdWithIncludesAsync(int id, params Expression<Func<CommoditieServices, object>>[] includes)
+        {
+            throw new NotImplementedException();
+        }
     }
 }
-
 

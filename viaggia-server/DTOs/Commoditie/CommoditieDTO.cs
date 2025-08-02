@@ -11,6 +11,8 @@ namespace viaggia_server.DTOs.Commoditie
         public string? HotelName { get; set; }
 
         public int HotelId { get; set; }
+
+        // Serviços fixos
         public bool HasParking { get; set; }
         public bool IsParkingPaid { get; set; }
 

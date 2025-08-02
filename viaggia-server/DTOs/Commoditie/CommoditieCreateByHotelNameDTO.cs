@@ -3,7 +3,7 @@
     public class CommoditieCreateByHotelNameDTO
     {
         public string HotelName { get; set; } = string.Empty;  // Nome do hotel em vez de HotelId
-        
+
 
         public bool HasParking { get; set; }
         public bool IsParkingPaid { get; set; }

@@ -6,7 +6,6 @@ using viaggia_server.Models.Hotels;
 using viaggia_server.Repositories;
 using viaggia_server.Repositories.Commodities;
 using viaggia_server.Repositories.HotelRepository;
-using viaggia_server.Services;
 
 namespace viaggia_server.Controllers
 {

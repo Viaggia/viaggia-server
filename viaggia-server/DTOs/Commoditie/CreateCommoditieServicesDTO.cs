@@ -23,7 +23,7 @@ namespace viaggia_server.DTOs.Commoditie
         // Indica se o serviço está ativo
         public bool IsActive { get; set; } = true;
 
-       
+
 
     }
 }

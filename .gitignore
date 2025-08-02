@@ -88,3 +88,7 @@ wwwroot/Uploads/
 /viaggia-server/appsettings.Development.json
 viaggia-server.tests/bin/
 viaggia-server.tests/obj/
+/viaggia-server/wwwroot/Uploads/Packages/
+/viaggia-server/wwwroot/Uploads/Hotel/
+/viaggia-server/wwwroot/Uploads/User/
+

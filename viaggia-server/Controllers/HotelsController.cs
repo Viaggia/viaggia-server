@@ -1,7 +1,9 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Mvc;
+using viaggia_server.DTOs;
 using viaggia_server.DTOs.Hotel;
+using viaggia_server.DTOs.HotelFilterDTO;
 using viaggia_server.DTOs.Hotels;
 using viaggia_server.Services.HotelServices;
 
@@ -123,6 +125,46 @@ namespace viaggia_server.Controllers
             if (!response.Success)
                 return BadRequest(response.Message);
             return Ok(response.Data);
+        }
+
+        [HttpGet("filter")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> FilterHotels([FromQuery] List<string> commodities, [FromQuery] List<string> commoditieServices, [FromQuery] List<string> roomTypes)
+        {
+            try
+            {
+                if ((commodities == null || !commodities.Any()) &&
+                    (commoditieServices == null || !commoditieServices.Any()) &&
+                    (roomTypes == null || !roomTypes.Any()))
+                {
+                    _logger.LogWarning("At least one filter parameter (commodities, commoditieServices, or roomTypes) must be provided.");
+                    return BadRequest(new ApiResponse<List<HotelDTO>>(false, "At least one filter parameter must be provided."));
+                }
+
+                var filter = new HotelFilterDTO
+                {
+                    Commodities = commodities ?? new List<string>(),
+                    CommoditieServices = commoditieServices ?? new List<string>(),
+                    RoomTypes = roomTypes ?? new List<string>()
+                };
+
+                var response = await _hotelServices.FilterHotelsAsync(filter);
+                if (!response.Success)
+                {
+                    _logger.LogWarning("Failed to filter hotels: {Message}", response.Message);
+                    return BadRequest(new ApiResponse<List<HotelDTO>>(false, response.Message));
+                }
+
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error filtering hotels");
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    new ApiResponse<List<HotelDTO>>(false, $"Error filtering hotels: {ex.Message}"));
+            }
         }
     }
 }

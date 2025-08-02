@@ -31,6 +31,9 @@ namespace viaggia_server.Controllers
             {
                 RedirectUri = "/api/Accounts/google-callback"
             };
+
+            properties.Items["prompt"] = "select_account";
+
             return Challenge(properties, GoogleDefaults.AuthenticationScheme);
         }
 
@@ -62,8 +65,9 @@ namespace viaggia_server.Controllers
             var user = await _repository.CreateOrLoginOAuth(oauthRequest);
             var token = await _authRepository.GenerateJwtTokenAsync(user);
 
-            return Redirect($"http://localhost:5223/auth-sucess?token={token}"); //https://localhost:7164/auth-sucess?token={token}
+            return Redirect($"http://localhost:5173/auth-success?token={token}");
         }
+
 
         [HttpPost("logout-google")]
         public async Task<IActionResult> Logout()

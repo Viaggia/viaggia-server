@@ -1,4 +1,5 @@
-﻿using viaggia_server.Models.Commodities;
+﻿
+using viaggia_server.Models.Commodities;
 
 namespace viaggia_server.Repositories.Commodities
 {
