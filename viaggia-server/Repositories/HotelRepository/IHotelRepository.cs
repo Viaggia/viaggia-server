@@ -1,6 +1,5 @@
 ﻿using viaggia_server.Models.Hotels;
 using viaggia_server.Models.HotelRoomTypes;
-using viaggia_server.Models.HotelDates;
 using viaggia_server.Models.Medias;
 using viaggia_server.Models.Reviews;
 using viaggia_server.Models.Packages;
@@ -19,12 +18,7 @@ namespace viaggia_server.Repositories.HotelRepository
         // Tipos de Quarto
         Task<HotelRoomType> AddRoomTypeAsync(HotelRoomType roomType);
         Task<HotelRoomType?> GetRoomTypeByIdAsync(int roomTypeId);
-        Task<IEnumerable<HotelRoomType>> GetHotelRoomTypesAsync(int hotelId);
-
-        //Hotel Dates
-        Task<IEnumerable<HotelDate>> GetHotelDatesAsync(int hotelId);
-        Task<HotelDate?> GetHotelDateByIdAsync(int hotelDateId);
-        Task<HotelDate> AddHotelDateAsync(HotelDate hotelDate);
+        
 
         //Medias
         Task<IEnumerable<Media>> GetMediasByHotelIdAsync(int hotelId);

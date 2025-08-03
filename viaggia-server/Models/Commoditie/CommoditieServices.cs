@@ -7,31 +7,30 @@ namespace viaggia_server.Models.Commodities
 {
     public class CommoditieServices : ISoftDeletable
     {
-            [Key]
-            public int CommoditieServicesId { get; set; }
+        [Key]
+        public int CommoditieServicesId { get; set; }
 
-           [Required(ErrorMessage = "Service name is required")]
-           [StringLength(100, ErrorMessage = "The service name cannot exceed 100 characters")]
-      
-           public string Name { get; set; } = null!; // Nome do serviço extra (ex: "Serviço de quarto 24h")
+        [Required(ErrorMessage = "Service name is required")]
+        [StringLength(100, ErrorMessage = "The service name cannot exceed 100 characters")]
 
-            public bool IsPaid { get; set; }
+        public string Name { get; set; } = null!; // Nome do serviço extra (ex: "Serviço de quarto 24h")
 
-           [StringLength(250, ErrorMessage = "The description cannot exceed 250 characters")]
-            public string? Description { get; set; }
+        public bool IsPaid { get; set; }
 
-            public bool IsActive { get; set; } = true;
+        [StringLength(250, ErrorMessage = "The description cannot exceed 250 characters")]
+        public string? Description { get; set; }
 
-            public int CommoditieId { get; set; }
+        public bool IsActive { get; set; } = true;
 
-            [ForeignKey("CommoditieId")]
-            public Commoditie Commoditie { get; set; } = null!;
+        public int CommoditieId { get; set; }
 
-            public int HotelId { get; set; }
-    
-            [ForeignKey("HotelId")]
-            public Hotel? Hotel { get; set; } = null!; // Relacionamento com o hotel
+        [ForeignKey("CommoditieId")]
+        public Commoditie Commoditie { get; set; } = null!;
+
+        public int HotelId { get; set; }
+
+        [ForeignKey("HotelId")]
+        public Hotel? Hotel { get; set; } = null!; // Relacionamento com o hotel
 
     }
 }
-

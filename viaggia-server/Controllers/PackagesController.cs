@@ -42,6 +42,9 @@ namespace viaggia_server.Controllers
                 var packageDTOs = new List<PackageDTO>();
                 foreach (var p in packages)
                 {
+                    // Load related data (Medias and PackageDates)
+                    p.Medias = (await _packageRepository.GetPackageMediasAsync(p.PackageId)).ToList();
+                    p.PackageDates = (await _packageRepository.GetPackageDatesAsync(p.PackageId)).ToList();
                     var hotel = await _genericRepository.GetByIdAsync<Hotel>(p.HotelId);
                     packageDTOs.Add(new PackageDTO
                     {
@@ -218,7 +221,7 @@ namespace viaggia_server.Controllers
                     IsActive = true
                 };
                 await _packageRepository.AddPackageDateAsync(packageDate);
-                package.PackageDates.Add(packageDate);
+                //package.PackageDates.Add(packageDate);
                 _logger.LogInformation("Added PackageDate: PackageId={PackageId}, StartDate={StartDate}, EndDate={EndDate}", package.PackageId, startDate, endDate);
 
                 // Process file uploads
@@ -244,7 +247,7 @@ namespace viaggia_server.Controllers
                             IsActive = true
                         };
                         await _packageRepository.AddMediaAsync(media);
-                        package.Medias.Add(media);
+                        //package.Medias.Add(media);
                         _logger.LogInformation("Added Media: PackageId={PackageId}, MediaUrl={MediaUrl}", package.PackageId, media.MediaUrl);
                     }
                 }
@@ -291,7 +294,7 @@ namespace viaggia_server.Controllers
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> UpdatePackage(int id, [FromForm] PackageUpdateDTO packageDTO)
         {
-            if (id <= 0 || packageDTO == null || id != packageDTO.PackageId || !ModelState.IsValid)
+            if (id <= 0 || packageDTO == null || !ModelState.IsValid)
             {
                 var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage);
                 _logger.LogWarning("Invalid package data for ID {Id}: {Errors}", id, string.Join(", ", errors));

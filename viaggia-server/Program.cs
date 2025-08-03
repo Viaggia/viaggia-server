@@ -12,6 +12,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Stripe;
 using Viaggia.Swagger;
+using viaggia_server.Config;
 using viaggia_server.Data;
 using viaggia_server.Repositories;
 using viaggia_server.Repositories.ReservationRepository;
@@ -19,8 +20,16 @@ using viaggia_server.Repositories.Users;
 using viaggia_server.Repositories.Auth;
 using viaggia_server.Repositories.Commodities;
 using viaggia_server.Repositories.HotelRepository;
+<<<<<<< HEAD
 using viaggia_server.Services;
 using viaggia_server.Services.Payment;
+=======
+using viaggia_server.Repositories.Payment;
+using viaggia_server.Repositories.Users;
+using viaggia_server.Services.EmailResetPassword;
+using viaggia_server.Services.HotelServices;
+using viaggia_server.Services.Medias;
+>>>>>>> 4ab8ac3dc4732ca91d9c662fc8b90e047b46890d
 using viaggia_server.Swagger;
 using viaggia_server.Validators;
 using viaggia_server.Services;
@@ -68,8 +77,11 @@ builder.Services.AddSwaggerGen(c =>
         new string[] { }
     }
     });
-    c.OperationFilter<SecurityRequirementsOperationFilter>();
+    c.EnableAnnotations();
+    c.SchemaFilter<EnumSchemaFilter>();
     c.SchemaFilter<FormFileSchemaFilter>();
+    c.OperationFilter<SecurityRequirementsOperationFilter>();
+    c.OperationFilter<MultipartFormDataOperationFilter>();
 });
 
 // Configure DbContext
@@ -77,7 +89,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"),
     sqlOptions => sqlOptions.CommandTimeout(60)));
 
-// Register repositories and services
+// Repositories
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IImageService, ImageService>();
@@ -85,9 +97,16 @@ builder.Services.AddScoped<IPackageRepository, PackageRepository>();
 builder.Services.AddScoped<IHotelRepository, HotelRepository>();
 builder.Services.AddScoped<ICommoditieRepository, CommoditieRepository>();
 builder.Services.AddScoped<ICommoditieServicesRepository, CommoditieServicesRepository>();
+<<<<<<< HEAD
 builder.Services.AddScoped<IStripePaymentService, StripePaymentService>();
+=======
+builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
+>>>>>>> 4ab8ac3dc4732ca91d9c662fc8b90e047b46890d
 builder.Services.AddScoped<IAuthRepository, AuthRepository>();
 builder.Services.AddScoped<IGoogleAccountRepository, GoogleAccountRepository>();
+
+//Services
+builder.Services.AddScoped<IHotelServices, HotelServices>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<Stripe.TokenService>();
 builder.Services.AddScoped<Stripe.CustomerService>();
@@ -173,12 +192,23 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
+<<<<<<< HEAD
         policy.WithOrigins(
                 "http://localhost:5173",
                 "https://your-production-frontend.com"
             ).AllowAnyOrigin()
                 .AllowAnyHeader()
                 .AllowAnyMethod();
+=======
+        //policy.WithOrigins(
+        //        "http://localhost:5173",
+        //        "https://your-production-frontend.com"
+        //    )
+        policy.AllowAnyOrigin()
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+
+>>>>>>> 4ab8ac3dc4732ca91d9c662fc8b90e047b46890d
     });
 });
 

@@ -1,4 +1,5 @@
-﻿using viaggia_server.Models.Commodities;
+﻿
+using viaggia_server.Models.Commodities;
 
 namespace viaggia_server.Repositories.Commodities
 {
@@ -10,5 +11,10 @@ namespace viaggia_server.Repositories.Commodities
         Task<CommoditieServices> AddAsync(CommoditieServices entity);
         Task<CommoditieServices> UpdateAsync(CommoditieServices entity);
         Task<bool> SoftDeleteAsync(int id);
+
+        Task<IEnumerable<CommoditieServices>> GetAllWithHotelAsync();
+
+        Task<CommoditieServices?> GetCommoditieByHotelIdAsync(int hotelId);
+
     }
 }

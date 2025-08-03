@@ -11,6 +11,10 @@ namespace viaggia_server.DTOs.Commoditie
         [StringLength(100, ErrorMessage = "ServiceName cannot exceed 100 characters.")]
         public string Name { get; set; } = string.Empty;
 
+        // Nome do hotel associado ao serviço
+        [Required(ErrorMessage = "HotelName is required.")]
+        public string HotelName { get; set; } = null!;
+
         // Indica se o serviço é gratuito ou pago
         public bool IsPaid { get; set; }
 
@@ -22,6 +26,8 @@ namespace viaggia_server.DTOs.Commoditie
         public bool IsActive { get; set; } = true;
 
         public int CommoditieId { get; set; }
+
+        public int HotelId { get; set; }
 
     }
 }

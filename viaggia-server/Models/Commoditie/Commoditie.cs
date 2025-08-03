@@ -10,6 +10,7 @@ namespace viaggia_server.Models.Commodities
         [Key]
         public int CommoditieId { get; set; }
 
+
         // Serviços padrões
         public bool HasParking { get; set; }
         public bool IsParkingPaid { get; set; }
