@@ -3,45 +3,45 @@ using Microsoft.EntityFrameworkCore;
 using viaggia_server.Data;
 using viaggia_server.Models.Commodities;
 
-namespace viaggia_server.Repositories.Commodities
+namespace viaggia_server.Repositories.CommodityRepository
 {
-    public class CommoditieRepository : ICommoditieRepository
+    public class CommodityRepository : ICommodityRepository
     {
         private readonly AppDbContext _context;
 
-        public CommoditieRepository(AppDbContext context)
+        public CommodityRepository(AppDbContext context)
         {
             _context = context;
         }
 
-        public async Task<IEnumerable<Commoditie>> GetAllAsync()
+        public async Task<IEnumerable<Commodity>> GetAllAsync()
         {
             return await _context.Commodities
                 .Where(c => c.IsActive)
                 .ToListAsync();
         }
 
-        public async Task<Commoditie?> GetByIdAsync(int id)
+        public async Task<Commodity?> GetByIdAsync(int id)
         {
             return await _context.Commodities
-                .FirstOrDefaultAsync(c => c.CommoditieId == id && c.IsActive);
+                .FirstOrDefaultAsync(c => c.CommodityId == id && c.IsActive);
         }
 
-        public async Task<Commoditie?> GetByHotelIdAsync(int hotelId)
+        public async Task<Commodity?> GetByHotelIdAsync(int hotelId)
         {
             return await _context.Commodities
-                .Include(c => c.CommoditieServices)
+                .Include(c => c.CustomCommodities)
                 .FirstOrDefaultAsync(c => c.HotelId == hotelId && c.IsActive);
         }
 
-        public async Task<Commoditie> AddAsync(Commoditie entity)
+        public async Task<Commodity> AddAsync(Commodity entity)
         {
             await _context.Commodities.AddAsync(entity);
             await _context.SaveChangesAsync();
             return entity;
         }
 
-        public async Task<Commoditie> UpdateAsync(Commoditie entity)
+        public async Task<Commodity> UpdateAsync(Commodity entity)
         {
             _context.Commodities.Update(entity);
             await _context.SaveChangesAsync();
@@ -74,12 +74,12 @@ namespace viaggia_server.Repositories.Commodities
             return await _context.SaveChangesAsync() > 0;
         }
 
-        Task<T2?> IRepository<Commoditie>.GetByIdAsync<T2>(int id) where T2 : class
+        Task<T2?> IRepository<Commodity>.GetByIdAsync<T2>(int id) where T2 : class
         {
             return _context.Set<T2>().FindAsync(id).AsTask();
         }
 
-        Task<bool> IRepository<Commoditie>.SoftDeleteAsync<T2>(int id)
+        Task<bool> IRepository<Commodity>.SoftDeleteAsync<T2>(int id)
         {
             var entity = _context.Set<T2>().Find(id);
             if (entity == null)
@@ -94,14 +94,14 @@ namespace viaggia_server.Repositories.Commodities
         }
 
 
-        public async Task<Commoditie?> GetByHotelNameAsync(string hotelName)
+        public async Task<Commodity?> GetByHotelNameAsync(string hotelName)
         {
             return await _context.Commodities
                 .Include(c => c.Hotel)
                 .FirstOrDefaultAsync(c => c.Hotel.Name == hotelName);
         }
 
-        public Task<Commoditie?> GetByIdWithIncludesAsync(int id, params Expression<Func<Commoditie, object>>[] includes)
+        public Task<Commodity?> GetByIdWithIncludesAsync(int id, params Expression<Func<Commodity, object>>[] includes)
         {
             throw new NotImplementedException();
         }

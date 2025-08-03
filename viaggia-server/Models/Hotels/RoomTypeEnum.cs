@@ -1,6 +1,4 @@
-﻿using System.Runtime.Serialization;
-
-namespace viaggia_server.Models.RoomTypeEnums
+﻿namespace viaggia_server.Models.Hotels
 {
     public enum RoomTypeEnum
     {

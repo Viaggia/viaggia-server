@@ -1,10 +1,8 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using viaggia_server.Models.Hotels;
-using viaggia_server.Models.RoomTypeEnums;
 using viaggia_server.Repositories;
 
-namespace viaggia_server.Models.HotelRoomTypes
+namespace viaggia_server.Models.Hotels
 {
     public class HotelRoomType : ISoftDeletable
     {

@@ -1,18 +1,17 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using viaggia_server.Models.HotelRoomTypes;
 using viaggia_server.Models.Hotels;
 using viaggia_server.Models.Packages;
 using viaggia_server.Models.Payments;
 using viaggia_server.Models.Users;
 using viaggia_server.Repositories;
 
-namespace viaggia_server.Models.Reservations
+namespace viaggia_server.Models.Reserves
 {
-    public class Reservation : ISoftDeletable
+    public class Reserve : ISoftDeletable
     {
         [Key]
-        public int ReservationId { get; set; }
+        public int ReserveId { get; set; }
 
         [Required]
         public int UserId { get; set; }
@@ -49,6 +48,9 @@ namespace viaggia_server.Models.Reservations
         [Column(TypeName = "decimal(10,2)")]
         public decimal TotalPrice { get; set; }
 
+        public decimal TotalDiscount { get; set; }
+
+        public int NumberOfRooms { get; set; }
         public bool IsActive { get; set; } = true;
 
         public virtual ICollection<Payment> Payments { get; set; } = new List<Payment>();

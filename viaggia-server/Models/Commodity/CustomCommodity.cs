@@ -1,36 +1,36 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using viaggia_server.Models.Commodities;
 using viaggia_server.Models.Hotels;
 using viaggia_server.Repositories;
 
-namespace viaggia_server.Models.Commodities
+namespace viaggia_server.Models.CustomCommodities
 {
-    public class CommoditieServices : ISoftDeletable
+    public class CustomCommodity : ISoftDeletable
     {
         [Key]
-        public int CommoditieServicesId { get; set; }
+        public int CustomCommodityId { get; set; }
 
         [Required(ErrorMessage = "Service name is required")]
         [StringLength(100, ErrorMessage = "The service name cannot exceed 100 characters")]
-
-        public string Name { get; set; } = null!; // Nome do serviço extra (ex: "Serviço de quarto 24h")
+        public string Name { get; set; } = null!;
 
         public bool IsPaid { get; set; }
+        public decimal Price { get; set; } // Added
 
         [StringLength(250, ErrorMessage = "The description cannot exceed 250 characters")]
         public string? Description { get; set; }
 
         public bool IsActive { get; set; } = true;
 
-        public int CommoditieId { get; set; }
+        public int CommodityId { get; set; }
 
-        [ForeignKey("CommoditieId")]
-        public Commoditie Commoditie { get; set; } = null!;
+        [ForeignKey("CommodityId")]
+        public Commodity Commodity { get; set; } = null!;
 
         public int HotelId { get; set; }
 
         [ForeignKey("HotelId")]
-        public Hotel? Hotel { get; set; } = null!; // Relacionamento com o hotel
-
+        public Hotel? Hotel { get; set; } = null!;
     }
 }

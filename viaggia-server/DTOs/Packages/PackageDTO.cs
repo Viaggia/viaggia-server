@@ -1,6 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
-using viaggia_server.Models.Medias;
-
+﻿
 namespace viaggia_server.DTOs.Packages
 {
     public class PackageDTO

@@ -109,23 +109,6 @@ namespace viaggia_server.Repositories
             return entity;
         }
 
-        public async Task<IEnumerable<T>> GetHotelsWithRelatedDataAsync(int id, params Expression<Func<T, object>>[] includes)
-        {
-            if (typeof(T) != typeof(Hotel))
-                throw new InvalidOperationException("GetHotelsWithRelatedDataAsync is only valid for Hotel entities.");
-
-            return await _context.Set<Hotel>()
-                .Where(h => h.IsActive)
-                .Include(h => h.Commodities)
-                .Include(h => h.CommoditieServices)
-                .Include(h => h.RoomTypes)
-                .Include(h => h.Medias)
-                .Include(h => h.Reviews)
-                .Include(h => h.Packages)
-                .Cast<T>()
-                .ToListAsync();
-        }
-
         public Task<T?> GetByIdWithIncludesAsync(int id, params Expression<Func<T, object>>[] includes)
         {
             throw new NotImplementedException();

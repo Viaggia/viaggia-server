@@ -1,8 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
-using viaggia_server.DTOs.Hotel;
 
-namespace viaggia_server.DTOs.Hotels
+
+namespace viaggia_server.DTOs.Hotel
 {
     public class CreateHotelDTO
     {

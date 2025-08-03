@@ -6,7 +6,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using viaggia_server.Data;
 using viaggia_server.DTOs.Auth;
-using viaggia_server.Models.RevokedToken;
 using viaggia_server.Models.Users;
 
 namespace viaggia_server.Repositories.Auth

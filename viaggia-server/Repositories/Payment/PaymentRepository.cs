@@ -14,7 +14,7 @@ namespace viaggia_server.Repositories.Payment
         {
             return await _context.Payments
                 
-                .Include(p => p.Reservation)
+                .Include(p => p.Reserve)
                 .Where(p => p.UserId == userId && p.IsActive)
                 .OrderByDescending(p => p.PaymentDate)
                 .Skip((page - 1) * pageSize)
@@ -37,7 +37,7 @@ namespace viaggia_server.Repositories.Payment
             return await _context.Payments
                 
                 .Include(p => p.User)
-                .Include(p => p.Reservation)
+                .Include(p => p.Reserve)
                 .FirstOrDefaultAsync(p => p.StripePaymentIntentId == stripePaymentIntentId && p.IsActive);
         }
 
@@ -46,7 +46,7 @@ namespace viaggia_server.Repositories.Payment
             return await _context.Payments
                
                 .Include(p => p.User)
-                .Include(p => p.Reservation)
+                .Include(p => p.Reserve)
                 .Where(p => p.Status == status && p.IsActive)
                 .OrderByDescending(p => p.PaymentDate)
                 .ToListAsync();
@@ -57,7 +57,7 @@ namespace viaggia_server.Repositories.Payment
             return await _context.Payments
                
                 .Include(p => p.User)
-                .Include(p => p.Reservation)
+                .Include(p => p.Reserve)
                 .Where(p => p.PaymentDate >= startDate && p.PaymentDate <= endDate && p.IsActive)
                 .OrderByDescending(p => p.PaymentDate)
                 .ToListAsync();
@@ -75,7 +75,7 @@ namespace viaggia_server.Repositories.Payment
             return await _context.Payments
                
                 .Include(p => p.User)
-                .Include(p => p.Reservation)
+                .Include(p => p.Reserve)
                 .Where(p => p.Status == "Completed" && 
                            p.RefundedAt == null && 
                            p.IsActive &&

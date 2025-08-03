@@ -1,8 +1,7 @@
 ﻿using viaggia_server.DTOs;
 using viaggia_server.DTOs.Hotel;
-using viaggia_server.DTOs.HotelFilterDTO;
-using viaggia_server.DTOs.Hotels;
 using viaggia_server.DTOs.Packages;
+using viaggia_server.DTOs.Reviews;
 using viaggia_server.Models.Hotels;
 
 namespace viaggia_server.Services.HotelServices
@@ -17,11 +16,12 @@ namespace viaggia_server.Services.HotelServices
         Task<ApiResponse<double>> GetHotelAverageRatingAsync(int hotelId);
         Task<ApiResponse<IEnumerable<PackageDTO>>> GetPackagesByHotelIdAsync(int hotelId);
         Task<ApiResponse<List<HotelDTO>>> FilterHotelsAsync(HotelFilterDTO filter);
+        Task<ApiResponse<List<HotelRoomTypeDTO>>> GetAvailableRoomsAsync(int hotelId, int numberOfPeople, DateTime checkInDate, DateTime checkOutDate);
+        Task<ApiResponse<ReviewDTO>> AddHotelReviewAsync(CreateReviewDTO reviewDto); // Renamed
+        Task<ApiResponse<List<ReviewDTO>>> GetHotelReviewsAsync(int hotelId); // Renamed
+        Task<ApiResponse<ReviewDTO>> UpdateHotelReviewAsync(int reviewId, CreateReviewDTO reviewDto); // Renamed
+        Task<ApiResponse<bool>> RemoveHotelReviewAsync(int reviewId); // Renamed
 
 
-        //Task<IEnumerable<Media>> GetMediaByHotelIdAsync(int hotelId);
-        //Task<Media?> GetMediaByIdAsync(int mediaId);
-        //Task<Media> AddMediaToHotelAsync(Media media);
-        //Task<bool> SoftDeleteMediaAsync(int mediaId);
     }
 }

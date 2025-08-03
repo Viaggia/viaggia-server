@@ -1,15 +1,14 @@
 ﻿using System.Text.Json;
 using viaggia_server.DTOs;
-using viaggia_server.DTOs.Commoditie;
+using viaggia_server.DTOs.Commodity;
 using viaggia_server.DTOs.Hotel;
-using viaggia_server.DTOs.HotelFilterDTO;
-using viaggia_server.DTOs.Hotels;
 using viaggia_server.DTOs.Packages;
 using viaggia_server.DTOs.Reviews;
-using viaggia_server.Models.HotelRoomTypes;
+using viaggia_server.Models.Commodities;
 using viaggia_server.Models.Hotels;
 using viaggia_server.Models.Medias;
-using viaggia_server.Models.RoomTypeEnums;
+using viaggia_server.Models.Packages;
+using viaggia_server.Models.Reviews;
 using viaggia_server.Repositories;
 using viaggia_server.Repositories.HotelRepository;
 
@@ -19,19 +18,290 @@ namespace viaggia_server.Services.HotelServices
     {
         private readonly IRepository<Hotel> _genericRepository;
         private readonly IHotelRepository _hotelRepository;
+        private readonly IReviewRepository _reviewRepository;
         private readonly IWebHostEnvironment _environment;
         private readonly ILogger<HotelServices> _logger;
 
         public HotelServices(
             IRepository<Hotel> genericRepository,
             IHotelRepository hotelRepository,
+            IReviewRepository reviewRepository,
             IWebHostEnvironment environment,
             ILogger<HotelServices> logger)
         {
             _genericRepository = genericRepository;
             _hotelRepository = hotelRepository;
+            _reviewRepository = reviewRepository;
             _environment = environment;
             _logger = logger;
+        }
+
+        // Existing methods (unchanged)
+        public async Task<ApiResponse<List<HotelDTO>>> GetAllHotelAsync()
+        {
+            try
+            {
+                var hotels = await _genericRepository.GetAllAsync();
+                var hotelDTOs = new List<HotelDTO>();
+                foreach (var hotel in hotels)
+                {
+                    var roomTypes = (await _hotelRepository.GetHotelRoomTypesAsync(hotel.HotelId)).ToList();
+                    var medias = (await _hotelRepository.GetMediasByHotelIdAsync(hotel.HotelId)).ToList();
+                    var reviews = (await _reviewRepository.GetReviewsByHotelIdAsync(hotel.HotelId)).ToList();
+                    var packages = (await _hotelRepository.GetPackagesByHotelIdAsync(hotel.HotelId)).ToList();
+                    var commodities = (await _hotelRepository.GetCommoditiesByHotelIdAsync(hotel.HotelId)).ToList();
+                    var commoditieServices = (await _hotelRepository.GetCommoditieServicesByHotelIdAsync(hotel.HotelId)).ToList();
+
+                    var dto = new HotelDTO
+                    {
+                        HotelId = hotel.HotelId,
+                        Name = hotel.Name,
+                        Cnpj = hotel.Cnpj,
+                        Street = hotel.Street,
+                        City = hotel.City,
+                        State = hotel.State,
+                        ZipCode = hotel.ZipCode,
+                        Description = hotel.Description,
+                        StarRating = hotel.StarRating,
+                        CheckInTime = hotel.CheckInTime,
+                        CheckOutTime = hotel.CheckOutTime,
+                        ContactPhone = hotel.ContactPhone,
+                        ContactEmail = hotel.ContactEmail,
+                        IsActive = hotel.IsActive,
+                        AverageRating = hotel.AverageRating,
+                        RoomTypes = roomTypes.Select(rt => new HotelRoomTypeDTO
+                        {
+                            RoomTypeId = rt.RoomTypeId,
+                            Name = rt.Name,
+                            Description = rt.Description,
+                            Price = rt.Price,
+                            Capacity = rt.Capacity,
+                            BedType = rt.BedType,
+                            TotalRooms = rt.TotalRooms,
+                            AvailableRooms = rt.AvailableRooms,
+                            IsActive = rt.IsActive
+                        }).ToList(),
+                        Medias = medias.Select(m => new MediaDTO
+                        {
+                            MediaId = m.MediaId,
+                            MediaUrl = m.MediaUrl,
+                            MediaType = m.MediaType
+                        }).ToList(),
+                        Reviews = reviews.Select(r => new ReviewDTO
+                        {
+                            ReviewId = r.ReviewId,
+                            UserId = r.UserId,
+                            ReviewType = r.ReviewType,
+                            HotelId = r.HotelId,
+                            Rating = r.Rating,
+                            Comment = r.Comment,
+                            CreatedAt = r.CreatedAt,
+                            IsActive = r.IsActive
+                        }).ToList(),
+                        Packages = packages.Select(p => new PackageDTO
+                        {
+                            PackageId = p.PackageId,
+                            Name = p.Name,
+                            Description = p.Description,
+                            BasePrice = p.BasePrice,
+                            IsActive = p.IsActive
+                        }).ToList(),
+                        Commodities = commodities.Select(c => new CommodityDTO
+                        {
+                            HotelId = c.HotelId,
+                            HasParking = c.HasParking,
+                            IsParkingPaid = c.IsParkingPaid,
+                            ParkingPrice = c.ParkingPrice,
+                            HasBreakfast = c.HasBreakfast,
+                            IsBreakfastPaid = c.IsBreakfastPaid,
+                            BreakfastPrice = c.BreakfastPrice,
+                            HasLunch = c.HasLunch,
+                            IsLunchPaid = c.IsLunchPaid,
+                            LunchPrice = c.LunchPrice,
+                            HasDinner = c.HasDinner,
+                            IsDinnerPaid = c.IsDinnerPaid,
+                            DinnerPrice = c.DinnerPrice,
+                            HasSpa = c.HasSpa,
+                            IsSpaPaid = c.IsSpaPaid,
+                            SpaPrice = c.SpaPrice,
+                            HasPool = c.HasPool,
+                            IsPoolPaid = c.IsPoolPaid,
+                            PoolPrice = c.PoolPrice,
+                            HasGym = c.HasGym,
+                            IsGymPaid = c.IsGymPaid,
+                            GymPrice = c.GymPrice,
+                            HasWiFi = c.HasWiFi,
+                            IsWiFiPaid = c.IsWiFiPaid,
+                            WiFiPrice = c.WiFiPrice,
+                            HasAirConditioning = c.HasAirConditioning,
+                            IsAirConditioningPaid = c.IsAirConditioningPaid,
+                            AirConditioningPrice = c.AirConditioningPrice,
+                            HasAccessibilityFeatures = c.HasAccessibilityFeatures,
+                            IsAccessibilityFeaturesPaid = c.IsAccessibilityFeaturesPaid,
+                            AccessibilityFeaturesPrice = c.AccessibilityFeaturesPrice,
+                            IsPetFriendly = c.IsPetFriendly,
+                            IsPetFriendlyPaid = c.IsPetFriendlyPaid,
+                            PetFriendlyPrice = c.PetFriendlyPrice,
+                            IsActive = c.IsActive
+                        }).ToList(),
+                        CommoditieServices = commoditieServices.Select(cs => new CustomCommodityDTO
+                        {
+                            Name = cs.Name,
+                            IsPaid = cs.IsPaid,
+                            Price = cs.Price,
+                            Description = cs.Description,
+                            IsActive = cs.IsActive
+                        }).ToList()
+                    };
+
+                    hotelDTOs.Add(dto);
+                }
+
+                return new ApiResponse<List<HotelDTO>>(true, "Hotels retrieved successfully.", hotelDTOs);
+            }
+            catch (Exception ex)
+            {
+                var innerMessage = ex.InnerException != null ? ex.InnerException.Message : ex.Message;
+                _logger.LogError(ex, "Error retrieving hotels: {Message}", innerMessage);
+                return new ApiResponse<List<HotelDTO>>(false, $"Error retrieving hotels: {innerMessage}");
+            }
+        }
+
+        public async Task<ApiResponse<HotelDTO>> GetHotelByIdAsync(int id)
+        {
+            try
+            {
+                if (id <= 0)
+                {
+                    _logger.LogWarning("Invalid hotel ID: {Id}", id);
+                    return new ApiResponse<HotelDTO>(false, "Invalid hotel ID.");
+                }
+
+                var hotel = await _genericRepository.GetByIdAsync(id);
+                if (hotel == null)
+                {
+                    _logger.LogWarning("Hotel not found for ID: {Id}", id);
+                    return new ApiResponse<HotelDTO>(false, "Hotel not found.");
+                }
+
+                var roomTypes = (await _hotelRepository.GetHotelRoomTypesAsync(hotel.HotelId)).ToList();
+                var medias = (await _hotelRepository.GetMediasByHotelIdAsync(hotel.HotelId)).ToList();
+                var reviews = (await _reviewRepository.GetReviewsByHotelIdAsync(hotel.HotelId)).ToList();
+                var packages = (await _hotelRepository.GetPackagesByHotelIdAsync(hotel.HotelId)).ToList();
+                var commodities = (await _hotelRepository.GetCommoditiesByHotelIdAsync(hotel.HotelId)).ToList();
+                var commoditieServices = (await _hotelRepository.GetCommoditieServicesByHotelIdAsync(hotel.HotelId)).ToList();
+
+                var dto = new HotelDTO
+                {
+                    HotelId = hotel.HotelId,
+                    Name = hotel.Name,
+                    Cnpj = hotel.Cnpj,
+                    Street = hotel.Street,
+                    City = hotel.City,
+                    State = hotel.State,
+                    ZipCode = hotel.ZipCode,
+                    Description = hotel.Description,
+                    StarRating = hotel.StarRating,
+                    CheckInTime = hotel.CheckInTime,
+                    CheckOutTime = hotel.CheckOutTime,
+                    ContactPhone = hotel.ContactPhone,
+                    ContactEmail = hotel.ContactEmail,
+                    IsActive = hotel.IsActive,
+                    AverageRating = hotel.AverageRating,
+                    RoomTypes = roomTypes.Select(rt => new HotelRoomTypeDTO
+                    {
+                        RoomTypeId = rt.RoomTypeId,
+                        Name = rt.Name,
+                        Description = rt.Description,
+                        Price = rt.Price,
+                        Capacity = rt.Capacity,
+                        BedType = rt.BedType,
+                        TotalRooms = rt.TotalRooms,
+                        AvailableRooms = rt.AvailableRooms,
+                        IsActive = rt.IsActive
+                    }).ToList(),
+                    Medias = medias.Select(m => new MediaDTO
+                    {
+                        MediaId = m.MediaId,
+                        MediaUrl = m.MediaUrl,
+                        MediaType = m.MediaType
+                    }).ToList(),
+                    Reviews = reviews.Select(r => new ReviewDTO
+                    {
+                        ReviewId = r.ReviewId,
+                        UserId = r.UserId,
+                        ReviewType = r.ReviewType,
+                        HotelId = r.HotelId,
+                        Rating = r.Rating,
+                        Comment = r.Comment,
+                        CreatedAt = r.CreatedAt,
+                        IsActive = r.IsActive
+                    }).ToList(),
+                    Packages = packages.Select(p => new PackageDTO
+                    {
+                        PackageId = p.PackageId,
+                        Name = p.Name,
+                        Description = p.Description,
+                        BasePrice = p.BasePrice,
+                        IsActive = p.IsActive
+                    }).ToList(),
+                    Commodities = commodities.Select(c => new CommodityDTO
+                    {
+                        HotelId = c.HotelId,
+                        HasParking = c.HasParking,
+                        IsParkingPaid = c.IsParkingPaid,
+                        ParkingPrice = c.ParkingPrice,
+                        HasBreakfast = c.HasBreakfast,
+                        IsBreakfastPaid = c.IsBreakfastPaid,
+                        BreakfastPrice = c.BreakfastPrice,
+                        HasLunch = c.HasLunch,
+                        IsLunchPaid = c.IsLunchPaid,
+                        LunchPrice = c.LunchPrice,
+                        HasDinner = c.HasDinner,
+                        IsDinnerPaid = c.IsDinnerPaid,
+                        DinnerPrice = c.DinnerPrice,
+                        HasSpa = c.HasSpa,
+                        IsSpaPaid = c.IsSpaPaid,
+                        SpaPrice = c.SpaPrice,
+                        HasPool = c.HasPool,
+                        IsPoolPaid = c.IsPoolPaid,
+                        PoolPrice = c.PoolPrice,
+                        HasGym = c.HasGym,
+                        IsGymPaid = c.IsGymPaid,
+                        GymPrice = c.GymPrice,
+                        HasWiFi = c.HasWiFi,
+                        IsWiFiPaid = c.IsWiFiPaid,
+                        WiFiPrice = c.WiFiPrice,
+                        HasAirConditioning = c.HasAirConditioning,
+                        IsAirConditioningPaid = c.IsAirConditioningPaid,
+                        AirConditioningPrice = c.AirConditioningPrice,
+                        HasAccessibilityFeatures = c.HasAccessibilityFeatures,
+                        IsAccessibilityFeaturesPaid = c.IsAccessibilityFeaturesPaid,
+                        AccessibilityFeaturesPrice = c.AccessibilityFeaturesPrice,
+                        IsPetFriendly = c.IsPetFriendly,
+                        IsPetFriendlyPaid = c.IsPetFriendlyPaid,
+                        PetFriendlyPrice = c.PetFriendlyPrice,
+                        IsActive = c.IsActive
+                    }).ToList(),
+                    CommoditieServices = commoditieServices.Select(cs => new CustomCommodityDTO
+                    {
+                        HotelName = cs.HotelName,
+                        Name = cs.Name,
+                        IsPaid = cs.IsPaid,
+                        Price = cs.Price,
+                        Description = cs.Description,
+                        IsActive = cs.IsActive
+                    }).ToList()
+                };
+
+                return new ApiResponse<HotelDTO>(true, "Hotel retrieved successfully.", dto);
+            }
+            catch (Exception ex)
+            {
+                var innerMessage = ex.InnerException != null ? ex.InnerException.Message : ex.Message;
+                _logger.LogError(ex, "Error retrieving hotel with ID {Id}: {Message}", id, innerMessage);
+                return new ApiResponse<HotelDTO>(false, $"Error retrieving hotel: {innerMessage}");
+            }
         }
 
         public async Task<ApiResponse<Hotel>> CreateHotelAsync(CreateHotelDTO createHotelDto, List<CreateHotelRoomTypeDTO> roomTypes)
@@ -80,7 +350,6 @@ namespace viaggia_server.Services.HotelServices
                 var createdHotel = await _genericRepository.AddAsync(hotel);
                 _logger.LogInformation("Hotel created with ID: {HotelId}", createdHotel.HotelId);
 
-                // Add Media
                 if (createHotelDto.MediaFiles != null && createHotelDto.MediaFiles.Any())
                 {
                     var uploadPath = Path.Combine(_environment.WebRootPath, "Uploads", "Hotel");
@@ -111,7 +380,6 @@ namespace viaggia_server.Services.HotelServices
                     }
                 }
 
-                // Add Room Types
                 if (roomTypes != null && roomTypes.Any())
                 {
                     foreach (var roomTypeDto in roomTypes)
@@ -144,8 +412,6 @@ namespace viaggia_server.Services.HotelServices
                     _logger.LogWarning("No room types provided for hotel ID: {HotelId}", createdHotel.HotelId);
                 }
 
-
-                // Fetch the created hotel with related data
                 var hotelWithDetails = await _genericRepository.GetByIdAsync(createdHotel.HotelId);
                 if (hotelWithDetails != null)
                 {
@@ -161,240 +427,6 @@ namespace viaggia_server.Services.HotelServices
                 var innerMessage = ex.InnerException != null ? ex.InnerException.Message : ex.Message;
                 _logger.LogError(ex, "Error creating hotel: {Message}", innerMessage);
                 return new ApiResponse<Hotel>(false, $"Error creating hotel: {innerMessage}");
-            }
-        }
-
-        // Outros métodos permanecem iguais
-        public async Task<ApiResponse<List<HotelDTO>>> GetAllHotelAsync()
-        {
-            try
-            {
-                var hotels = await _genericRepository.GetAllAsync();
-                var hotelDTOs = new List<HotelDTO>();
-                foreach (var hotel in hotels)
-                {
-                    var roomTypes = (await _hotelRepository.GetHotelRoomTypesAsync(hotel.HotelId)).ToList();
-                    var medias = (await _hotelRepository.GetMediasByHotelIdAsync(hotel.HotelId)).ToList();
-                    var reviews = (await _hotelRepository.GetReviewsByHotelIdAsync(hotel.HotelId)).ToList();
-                    var packages = (await _hotelRepository.GetPackagesByHotelIdAsync(hotel.HotelId)).ToList();
-                    var commodities = (await _hotelRepository.GetCommoditiesByHotelIdAsync(hotel.HotelId)).ToList();
-                    var commoditieServices = (await _hotelRepository.GetCommoditieServicesByHotelIdAsync(hotel.HotelId)).ToList();
-
-                    var dto = new HotelDTO
-                    {
-                        HotelId = hotel.HotelId,
-                        Name = hotel.Name,
-                        Cnpj = hotel.Cnpj,
-                        Street = hotel.Street,
-                        City = hotel.City,
-                        State = hotel.State,
-                        ZipCode = hotel.ZipCode,
-                        Description = hotel.Description,
-                        StarRating = hotel.StarRating,
-                        CheckInTime = hotel.CheckInTime,
-                        CheckOutTime = hotel.CheckOutTime,
-                        ContactPhone = hotel.ContactPhone,
-                        ContactEmail = hotel.ContactEmail,
-                        IsActive = hotel.IsActive,
-                        AverageRating = hotel.AverageRating,
-                        RoomTypes = roomTypes.Select(rt => new HotelRoomTypeDTO
-                        {
-                            RoomTypeId = rt.RoomTypeId,
-                            Name = rt.Name,
-                            Description = rt.Description,
-                            Price = rt.Price,
-                            Capacity = rt.Capacity,
-                            BedType = rt.BedType,
-                            TotalRooms = rt.TotalRooms,
-                            AvailableRooms = rt.AvailableRooms,
-                            IsActive = rt.IsActive
-                        }).ToList(),
-                        Medias = medias.Select(m => new MediaDTO
-                        {
-                            MediaId = m.MediaId,
-                            MediaUrl = m.MediaUrl,
-                            MediaType = m.MediaType
-                        }).ToList(),
-                        Reviews = reviews.Select(r => new ReviewDTO
-                        {
-                            ReviewId = r.ReviewId,
-                            Rating = r.Rating,
-                            Comment = r.Comment,
-                            CreatedAt = r.CreatedAt
-                        }).ToList(),
-                        Packages = packages.Select(p => new PackageDTO
-                        {
-                            PackageId = p.PackageId,
-                            Name = p.Name,
-                            Description = p.Description,
-                            BasePrice = p.BasePrice,
-                            IsActive = p.IsActive
-                        }).ToList(),
-                        Commodities = commodities.Select(c => new CommoditieDTO
-                        {
-                            HotelId = c.HotelId,
-                            HasParking = c.HasParking,
-                            IsParkingPaid = c.IsParkingPaid,
-                            HasBreakfast = c.HasBreakfast,
-                            IsBreakfastPaid = c.IsBreakfastPaid,
-                            HasLunch = c.HasLunch,
-                            IsLunchPaid = c.IsLunchPaid,
-                            HasDinner = c.HasDinner,
-                            IsDinnerPaid = c.IsDinnerPaid,
-                            HasSpa = c.HasSpa,
-                            IsSpaPaid = c.IsSpaPaid,
-                            HasPool = c.HasPool,
-                            IsPoolPaid = c.IsPoolPaid,
-                            HasGym = c.HasGym,
-                            IsGymPaid = c.IsGymPaid,
-                            HasWiFi = c.HasWiFi,
-                            IsWiFiPaid = c.IsWiFiPaid,
-                            HasAirConditioning = c.HasAirConditioning,
-                            IsAirConditioningPaid = c.IsAirConditioningPaid,
-                            HasAccessibilityFeatures = c.HasAccessibilityFeatures,
-                            IsAccessibilityFeaturesPaid = c.IsAccessibilityFeaturesPaid,
-                            IsPetFriendly = c.IsPetFriendly,
-                            IsPetFriendlyPaid = c.IsPetFriendlyPaid,
-                            IsActive = c.IsActive
-                        }).ToList(),
-                        CommoditieServices = commoditieServices.Select(cs => new CommoditieServicesDTO
-                        {
-                            Name = cs.Name,
-                            IsPaid = cs.IsPaid,
-                            Description = cs.Description,
-                            IsActive = cs.IsActive
-                        }).ToList()
-                    };
-
-                    hotelDTOs.Add(dto);
-                }
-
-                return new ApiResponse<List<HotelDTO>>(true, "Hotels retrieved successfully.", hotelDTOs);
-            }
-            catch (Exception ex)
-            {
-                var innerMessage = ex.InnerException != null ? ex.InnerException.Message : ex.Message;
-                return new ApiResponse<List<HotelDTO>>(false, $"Error retrieving hotels: {innerMessage}");
-            }
-        }
-
-        public async Task<ApiResponse<HotelDTO>> GetHotelByIdAsync(int id)
-        {
-            try
-            {
-                if (id <= 0)
-                {
-                    _logger.LogWarning("Invalid hotel ID: {Id}", id);
-                    return new ApiResponse<HotelDTO>(false, "Invalid hotel ID.");
-                }
-
-                var hotel = await _genericRepository.GetByIdAsync(id);
-                if (hotel == null)
-                {
-                    _logger.LogWarning("Hotel not found for ID: {Id}", id);
-                    return new ApiResponse<HotelDTO>(false, "Hotel not found.");
-                }
-
-                var roomTypes = (await _hotelRepository.GetHotelRoomTypesAsync(hotel.HotelId)).ToList();
-                var medias = (await _hotelRepository.GetMediasByHotelIdAsync(hotel.HotelId)).ToList();
-                var reviews = (await _hotelRepository.GetReviewsByHotelIdAsync(hotel.HotelId)).ToList();
-                var packages = (await _hotelRepository.GetPackagesByHotelIdAsync(hotel.HotelId)).ToList();
-                var commodities = (await _hotelRepository.GetCommoditiesByHotelIdAsync(hotel.HotelId)).ToList();
-                var commoditieServices = (await _hotelRepository.GetCommoditieServicesByHotelIdAsync(hotel.HotelId)).ToList();
-
-                var dto = new HotelDTO
-                {
-                    HotelId = hotel.HotelId,
-                    Name = hotel.Name,
-                    Cnpj = hotel.Cnpj,
-                    Street = hotel.Street,
-                    City = hotel.City,
-                    State = hotel.State,
-                    ZipCode = hotel.ZipCode,
-                    Description = hotel.Description,
-                    StarRating = hotel.StarRating,
-                    CheckInTime = hotel.CheckInTime,
-                    CheckOutTime = hotel.CheckOutTime,
-                    ContactPhone = hotel.ContactPhone,
-                    ContactEmail = hotel.ContactEmail,
-                    IsActive = hotel.IsActive,
-                    AverageRating = hotel.AverageRating,
-                    RoomTypes = roomTypes.Select(rt => new HotelRoomTypeDTO
-                    {
-                        RoomTypeId = rt.RoomTypeId,
-                        Name = rt.Name,
-                        Description = rt.Description,
-                        Price = rt.Price,
-                        Capacity = rt.Capacity,
-                        BedType = rt.BedType,
-                        TotalRooms = rt.TotalRooms,
-                        AvailableRooms = rt.AvailableRooms,
-                        IsActive = rt.IsActive
-                    }).ToList(),
-                    Medias = medias.Select(m => new MediaDTO
-                    {
-                        MediaId = m.MediaId,
-                        MediaUrl = m.MediaUrl,
-                        MediaType = m.MediaType
-                    }).ToList(),
-                    Reviews = reviews.Select(r => new ReviewDTO
-                    {
-                        ReviewId = r.ReviewId,
-                        Rating = r.Rating,
-                        Comment = r.Comment,
-                        CreatedAt = r.CreatedAt
-                    }).ToList(),
-                    Packages = packages.Select(p => new PackageDTO
-                    {
-                        PackageId = p.PackageId,
-                        Name = p.Name,
-                        Description = p.Description,
-                        BasePrice = p.BasePrice,
-                        IsActive = p.IsActive
-                    }).ToList(),
-                    Commodities = commodities.Select(c => new CommoditieDTO
-                    {
-                        HotelId = c.HotelId,
-                        HasParking = c.HasParking,
-                        IsParkingPaid = c.IsParkingPaid,
-                        HasBreakfast = c.HasBreakfast,
-                        IsBreakfastPaid = c.IsBreakfastPaid,
-                        HasLunch = c.HasLunch,
-                        IsLunchPaid = c.IsLunchPaid,
-                        HasDinner = c.HasDinner,
-                        IsDinnerPaid = c.IsDinnerPaid,
-                        HasSpa = c.HasSpa,
-                        IsSpaPaid = c.IsSpaPaid,
-                        HasPool = c.HasPool,
-                        IsPoolPaid = c.IsPoolPaid,
-                        HasGym = c.HasGym,
-                        IsGymPaid = c.IsGymPaid,
-                        HasWiFi = c.HasWiFi,
-                        IsWiFiPaid = c.IsWiFiPaid,
-                        HasAirConditioning = c.HasAirConditioning,
-                        IsAirConditioningPaid = c.IsAirConditioningPaid,
-                        HasAccessibilityFeatures = c.HasAccessibilityFeatures,
-                        IsAccessibilityFeaturesPaid = c.IsAccessibilityFeaturesPaid,
-                        IsPetFriendly = c.IsPetFriendly,
-                        IsPetFriendlyPaid = c.IsPetFriendlyPaid,
-                        IsActive = c.IsActive
-                    }).ToList(),
-                    CommoditieServices = commoditieServices.Select(cs => new CommoditieServicesDTO
-                    {
-                        Name = cs.Name,
-                        IsPaid = cs.IsPaid,
-                        Description = cs.Description,
-                        IsActive = cs.IsActive
-                    }).ToList()
-                };
-
-                return new ApiResponse<HotelDTO>(true, "Hotel retrieved successfully.", dto);
-            }
-            catch (Exception ex)
-            {
-                var innerMessage = ex.InnerException != null ? ex.InnerException.Message : ex.Message;
-                _logger.LogError(ex, "Error retrieving hotel with ID {Id}: {Message}", id, innerMessage);
-                return new ApiResponse<HotelDTO>(false, $"Error retrieving hotel: {innerMessage}");
             }
         }
 
@@ -432,35 +464,17 @@ namespace viaggia_server.Services.HotelServices
             return true;
         }
 
-        public async Task<IEnumerable<Media>> GetMediaByHotelIdAsync(int hotelId)
-        {
-            return await _hotelRepository.GetMediasByHotelIdAsync(hotelId);
-        }
-
-        //public async Task<Media?> GetMediaByIdAsync(int mediaId)
-        //{
-        //    return await _hotelRepository.GetMediaByIdAsync(mediaId);
-        //}
-
-        public async Task<Media> AddMediaToHotelAsync(Media media)
-        {
-            return await _hotelRepository.AddMediaAsync(media);
-        }
-
-        //public async Task<bool> SoftDeleteMediaAsync(int mediaId)
-        //{
-        //    return await _hotelRepository.SoftDeleteMediaAsync(mediaId);
-        //}
-
         public async Task<ApiResponse<double>> GetHotelAverageRatingAsync(int hotelId)
         {
             try
             {
-                var reviews = await _hotelRepository.GetReviewsByHotelIdAsync(hotelId);
-                if (!reviews.Any())
-                    return new ApiResponse<double>(true, "No reviews found.", 0);
-
-                var averageRating = reviews.Average(r => r.Rating);
+                var averageRating = await _reviewRepository.CalculateHotelAverageRatingAsync(hotelId);
+                var hotel = await _genericRepository.GetByIdAsync(hotelId);
+                if (hotel != null)
+                {
+                    hotel.AverageRating = averageRating;
+                    await _genericRepository.UpdateAsync(hotel);
+                }
                 return new ApiResponse<double>(true, "Average rating retrieved successfully.", averageRating);
             }
             catch (Exception ex)
@@ -497,13 +511,12 @@ namespace viaggia_server.Services.HotelServices
         {
             try
             {
-                _logger.LogInformation("Filtering hotels with Commodities: {Commodities}, CommoditieServices: {CommoditieServices}, RoomTypes: {RoomTypes}",
-                    string.Join(", ", filter.Commodities), string.Join(", ", filter.CommoditieServices), string.Join(", ", filter.RoomTypes));
+                _logger.LogInformation("Filtering hotels with Commodities: {Commodities}, CommoditieServices: {CommoditieServices}, RoomTypes: {RoomTypes}, MinPrice: {MinPrice}, MaxPrice: {MaxPrice}, MinCapacity: {MinCapacity}",
+                    string.Join(", ", filter.Commodities), string.Join(", ", filter.CommoditieServices), string.Join(", ", filter.RoomTypes), filter.MinPrice, filter.MaxPrice, filter.MinCapacity);
 
                 var hotels = await _hotelRepository.GetHotelsWithRelatedDataAsync();
                 var filteredHotels = hotels.AsQueryable();
 
-                // Filter by Commodities (all specified commodities must be true)
                 if (filter.Commodities != null && filter.Commodities.Any())
                 {
                     foreach (var commodity in filter.Commodities)
@@ -550,16 +563,14 @@ namespace viaggia_server.Services.HotelServices
                     }
                 }
 
-                // Filter by CommoditieServices (all specified services must exist)
                 if (filter.CommoditieServices != null && filter.CommoditieServices.Any())
                 {
                     foreach (var service in filter.CommoditieServices)
                     {
-                        filteredHotels = filteredHotels.Where(h => h.CommoditieServices.Any(cs => cs.IsActive && cs.Name.ToLower() == service.ToLower()));
+                        filteredHotels = filteredHotels.Where(h => h.CustomCommodities.Any(cs => cs.IsActive && cs.Name.ToLower() == service.ToLower()));
                     }
                 }
 
-                // Filter by RoomTypes (all specified room types must exist)
                 if (filter.RoomTypes != null && filter.RoomTypes.Any())
                 {
                     foreach (var roomType in filter.RoomTypes)
@@ -573,6 +584,53 @@ namespace viaggia_server.Services.HotelServices
                             _logger.LogWarning("Invalid room type: {RoomType}", roomType);
                         }
                     }
+                }
+
+                if (filter.MinCapacity.HasValue)
+                {
+                    filteredHotels = filteredHotels.Where(h => h.RoomTypes.Any(rt => rt.IsActive && rt.Capacity >= filter.MinCapacity.Value));
+                }
+
+                if (filter.MinPrice.HasValue || filter.MaxPrice.HasValue)
+                {
+                    filteredHotels = filteredHotels.Where(h =>
+                    {
+                        var roomPrices = h.RoomTypes.Where(rt => rt.IsActive).Select(rt => rt.Price).ToList();
+                        if (!roomPrices.Any())
+                            return false;
+
+                        var minRoomPrice = roomPrices.Min();
+                        var maxRoomPrice = roomPrices.Max();
+
+                        decimal commodityCost = 0;
+                        var commodities = h.Commodities.FirstOrDefault(c => c.IsActive);
+                        if (commodities != null)
+                        {
+                            if (commodities.IsParkingPaid) commodityCost += commodities.ParkingPrice;
+                            if (commodities.IsBreakfastPaid) commodityCost += commodities.BreakfastPrice;
+                            if (commodities.IsLunchPaid) commodityCost += commodities.LunchPrice;
+                            if (commodities.IsDinnerPaid) commodityCost += commodities.DinnerPrice;
+                            if (commodities.IsSpaPaid) commodityCost += commodities.SpaPrice;
+                            if (commodities.IsPoolPaid) commodityCost += commodities.PoolPrice;
+                            if (commodities.IsGymPaid) commodityCost += commodities.GymPrice;
+                            if (commodities.IsWiFiPaid) commodityCost += commodities.WiFiPrice;
+                            if (commodities.IsAirConditioningPaid) commodityCost += commodities.AirConditioningPrice;
+                            if (commodities.IsAccessibilityFeaturesPaid) commodityCost += commodities.AccessibilityFeaturesPrice;
+                            if (commodities.IsPetFriendlyPaid) commodityCost += commodities.PetFriendlyPrice;
+                        }
+
+                        decimal commoditieServicesCost = h.CommoditieServices
+                            .Where(cs => cs.IsActive && cs.IsPaid)
+                            .Sum(cs => cs.Price);
+
+                        var minTotalPrice = minRoomPrice + commodityCost + commoditieServicesCost;
+                        var maxTotalPrice = maxRoomPrice + commodityCost + commoditieServicesCost;
+
+                        bool meetsMinPrice = !filter.MinPrice.HasValue || minTotalPrice >= filter.MinPrice.Value;
+                        bool meetsMaxPrice = !filter.MaxPrice.HasValue || maxTotalPrice <= filter.MaxPrice.Value;
+
+                        return meetsMinPrice && meetsMaxPrice;
+                    });
                 }
 
                 var hotelDTOs = filteredHotels.Select(hotel => new HotelDTO
@@ -613,9 +671,13 @@ namespace viaggia_server.Services.HotelServices
                     Reviews = hotel.Reviews.Select(r => new ReviewDTO
                     {
                         ReviewId = r.ReviewId,
+                        UserId = r.UserId,
+                        ReviewType = r.ReviewType,
+                        HotelId = r.HotelId,
                         Rating = r.Rating,
                         Comment = r.Comment,
-                        CreatedAt = r.CreatedAt
+                        CreatedAt = r.CreatedAt,
+                        IsActive = r.IsActive
                     }).ToList(),
                     Packages = hotel.Packages.Select(p => new PackageDTO
                     {
@@ -625,37 +687,49 @@ namespace viaggia_server.Services.HotelServices
                         BasePrice = p.BasePrice,
                         IsActive = p.IsActive
                     }).ToList(),
-                    Commodities = hotel.Commodities.Select(c => new CommoditieDTO
+                    Commodities = hotel.Commodities.Select(c => new CommodityDTO
                     {
                         HotelId = c.HotelId,
                         HasParking = c.HasParking,
                         IsParkingPaid = c.IsParkingPaid,
+                        ParkingPrice = c.ParkingPrice,
                         HasBreakfast = c.HasBreakfast,
                         IsBreakfastPaid = c.IsBreakfastPaid,
+                        BreakfastPrice = c.BreakfastPrice,
                         HasLunch = c.HasLunch,
                         IsLunchPaid = c.IsLunchPaid,
+                        LunchPrice = c.LunchPrice,
                         HasDinner = c.HasDinner,
                         IsDinnerPaid = c.IsDinnerPaid,
+                        DinnerPrice = c.DinnerPrice,
                         HasSpa = c.HasSpa,
                         IsSpaPaid = c.IsSpaPaid,
+                        SpaPrice = c.SpaPrice,
                         HasPool = c.HasPool,
                         IsPoolPaid = c.IsPoolPaid,
+                        PoolPrice = c.PoolPrice,
                         HasGym = c.HasGym,
                         IsGymPaid = c.IsGymPaid,
+                        GymPrice = c.GymPrice,
                         HasWiFi = c.HasWiFi,
                         IsWiFiPaid = c.IsWiFiPaid,
+                        WiFiPrice = c.WiFiPrice,
                         HasAirConditioning = c.HasAirConditioning,
                         IsAirConditioningPaid = c.IsAirConditioningPaid,
+                        AirConditioningPrice = c.AirConditioningPrice,
                         HasAccessibilityFeatures = c.HasAccessibilityFeatures,
                         IsAccessibilityFeaturesPaid = c.IsAccessibilityFeaturesPaid,
+                        AccessibilityFeaturesPrice = c.AccessibilityFeaturesPrice,
                         IsPetFriendly = c.IsPetFriendly,
                         IsPetFriendlyPaid = c.IsPetFriendlyPaid,
+                        PetFriendlyPrice = c.PetFriendlyPrice,
                         IsActive = c.IsActive
                     }).ToList(),
-                    CommoditieServices = hotel.CommoditieServices.Select(cs => new CommoditieServicesDTO
+                    CommoditieServices = hotel.CustomCommodities.Select(cs => new CustomCommodityDTO
                     {
                         Name = cs.Name,
                         IsPaid = cs.IsPaid,
+                        Price = cs.Price,
                         Description = cs.Description,
                         IsActive = cs.IsActive
                     }).ToList()
@@ -668,6 +742,292 @@ namespace viaggia_server.Services.HotelServices
                 var innerMessage = ex.InnerException != null ? ex.InnerException.Message : ex.Message;
                 _logger.LogError(ex, "Error filtering hotels: {Message}", innerMessage);
                 return new ApiResponse<List<HotelDTO>>(false, $"Error retrieving hotels: {innerMessage}");
+            }
+        }
+
+        public async Task<ApiResponse<List<HotelRoomTypeDTO>>> GetAvailableRoomsAsync(int hotelId, int numberOfPeople, DateTime checkInDate, DateTime checkOutDate)
+        {
+            try
+            {
+                if (hotelId <= 0)
+                {
+                    _logger.LogWarning("Invalid hotel ID: {Id}", hotelId);
+                    return new ApiResponse<List<HotelRoomTypeDTO>>(false, "Invalid hotel ID.");
+                }
+
+                if (numberOfPeople <= 0)
+                {
+                    _logger.LogWarning("Invalid number of people: {NumberOfPeople}", numberOfPeople);
+                    return new ApiResponse<List<HotelRoomTypeDTO>>(false, "Number of people must be greater than 0.");
+                }
+
+                if (checkInDate >= checkOutDate)
+                {
+                    _logger.LogWarning("Invalid date range: CheckInDate {CheckInDate} must be before CheckOutDate {CheckOutDate}", checkInDate, checkOutDate);
+                    return new ApiResponse<List<HotelRoomTypeDTO>>(false, "Check-in date must be before check-out date.");
+                }
+
+                var roomTypes = await _hotelRepository.GetAvailableRoomTypesAsync(hotelId, numberOfPeople, checkInDate, checkOutDate);
+                var roomTypeDTOs = roomTypes.Select(rt => new HotelRoomTypeDTO
+                {
+                    RoomTypeId = rt.RoomTypeId,
+                    Name = rt.Name,
+                    Description = rt.Description,
+                    Price = rt.Price,
+                    Capacity = rt.Capacity,
+                    BedType = rt.BedType,
+                    TotalRooms = rt.TotalRooms,
+                    AvailableRooms = rt.AvailableRooms,
+                    IsActive = rt.IsActive
+                }).ToList();
+
+                return new ApiResponse<List<HotelRoomTypeDTO>>(true, "Available rooms retrieved successfully.", roomTypeDTOs);
+            }
+            catch (Exception ex)
+            {
+                var innerMessage = ex.InnerException != null ? ex.InnerException.Message : ex.Message;
+                _logger.LogError(ex, "Error retrieving available rooms for HotelId {HotelId}: {Message}", hotelId, innerMessage);
+                return new ApiResponse<List<HotelRoomTypeDTO>>(false, $"Error retrieving available rooms: {innerMessage}");
+            }
+        }
+
+
+        // Renamed review-related methods
+        public async Task<ApiResponse<ReviewDTO>> AddHotelReviewAsync(CreateReviewDTO reviewDto)
+        {
+            try
+            {
+                if (reviewDto.HotelId <= 0)
+                {
+                    _logger.LogWarning("Invalid hotel ID: {HotelId}", reviewDto.HotelId);
+                    return new ApiResponse<ReviewDTO>(false, "Invalid hotel ID.");
+                }
+
+                if (reviewDto.UserId <= 0)
+                {
+                    _logger.LogWarning("Invalid user ID: {UserId}", reviewDto.UserId);
+                    return new ApiResponse<ReviewDTO>(false, "Invalid user ID.");
+                }
+
+                if (reviewDto.ReviewType != "Hotel")
+                {
+                    _logger.LogWarning("Invalid review type: {ReviewType}. Must be 'Hotel'.", reviewDto.ReviewType);
+                    return new ApiResponse<ReviewDTO>(false, "Review type must be 'Hotel'.");
+                }
+
+                var hotel = await _genericRepository.GetByIdAsync(reviewDto.HotelId.Value);
+                if (hotel == null || !hotel.IsActive)
+                {
+                    _logger.LogWarning("Hotel not found or inactive for HotelId: {HotelId}", reviewDto.HotelId);
+                    return new ApiResponse<ReviewDTO>(false, "Hotel not found or inactive.");
+                }
+
+                var review = new Review
+                {
+                    UserId = reviewDto.UserId,
+                    ReviewType = reviewDto.ReviewType,
+                    HotelId = reviewDto.HotelId,
+                    Rating = reviewDto.Rating,
+                    Comment = reviewDto.Comment,
+                    CreatedAt = DateTime.UtcNow,
+                    IsActive = true
+                };
+
+                var createdReview = await _reviewRepository.CreateReviewAsync(review);
+
+                // Update hotel's average rating
+                var averageRating = await _reviewRepository.CalculateHotelAverageRatingAsync(reviewDto.HotelId.Value);
+                hotel.AverageRating = averageRating;
+                await _genericRepository.UpdateAsync(hotel);
+
+                var reviewDtoResult = new ReviewDTO
+                {
+                    ReviewId = createdReview.ReviewId,
+                    UserId = createdReview.UserId,
+                    ReviewType = createdReview.ReviewType,
+                    HotelId = createdReview.HotelId,
+                    Rating = createdReview.Rating,
+                    Comment = createdReview.Comment,
+                    CreatedAt = createdReview.CreatedAt,
+                    IsActive = createdReview.IsActive
+                };
+
+                return new ApiResponse<ReviewDTO>(true, "Review created successfully.", reviewDtoResult);
+            }
+            catch (Exception ex)
+            {
+                var innerMessage = ex.InnerException != null ? ex.InnerException.Message : ex.Message;
+                _logger.LogError(ex, "Error creating review for HotelId {HotelId}: {Message}", reviewDto.HotelId, innerMessage);
+                return new ApiResponse<ReviewDTO>(false, $"Error creating review: {innerMessage}");
+            }
+        }
+
+        public async Task<ApiResponse<List<ReviewDTO>>> GetHotelReviewsAsync(int hotelId)
+        {
+            try
+            {
+                if (hotelId <= 0)
+                {
+                    _logger.LogWarning("Invalid hotel ID: {HotelId}", hotelId);
+                    return new ApiResponse<List<ReviewDTO>>(false, "Invalid hotel ID.");
+                }
+
+                var reviews = await _reviewRepository.GetReviewsByHotelIdAsync(hotelId);
+                var reviewDTOs = reviews.Select(r => new ReviewDTO
+                {
+                    ReviewId = r.ReviewId,
+                    UserId = r.UserId,
+                    ReviewType = r.ReviewType,
+                    HotelId = r.HotelId,
+                    Rating = r.Rating,
+                    Comment = r.Comment,
+                    CreatedAt = r.CreatedAt,
+                    IsActive = r.IsActive
+                }).ToList();
+
+                return new ApiResponse<List<ReviewDTO>>(true, "Reviews retrieved successfully.", reviewDTOs);
+            }
+            catch (Exception ex)
+            {
+                var innerMessage = ex.InnerException != null ? ex.InnerException.Message : ex.Message;
+                _logger.LogError(ex, "Error retrieving reviews for HotelId {HotelId}: {Message}", hotelId, innerMessage);
+                return new ApiResponse<List<ReviewDTO>>(false, $"Error retrieving reviews: {innerMessage}");
+            }
+        }
+
+        public async Task<ApiResponse<ReviewDTO>> UpdateHotelReviewAsync(int reviewId, CreateReviewDTO reviewDto)
+        {
+            try
+            {
+                if (reviewId <= 0)
+                {
+                    _logger.LogWarning("Invalid review ID: {ReviewId}", reviewId);
+                    return new ApiResponse<ReviewDTO>(false, "Invalid review ID.");
+                }
+
+                if (reviewDto.HotelId <= 0)
+                {
+                    _logger.LogWarning("Invalid hotel ID: {HotelId}", reviewDto.HotelId);
+                    return new ApiResponse<ReviewDTO>(false, "Invalid hotel ID.");
+                }
+
+                if (reviewDto.UserId <= 0)
+                {
+                    _logger.LogWarning("Invalid user ID: {UserId}", reviewDto.UserId);
+                    return new ApiResponse<ReviewDTO>(false, "Invalid user ID.");
+                }
+
+                if (reviewDto.ReviewType != "Hotel")
+                {
+                    _logger.LogWarning("Invalid review type: {ReviewType}. Must be 'Hotel'.", reviewDto.ReviewType);
+                    return new ApiResponse<ReviewDTO>(false, "Review type must be 'Hotel'.");
+                }
+
+                var existingReview = await _reviewRepository.GetReviewByIdAsync(reviewId);
+                if (existingReview == null || !existingReview.IsActive)
+                {
+                    _logger.LogWarning("Review not found or inactive for ReviewId: {ReviewId}", reviewId);
+                    return new ApiResponse<ReviewDTO>(false, "Review not found or inactive.");
+                }
+
+                // Authorization check: Ensure the user updating the review is the owner
+                if (existingReview.UserId != reviewDto.UserId)
+                {
+                    _logger.LogWarning("User {UserId} is not authorized to update ReviewId: {ReviewId}", reviewDto.UserId, reviewId);
+                    return new ApiResponse<ReviewDTO>(false, "User is not authorized to update this review.");
+                }
+
+                var hotel = await _genericRepository.GetByIdAsync(reviewDto.HotelId.Value);
+                if (hotel == null || !hotel.IsActive)
+                {
+                    _logger.LogWarning("Hotel not found or inactive for HotelId: {HotelId}", reviewDto.HotelId);
+                    return new ApiResponse<ReviewDTO>(false, "Hotel not found or inactive.");
+                }
+
+                var review = new Review
+                {
+                    ReviewId = reviewId,
+                    UserId = reviewDto.UserId,
+                    ReviewType = reviewDto.ReviewType,
+                    HotelId = reviewDto.HotelId,
+                    Rating = reviewDto.Rating,
+                    Comment = reviewDto.Comment,
+                    CreatedAt = existingReview.CreatedAt, // Preserve original creation date
+                    IsActive = true
+                };
+
+                var updated = await _reviewRepository.UpdateReviewAsync(review);
+                if (!updated)
+                {
+                    return new ApiResponse<ReviewDTO>(false, "Failed to update review.");
+                }
+
+                // Update hotel's average rating
+                var averageRating = await _reviewRepository.CalculateHotelAverageRatingAsync(reviewDto.HotelId.Value);
+                hotel.AverageRating = averageRating;
+                await _genericRepository.UpdateAsync(hotel);
+
+                var reviewDtoResult = new ReviewDTO
+                {
+                    ReviewId = review.ReviewId,
+                    UserId = review.UserId,
+                    ReviewType = review.ReviewType,
+                    HotelId = review.HotelId,
+                    Rating = review.Rating,
+                    Comment = review.Comment,
+                    CreatedAt = review.CreatedAt,
+                    IsActive = review.IsActive
+                };
+
+                return new ApiResponse<ReviewDTO>(true, "Review updated successfully.", reviewDtoResult);
+            }
+            catch (Exception ex)
+            {
+                var innerMessage = ex.InnerException != null ? ex.InnerException.Message : ex.Message;
+                _logger.LogError(ex, "Error updating review with ReviewId {ReviewId}: {Message}", reviewId, innerMessage);
+                return new ApiResponse<ReviewDTO>(false, $"Error updating review: {innerMessage}");
+            }
+        }
+
+        public async Task<ApiResponse<bool>> RemoveHotelReviewAsync(int reviewId)
+        {
+            try
+            {
+                if (reviewId <= 0)
+                {
+                    _logger.LogWarning("Invalid review ID: {ReviewId}", reviewId);
+                    return new ApiResponse<bool>(false, "Invalid review ID.");
+                }
+
+                var review = await _reviewRepository.GetReviewByIdAsync(reviewId);
+                if (review == null || !review.IsActive)
+                {
+                    _logger.LogWarning("Review not found or inactive for ReviewId: {ReviewId}", reviewId);
+                    return new ApiResponse<bool>(false, "Review not found or inactive.");
+                }
+
+                var deleted = await _reviewRepository.SoftDeleteReviewAsync(reviewId);
+                if (!deleted)
+                {
+                    return new ApiResponse<bool>(false, "Failed to delete review.");
+                }
+
+                // Update hotel's average rating
+                var averageRating = await _reviewRepository.CalculateHotelAverageRatingAsync(review.HotelId.Value);
+                var hotel = await _genericRepository.GetByIdAsync(review.HotelId.Value);
+                if (hotel != null)
+                {
+                    hotel.AverageRating = averageRating;
+                    await _genericRepository.UpdateAsync(hotel);
+                }
+
+                return new ApiResponse<bool>(true, "Review deleted successfully.", true);
+            }
+            catch (Exception ex)
+            {
+                var innerMessage = ex.InnerException != null ? ex.InnerException.Message : ex.Message;
+                _logger.LogError(ex, "Error deleting review with ReviewId {ReviewId}: {Message}", reviewId, innerMessage);
+                return new ApiResponse<bool>(false, $"Error deleting review: {innerMessage}");
             }
         }
     }

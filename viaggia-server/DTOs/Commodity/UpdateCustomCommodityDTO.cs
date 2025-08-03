@@ -1,8 +1,8 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace viaggia_server.DTOs.Commoditie
+namespace viaggia_server.DTOs.Commodity
 {
-    public class UpdateCommoditeServicesDTO
+    public class UpdateCustomCommodityDTO
     {
         // Nome do serviço personalizado (ex: "Lavanderia", "Translado", etc.)
         [Required(ErrorMessage = "ServiceName is required.")]
@@ -15,6 +15,9 @@ namespace viaggia_server.DTOs.Commoditie
 
         // Indica se o serviço é gratuito ou pago
         public bool IsPaid { get; set; }
+
+        public decimal Price { get; set; } // Added
+
 
         // Descrição do serviço (opcional)
         [StringLength(250, ErrorMessage = "Description cannot exceed 250 characters.")]

@@ -1,10 +1,10 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using viaggia_server.DTOs;
-using viaggia_server.DTOs.Commoditie;
+using viaggia_server.DTOs.Commodity;
 using viaggia_server.Models.Commodities;
 using viaggia_server.Models.Hotels;
 using viaggia_server.Repositories;
-using viaggia_server.Repositories.Commodities;
+using viaggia_server.Repositories.CommodityRepository;
 using viaggia_server.Repositories.HotelRepository;
 
 namespace viaggia_server.Controllers
@@ -13,12 +13,12 @@ namespace viaggia_server.Controllers
     [Route("api/[controller]")]
     public class CommoditieController : ControllerBase
     {
-        private readonly ICommoditieRepository _commoditieRepository;
+        private readonly ICommodityRepository _commoditieRepository;
         private readonly IHotelRepository _hotelRepository;
         private readonly IRepository<Hotel> _genericRepository;
 
         public CommoditieController(
-            ICommoditieRepository commoditieRepository,
+            ICommodityRepository commoditieRepository,
             IHotelRepository hotelRepository,
             IRepository<Hotel> genericRepository)
         {
@@ -32,7 +32,7 @@ namespace viaggia_server.Controllers
         public async Task<IActionResult> GetAll()
         {
             var commodities = await _commoditieRepository.GetAllAsync();
-            return Ok(new ApiResponse<IEnumerable<Commoditie>>(true, "Commodities recuperadas com sucesso.", commodities));
+            return Ok(new ApiResponse<IEnumerable<Commodity>>(true, "Commodities recuperadas com sucesso.", commodities));
         }
 
         // GET: api/commoditie/{id}
@@ -41,9 +41,9 @@ namespace viaggia_server.Controllers
         {
             var commoditie = await _commoditieRepository.GetByIdAsync(id);
             if (commoditie == null)
-                return NotFound(new ApiResponse<Commoditie>(false, "Commodity não encontrada."));
+                return NotFound(new ApiResponse<Commodity>(false, "Commodity não encontrada."));
 
-            return Ok(new ApiResponse<Commoditie>(true, "Commodity encontrada.", commoditie));
+            return Ok(new ApiResponse<Commodity>(true, "Commodity encontrada.", commoditie));
         }
 
         // GET: api/commoditie/hotel/{hotelId}
@@ -52,9 +52,9 @@ namespace viaggia_server.Controllers
         {
             var commoditie = await _commoditieRepository.GetByHotelIdAsync(hotelId);
             if (commoditie == null)
-                return NotFound(new ApiResponse<Commoditie>(false, "Commodity não encontrada para este hotel."));
+                return NotFound(new ApiResponse<Commodity>(false, "Commodity não encontrada para este hotel."));
 
-            return Ok(new ApiResponse<Commoditie>(true, "Commodity do hotel encontrada.", commoditie));
+            return Ok(new ApiResponse<Commodity>(true, "Commodity do hotel encontrada.", commoditie));
         }
 
         // GET: api/commoditie/list-hotels (lista hotéis id + nome)
@@ -69,16 +69,16 @@ namespace viaggia_server.Controllers
         // POST: api/commoditie
         [HttpPost]
         [Consumes("multipart/form-data")]
-        public async Task<IActionResult> Create([FromForm] CommoditieCreateByHotelNameDTO dto)
+        public async Task<IActionResult> Create([FromForm] CreateCommodityDTO dto)
         {
             if (!ModelState.IsValid)
-                return BadRequest(new ApiResponse<CommoditieCreateByHotelNameDTO>(false, "Dados inválidos.", null, ModelState));
+                return BadRequest(new ApiResponse<CreateCommodityDTO>(false, "Dados inválidos.", null, ModelState));
 
             var hotel = await _hotelRepository.GetHotelByNameAsync(dto.HotelName);
             if (hotel == null)
                 return BadRequest(new ApiResponse<object>(false, $"Hotel com nome '{dto.HotelName}' não encontrado."));
 
-            var commoditie = new Commoditie
+            var commoditie = new Commodity
             {
                 HotelId = hotel.HotelId,
                 HasParking = dto.HasParking,
@@ -121,14 +121,14 @@ namespace viaggia_server.Controllers
         // PUT: api/commoditie/{id}
         [HttpPut("{id:int}")]
         [Consumes("multipart/form-data")]
-        public async Task<IActionResult> Update(int id, [FromForm] UpdateCommoditieDTO dto)
+        public async Task<IActionResult> Update(int id, [FromForm] UpdateCommodityDTO dto)
         {
             if (!ModelState.IsValid)
-                return BadRequest(new ApiResponse<UpdateCommoditieDTO>(false, "Dados inválidos.", null, ModelState));
+                return BadRequest(new ApiResponse<UpdateCommodityDTO>(false, "Dados inválidos.", null, ModelState));
 
             var existing = await _commoditieRepository.GetByIdAsync(id);
             if (existing == null)
-                return NotFound(new ApiResponse<Commoditie>(false, "Commodity não encontrada."));
+                return NotFound(new ApiResponse<Commodity>(false, "Commodity não encontrada."));
 
             var hotel = await _hotelRepository.GetHotelByNameAsync(dto.HotelName);
             if (hotel == null)
@@ -162,7 +162,7 @@ namespace viaggia_server.Controllers
 
             await _commoditieRepository.UpdateAsync(existing);
 
-            return Ok(new ApiResponse<Commoditie>(true, "Commodity atualizada com sucesso.", existing));
+            return Ok(new ApiResponse<Commodity>(true, "Commodity atualizada com sucesso.", existing));
         }
 
         // DELETE: api/commoditie/{id}
@@ -171,7 +171,7 @@ namespace viaggia_server.Controllers
         {
             var deleted = await _commoditieRepository.SoftDeleteAsync(id);
             if (!deleted)
-                return NotFound(new ApiResponse<Commoditie>(false, "Commodity não encontrada ou já removida."));
+                return NotFound(new ApiResponse<Commodity>(false, "Commodity não encontrada ou já removida."));
 
             return NoContent();
         }

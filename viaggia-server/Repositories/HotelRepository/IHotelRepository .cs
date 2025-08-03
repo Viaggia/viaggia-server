@@ -1,6 +1,7 @@
-﻿using viaggia_server.DTOs.HotelFilterDTO;
+﻿using viaggia_server.DTOs;
+using viaggia_server.DTOs.Reviews;
 using viaggia_server.Models.Commodities;
-using viaggia_server.Models.HotelRoomTypes;
+using viaggia_server.Models.CustomCommodities;
 using viaggia_server.Models.Hotels;
 using viaggia_server.Models.Medias;
 using viaggia_server.Models.Packages;
@@ -20,21 +21,10 @@ namespace viaggia_server.Repositories.HotelRepository
         Task<IEnumerable<Media>> GetMediasByHotelIdAsync(int hotelId);
         Task<IEnumerable<Review>> GetReviewsByHotelIdAsync(int hotelId);
         Task<IEnumerable<Package>> GetPackagesByHotelIdAsync(int hotelId);
-        Task<IEnumerable<Commoditie>> GetCommoditiesByHotelIdAsync(int hotelId);
-        Task<IEnumerable<CommoditieServices>> GetCommoditieServicesByHotelIdAsync(int hotelId);
+        Task<IEnumerable<Commodity>> GetCommoditiesByHotelIdAsync(int hotelId);
+        Task<IEnumerable<CustomCommodity>> GetCommoditieServicesByHotelIdAsync(int hotelId);
         Task<IEnumerable<Hotel>> GetHotelsWithRelatedDataAsync();
-
-        //Task<CommoditieServices?> GetCommoditieServiceByIdAsync(int commoditieServiceId);
-        //Task<Commoditie?> GetCommodityByIdAsync(int commoditieId);
-        //Task<CommoditieServices> AddCommoditieServiceAsync(CommoditieServices commoditieService);
-        //Task<Package?> GetPackageByIdAsync(int packageId);
-        //Task<Commoditie> AddCommodityAsync(Commoditie commoditie);
-        //Task<Review?> GetReviewByIdAsync(int reviewId);
-        //Task<Package> AddPackageAsync(Package package);
-        //Task<HotelRoomType?> GetRoomTypeByIdAsync(int roomTypeId);
-        //Task<bool> UpdateRoomAvailabilityAsync(int roomTypeId, int roomsToReserve);
-        //Task<Media?> GetMediaByIdAsync(int mediaId);
-        //Task<bool> SoftDeleteMediaAsync(int mediaId);
-        //Task<Review> AddReviewAsync(Review review);
+        Task<IEnumerable<HotelRoomType>> GetAvailableRoomTypesAsync(int hotelId, int numberOfPeople, DateTime checkInDate, DateTime checkOutDate);
+  
     }
 }
