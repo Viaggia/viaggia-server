@@ -27,7 +27,7 @@ namespace viaggia_server.Repositories.HotelRepository
         //Task<CommoditieServices?> GetCommoditieServiceByIdAsync(int commoditieServiceId);
         //Task<Commoditie?> GetCommodityByIdAsync(int commoditieId);
         //Task<CommoditieServices> AddCommoditieServiceAsync(CommoditieServices commoditieService);
-        //Task<Package?> GetPackageByIdAsync(int packageId);
+        Task<Package?> GetPackageByIdAsync(int packageId);
         //Task<Commoditie> AddCommodityAsync(Commoditie commoditie);
         //Task<Review?> GetReviewByIdAsync(int reviewId);
         //Task<Package> AddPackageAsync(Package package);
@@ -36,5 +36,7 @@ namespace viaggia_server.Repositories.HotelRepository
         //Task<Media?> GetMediaByIdAsync(int mediaId);
         //Task<bool> SoftDeleteMediaAsync(int mediaId);
         //Task<Review> AddReviewAsync(Review review);
+
+        Task<Hotel?> GetHotelByIdWithDetailsAsync(int hotelId);
     }
 }

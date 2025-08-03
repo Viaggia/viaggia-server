@@ -317,5 +317,18 @@ namespace viaggia_server.Repositories.HotelRepository
             }
         }
 
+        public async Task<Hotel?> GetHotelByIdWithDetailsAsync(int hotelId)
+        {
+            return await _context.Hotels
+                .Include(h => h.RoomTypes)
+                .Include(h => h.HotelDates)
+                .Include(h => h.Medias)
+                .Include(h => h.Reviews)
+                .Include(h => h.Packages)
+                .Include(h => h.Commodities)
+                .Include(h => h.CommoditieServices)
+                .FirstOrDefaultAsync(h => h.HotelId == hotelId);
+        }
+
     }
 }

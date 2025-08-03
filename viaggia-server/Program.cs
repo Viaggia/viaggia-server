@@ -130,7 +130,7 @@ builder.Services.AddLogging(logging =>
  builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-    options.DefaultChallengeScheme = GoogleDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
 })
 .AddJwtBearer(options =>
 {
@@ -228,6 +228,7 @@ app.UseHttpsRedirection();
 app.UseStaticFiles(); // For serving images in wwwroot
 app.UseCors("AllowFrontend");
 app.UseAuthentication();
+app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
