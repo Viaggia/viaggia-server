@@ -4,12 +4,13 @@ using viaggia_server.DTOs.Packages;
 using viaggia_server.DTOs.Reviews;
 using viaggia_server.Models.Hotels;
 
+
 namespace viaggia_server.Services.HotelServices
 {
     public interface IHotelServices
     {
         Task<ApiResponse<List<HotelDTO>>> GetAllHotelAsync();
-        Task<ApiResponse<HotelDTO>> GetHotelByIdAsync(int id); 
+        Task<ApiResponse<HotelDTO>> GetHotelByIdAsync(int id);
         Task<ApiResponse<Hotel>> CreateHotelAsync(CreateHotelDTO createHotelDto, List<CreateHotelRoomTypeDTO> roomTypes);
         Task<Hotel> UpdateHotelAsync(UpdateHotelDto updateHotelDto);
         Task<bool> SoftDeleteHotelAsync(int id);
@@ -17,11 +18,9 @@ namespace viaggia_server.Services.HotelServices
         Task<ApiResponse<IEnumerable<PackageDTO>>> GetPackagesByHotelIdAsync(int hotelId);
         Task<ApiResponse<List<HotelDTO>>> FilterHotelsAsync(HotelFilterDTO filter);
         Task<ApiResponse<List<HotelRoomTypeDTO>>> GetAvailableRoomsAsync(int hotelId, int numberOfPeople, DateTime checkInDate, DateTime checkOutDate);
-        Task<ApiResponse<ReviewDTO>> AddHotelReviewAsync(CreateReviewDTO reviewDto); // Renamed
-        Task<ApiResponse<List<ReviewDTO>>> GetHotelReviewsAsync(int hotelId); // Renamed
-        Task<ApiResponse<ReviewDTO>> UpdateHotelReviewAsync(int reviewId, CreateReviewDTO reviewDto); // Renamed
-        Task<ApiResponse<bool>> RemoveHotelReviewAsync(int reviewId); // Renamed
-
-
+        Task<ApiResponse<ReviewDTO>> AddHotelReviewAsync(CreateReviewDTO reviewDto);
+        Task<ApiResponse<List<ReviewDTO>>> GetHotelReviewsAsync(int hotelId);
+        Task<ApiResponse<ReviewDTO>> UpdateHotelReviewAsync(int reviewId, CreateReviewDTO reviewDto);
+        Task<ApiResponse<bool>> RemoveHotelReviewAsync(int reviewId);
     }
 }

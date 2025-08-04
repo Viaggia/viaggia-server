@@ -3,9 +3,7 @@ using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Mvc;
 using viaggia_server.DTOs;
 using viaggia_server.DTOs.Hotel;
-
 using viaggia_server.DTOs.Reviews;
-using viaggia_server.Models.Reserves;
 using viaggia_server.Services.HotelServices;
 
 namespace viaggia_server.Controllers
@@ -155,7 +153,7 @@ namespace viaggia_server.Controllers
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> FilterHotels(
             [FromQuery] List<string> commodities,
-            [FromQuery] List<string> commoditieServices,
+            [FromQuery] List<string> CustomCommodities,
             [FromQuery] List<string> roomTypes,
             [FromQuery] decimal? minPrice,
             [FromQuery] decimal? maxPrice,
@@ -164,7 +162,7 @@ namespace viaggia_server.Controllers
             try
             {
                 if ((commodities == null || !commodities.Any()) &&
-                    (commoditieServices == null || !commoditieServices.Any()) &&
+                    (CustomCommodities == null || !CustomCommodities.Any()) &&
                     (roomTypes == null || !roomTypes.Any()) &&
                     !minPrice.HasValue && !maxPrice.HasValue && !minCapacity.HasValue)
                 {
@@ -174,8 +172,8 @@ namespace viaggia_server.Controllers
 
                 var filter = new HotelFilterDTO
                 {
-                    Commodities = commodities ?? new List<string>(),
-                    CommoditieServices = commoditieServices ?? new List<string>(),
+                    Commodity = commodities ?? new List<string>(),
+                    CustomCommodity = CustomCommodities ?? new List<string>(),
                     RoomTypes = roomTypes ?? new List<string>(),
                     MinPrice = minPrice,
                     MaxPrice = maxPrice,

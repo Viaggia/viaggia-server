@@ -155,44 +155,39 @@ namespace viaggia_server.Repositories.HotelRepository
                 .FirstOrDefaultAsync(p => p.PackageId == packageId && p.IsActive);
         }
 
-        public async Task<Commodity> AddCommodityAsync(Commodity commoditie)
+        public async Task<Commodity> AddCommodityAsync(Commodity commodity)
         {
-            await _context.Commodities.AddAsync(commoditie);
+            await _context.Commodities.AddAsync(commodity);
             await _context.SaveChangesAsync();
-            return commoditie;
+            return commodity;
         }
 
-        public async Task<IEnumerable<Commodity>> GetCommoditiesByHotelIdAsync(int hotelId)
-        {
-            return await _context.Commodities
-                .Where(c => c.HotelId == hotelId && c.IsActive)
-                .ToListAsync();
-        }
-
-        public async Task<Commodity?> GetCommodityByIdAsync(int commoditieId)
-        {
-            return await _context.Commodities
-                .FirstOrDefaultAsync(c => c.CommodityId == commoditieId && c.IsActive);
-        }
-
-        public async Task<CustomCommodity> AddCommoditieServiceAsync(CustomCommodity commoditieService)
-        {
-            await _context.CustomCommodities.AddAsync(commoditieService);
-            await _context.SaveChangesAsync();
-            return commoditieService;
-        }
-
-        public async Task<IEnumerable<CustomCommodity>> GetCommoditieServicesByHotelIdAsync(int hotelId)
+        public async Task<IEnumerable<CustomCommodity>> GetCustomCommodityByHotelIdAsync(int hotelId)
         {
             return await _context.CustomCommodities
                 .Where(cs => cs.HotelId == hotelId && cs.IsActive)
                 .ToListAsync();
         }
 
-        public async Task<CustomCommodity?> GetCommoditieServiceByIdAsync(int commoditieServiceId)
+        public async Task<Commodity?> GetCommodityByIdAsync(int commodityId)
+        {
+            return await _context.Commodities
+                .FirstOrDefaultAsync(c => c.CommodityId == commodityId && c.IsActive);
+        }
+
+        public async Task<CustomCommodity> AddCustomCommodityAsync(CustomCommodity CustomCommodity)
+        {
+            await _context.CustomCommodities.AddAsync(CustomCommodity);
+            await _context.SaveChangesAsync();
+            return CustomCommodity;
+        }
+
+
+
+        public async Task<CustomCommodity?> GetCustomCommodityByIdAsync(int customCommodityId)
         {
             return await _context.CustomCommodities
-                .FirstOrDefaultAsync(cs => cs.CustomCommodityId == commoditieServiceId && cs.IsActive);
+                .FirstOrDefaultAsync(cs => cs.CustomCommodityId == customCommodityId && cs.IsActive);
         }
 
         public async Task<IEnumerable<Hotel>> GetHotelsWithRelatedDataAsync()
@@ -264,7 +259,9 @@ namespace viaggia_server.Repositories.HotelRepository
             }
         }
 
-
-
+        public Task<IEnumerable<Commodity>> GetCommodityByHotelIdAsync(int hotelId)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

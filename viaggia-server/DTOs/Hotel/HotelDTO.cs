@@ -26,6 +26,6 @@ namespace viaggia_server.DTOs.Hotel
         public List<ReviewDTO> Reviews { get; set; } = new List<ReviewDTO>();
         public List<PackageDTO> Packages { get; set; } = new List<PackageDTO>();
         public List<CommodityDTO> Commodities { get; set; } = new List<CommodityDTO>();
-        public List<CustomCommodityDTO> CommoditieServices { get; set; } = new List<CustomCommodityDTO>();
+        public List<CustomCommodityDTO> CustomCommodities { get; set; } = new List<CustomCommodityDTO>();
     }
 }

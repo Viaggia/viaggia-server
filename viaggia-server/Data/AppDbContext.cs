@@ -111,6 +111,12 @@ namespace viaggia_server.Data
                 .HasForeignKey(c => c.HotelId)
                 .OnDelete(DeleteBehavior.Cascade);
 
+            modelBuilder.Entity<Hotel>()
+                .HasMany(h => h.CustomCommodities)
+                .WithOne(cs => cs.Hotel)
+                .HasForeignKey(cs => cs.HotelId)
+                .OnDelete(DeleteBehavior.NoAction);
+
             // Configure RoomTypeEnum
             modelBuilder.Entity<HotelRoomType>()
                 .Property(rt => rt.Name)
@@ -118,27 +124,12 @@ namespace viaggia_server.Data
                     v => v.ToString(),
                     v => (RoomTypeEnum)Enum.Parse(typeof(RoomTypeEnum), v));
 
-            // Commoditie
-            modelBuilder.Entity<Hotel>()
-                .HasMany(h => h.Commodities)
-                .WithOne(c => c.Hotel)
-                .HasForeignKey(c => c.HotelId)
-                .OnDelete(DeleteBehavior.Cascade);
 
-            // Commodity 1:N CommoditiesServices
             modelBuilder.Entity<Commodity>()
-              .HasMany(c => c.CustomCommodities)
-              .WithOne(cs => cs.Commodity)
-              .HasForeignKey(cs => cs.CommodityId)
-              .OnDelete(DeleteBehavior.NoAction); 
-
-            // CommoditieServices 1:N Hotel
-            modelBuilder.Entity<CustomCommodity>()
-                .HasOne(cs => cs.Hotel)
-                .WithMany(h => h.CustomCommodities)
-                .HasForeignKey(cs => cs.HotelId)
+                .HasMany(c => c.CustomCommodities)
+                .WithOne(cs => cs.Commodity)
+                .HasForeignKey(cs => cs.CommodityId)
                 .OnDelete(DeleteBehavior.NoAction);
-
 
             // Reservation
             modelBuilder.Entity<Reserve>()
@@ -195,7 +186,6 @@ namespace viaggia_server.Data
             modelBuilder.Entity<Media>()
                 .ToTable(t => t.HasCheckConstraint("CK_Media_OneEntity",
                     "([PackageId] IS NOT NULL AND [HotelId] IS NULL) OR ([PackageId] IS NULL AND [HotelId] IS NOT NULL)"));
-
 
             // Seed Roles
             modelBuilder.Entity<Role>().HasData(

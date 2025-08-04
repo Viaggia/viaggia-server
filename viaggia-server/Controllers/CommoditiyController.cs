@@ -11,13 +11,13 @@ namespace viaggia_server.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class CommoditieController : ControllerBase
+    public class CommodityController : ControllerBase
     {
         private readonly ICommodityRepository _commoditieRepository;
         private readonly IHotelRepository _hotelRepository;
         private readonly IRepository<Hotel> _genericRepository;
 
-        public CommoditieController(
+        public CommodityController(
             ICommodityRepository commoditieRepository,
             IHotelRepository hotelRepository,
             IRepository<Hotel> genericRepository)

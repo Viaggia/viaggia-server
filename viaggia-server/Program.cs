@@ -91,6 +91,7 @@ builder.Services.AddScoped<ICustomCommodityRepository, CustomCommodityRepository
 builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
 builder.Services.AddScoped<IAuthRepository, AuthRepository>();
 builder.Services.AddScoped<IGoogleAccountRepository, GoogleAccountRepository>();
+builder.Services.AddScoped<IReviewRepository, ReviewRepository>();
 
 //Services
 builder.Services.AddScoped<IHotelServices, HotelServices>();

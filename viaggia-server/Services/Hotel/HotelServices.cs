@@ -1,13 +1,12 @@
 ﻿using System.Text.Json;
+using Microsoft.EntityFrameworkCore;
 using viaggia_server.DTOs;
 using viaggia_server.DTOs.Commodity;
 using viaggia_server.DTOs.Hotel;
 using viaggia_server.DTOs.Packages;
 using viaggia_server.DTOs.Reviews;
-using viaggia_server.Models.Commodities;
 using viaggia_server.Models.Hotels;
 using viaggia_server.Models.Medias;
-using viaggia_server.Models.Packages;
 using viaggia_server.Models.Reviews;
 using viaggia_server.Repositories;
 using viaggia_server.Repositories.HotelRepository;
@@ -36,7 +35,6 @@ namespace viaggia_server.Services.HotelServices
             _logger = logger;
         }
 
-        // Existing methods (unchanged)
         public async Task<ApiResponse<List<HotelDTO>>> GetAllHotelAsync()
         {
             try
@@ -49,8 +47,8 @@ namespace viaggia_server.Services.HotelServices
                     var medias = (await _hotelRepository.GetMediasByHotelIdAsync(hotel.HotelId)).ToList();
                     var reviews = (await _reviewRepository.GetReviewsByHotelIdAsync(hotel.HotelId)).ToList();
                     var packages = (await _hotelRepository.GetPackagesByHotelIdAsync(hotel.HotelId)).ToList();
-                    var commodities = (await _hotelRepository.GetCommoditiesByHotelIdAsync(hotel.HotelId)).ToList();
-                    var commoditieServices = (await _hotelRepository.GetCommoditieServicesByHotelIdAsync(hotel.HotelId)).ToList();
+                    var commodities = (await _hotelRepository.GetCommodityByHotelIdAsync(hotel.HotelId)).ToList();
+                    var customCommodities = (await _hotelRepository.GetCustomCommodityByHotelIdAsync(hotel.HotelId)).ToList();
 
                     var dto = new HotelDTO
                     {
@@ -144,8 +142,10 @@ namespace viaggia_server.Services.HotelServices
                             PetFriendlyPrice = c.PetFriendlyPrice,
                             IsActive = c.IsActive
                         }).ToList(),
-                        CommoditieServices = commoditieServices.Select(cs => new CustomCommodityDTO
+                        CustomCommodities = customCommodities.Select(cs => new CustomCommodityDTO
                         {
+                            CustomCommodityId = cs.CustomCommodityId,
+                            HotelId = cs.HotelId,
                             Name = cs.Name,
                             IsPaid = cs.IsPaid,
                             Price = cs.Price,
@@ -188,8 +188,8 @@ namespace viaggia_server.Services.HotelServices
                 var medias = (await _hotelRepository.GetMediasByHotelIdAsync(hotel.HotelId)).ToList();
                 var reviews = (await _reviewRepository.GetReviewsByHotelIdAsync(hotel.HotelId)).ToList();
                 var packages = (await _hotelRepository.GetPackagesByHotelIdAsync(hotel.HotelId)).ToList();
-                var commodities = (await _hotelRepository.GetCommoditiesByHotelIdAsync(hotel.HotelId)).ToList();
-                var commoditieServices = (await _hotelRepository.GetCommoditieServicesByHotelIdAsync(hotel.HotelId)).ToList();
+                var commodities = (await _hotelRepository.GetCommodityByHotelIdAsync(hotel.HotelId)).ToList();
+                var customCommodities = (await _hotelRepository.GetCustomCommodityByHotelIdAsync(hotel.HotelId)).ToList();
 
                 var dto = new HotelDTO
                 {
@@ -283,9 +283,10 @@ namespace viaggia_server.Services.HotelServices
                         PetFriendlyPrice = c.PetFriendlyPrice,
                         IsActive = c.IsActive
                     }).ToList(),
-                    CommoditieServices = commoditieServices.Select(cs => new CustomCommodityDTO
+                    CustomCommodities = customCommodities.Select(cs => new CustomCommodityDTO
                     {
-                        HotelName = cs.HotelName,
+                        CustomCommodityId = cs.CustomCommodityId,
+                        HotelId = cs.HotelId,
                         Name = cs.Name,
                         IsPaid = cs.IsPaid,
                         Price = cs.Price,
@@ -511,15 +512,17 @@ namespace viaggia_server.Services.HotelServices
         {
             try
             {
-                _logger.LogInformation("Filtering hotels with Commodities: {Commodities}, CommoditieServices: {CommoditieServices}, RoomTypes: {RoomTypes}, MinPrice: {MinPrice}, MaxPrice: {MaxPrice}, MinCapacity: {MinCapacity}",
-                    string.Join(", ", filter.Commodities), string.Join(", ", filter.CommoditieServices), string.Join(", ", filter.RoomTypes), filter.MinPrice, filter.MaxPrice, filter.MinCapacity);
+                _logger.LogInformation("Filtering hotels with Commodities: {Commodities}, CustomCommodities: {CustomCommodities}, RoomTypes: {RoomTypes}, MinPrice: {MinPrice}, MaxPrice: {MaxPrice}, MinCapacity: {MinCapacity}",
+                    string.Join(", ", filter.Commodity ?? new List<string>()),
+                    string.Join(", ", filter.CustomCommodity ?? new List<string>()),
+                    string.Join(", ", filter.RoomTypes ?? new List<string>()),
+                    filter.MinPrice, filter.MaxPrice, filter.MinCapacity);
 
-                var hotels = await _hotelRepository.GetHotelsWithRelatedDataAsync();
-                var filteredHotels = hotels.AsQueryable();
+                var filteredHotels = (await _hotelRepository.GetHotelsWithRelatedDataAsync()).AsQueryable();
 
-                if (filter.Commodities != null && filter.Commodities.Any())
+                if (filter.Commodity != null && filter.Commodity.Any())
                 {
-                    foreach (var commodity in filter.Commodities)
+                    foreach (var commodity in filter.Commodity)
                     {
                         switch (commodity.ToLower())
                         {
@@ -563,9 +566,9 @@ namespace viaggia_server.Services.HotelServices
                     }
                 }
 
-                if (filter.CommoditieServices != null && filter.CommoditieServices.Any())
+                if (filter.CustomCommodity != null && filter.CustomCommodity.Any())
                 {
-                    foreach (var service in filter.CommoditieServices)
+                    foreach (var service in filter.CustomCommodity)
                     {
                         filteredHotels = filteredHotels.Where(h => h.CustomCommodities.Any(cs => cs.IsActive && cs.Name.ToLower() == service.ToLower()));
                     }
@@ -591,9 +594,12 @@ namespace viaggia_server.Services.HotelServices
                     filteredHotels = filteredHotels.Where(h => h.RoomTypes.Any(rt => rt.IsActive && rt.Capacity >= filter.MinCapacity.Value));
                 }
 
+                // Materialize the query to avoid assignment issues in EF Core
+                var hotelsList = await filteredHotels.ToListAsync();
+
                 if (filter.MinPrice.HasValue || filter.MaxPrice.HasValue)
                 {
-                    filteredHotels = filteredHotels.Where(h =>
+                    hotelsList = hotelsList.Where(h =>
                     {
                         var roomPrices = h.RoomTypes.Where(rt => rt.IsActive).Select(rt => rt.Price).ToList();
                         if (!roomPrices.Any())
@@ -619,21 +625,21 @@ namespace viaggia_server.Services.HotelServices
                             if (commodities.IsPetFriendlyPaid) commodityCost += commodities.PetFriendlyPrice;
                         }
 
-                        decimal commoditieServicesCost = h.CommoditieServices
+                        decimal customCommodityCost = h.CustomCommodities
                             .Where(cs => cs.IsActive && cs.IsPaid)
                             .Sum(cs => cs.Price);
 
-                        var minTotalPrice = minRoomPrice + commodityCost + commoditieServicesCost;
-                        var maxTotalPrice = maxRoomPrice + commodityCost + commoditieServicesCost;
+                        var minTotalPrice = minRoomPrice + commodityCost + customCommodityCost;
+                        var maxTotalPrice = maxRoomPrice + commodityCost + customCommodityCost;
 
                         bool meetsMinPrice = !filter.MinPrice.HasValue || minTotalPrice >= filter.MinPrice.Value;
                         bool meetsMaxPrice = !filter.MaxPrice.HasValue || maxTotalPrice <= filter.MaxPrice.Value;
 
                         return meetsMinPrice && meetsMaxPrice;
-                    });
+                    }).ToList();
                 }
 
-                var hotelDTOs = filteredHotels.Select(hotel => new HotelDTO
+                var hotelDTOs = hotelsList.Select(hotel => new HotelDTO
                 {
                     HotelId = hotel.HotelId,
                     Name = hotel.Name,
@@ -725,8 +731,10 @@ namespace viaggia_server.Services.HotelServices
                         PetFriendlyPrice = c.PetFriendlyPrice,
                         IsActive = c.IsActive
                     }).ToList(),
-                    CommoditieServices = hotel.CustomCommodities.Select(cs => new CustomCommodityDTO
+                    CustomCommodities = hotel.CustomCommodities.Select(cs => new CustomCommodityDTO
                     {
+                        CustomCommodityId = cs.CustomCommodityId, // Added for completeness
+                        HotelId = cs.HotelId, // Added for completeness
                         Name = cs.Name,
                         IsPaid = cs.IsPaid,
                         Price = cs.Price,
@@ -791,8 +799,6 @@ namespace viaggia_server.Services.HotelServices
             }
         }
 
-
-        // Renamed review-related methods
         public async Task<ApiResponse<ReviewDTO>> AddHotelReviewAsync(CreateReviewDTO reviewDto)
         {
             try
@@ -930,7 +936,6 @@ namespace viaggia_server.Services.HotelServices
                     return new ApiResponse<ReviewDTO>(false, "Review not found or inactive.");
                 }
 
-                // Authorization check: Ensure the user updating the review is the owner
                 if (existingReview.UserId != reviewDto.UserId)
                 {
                     _logger.LogWarning("User {UserId} is not authorized to update ReviewId: {ReviewId}", reviewDto.UserId, reviewId);
@@ -952,7 +957,7 @@ namespace viaggia_server.Services.HotelServices
                     HotelId = reviewDto.HotelId,
                     Rating = reviewDto.Rating,
                     Comment = reviewDto.Comment,
-                    CreatedAt = existingReview.CreatedAt, // Preserve original creation date
+                    CreatedAt = existingReview.CreatedAt,
                     IsActive = true
                 };
 
@@ -962,7 +967,6 @@ namespace viaggia_server.Services.HotelServices
                     return new ApiResponse<ReviewDTO>(false, "Failed to update review.");
                 }
 
-                // Update hotel's average rating
                 var averageRating = await _reviewRepository.CalculateHotelAverageRatingAsync(reviewDto.HotelId.Value);
                 hotel.AverageRating = averageRating;
                 await _genericRepository.UpdateAsync(hotel);
@@ -1012,7 +1016,6 @@ namespace viaggia_server.Services.HotelServices
                     return new ApiResponse<bool>(false, "Failed to delete review.");
                 }
 
-                // Update hotel's average rating
                 var averageRating = await _reviewRepository.CalculateHotelAverageRatingAsync(review.HotelId.Value);
                 var hotel = await _genericRepository.GetByIdAsync(review.HotelId.Value);
                 if (hotel != null)
