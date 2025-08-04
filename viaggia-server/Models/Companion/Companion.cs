@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using viaggia_server.Models.Reservations;
+using viaggia_server.Models.Reserves;
 using viaggia_server.Repositories;
 
 namespace viaggia_server.Models.Companions
@@ -14,7 +14,7 @@ namespace viaggia_server.Models.Companions
         public int ReservationId { get; set; }
 
         [ForeignKey("ReservationId")]
-        public virtual Reservation Reservation { get; set; } = null!;
+        public virtual Reserve Reservation { get; set; } = null!;
 
         [Required(ErrorMessage = "Name is required.")]
         [StringLength(100, ErrorMessage = "Name cannot exceed 100 characters.")]

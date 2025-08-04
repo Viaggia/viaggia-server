@@ -1,4 +1,4 @@
-﻿using viaggia_server.Models.RoomTypeEnums;
+﻿using viaggia_server.Models.Hotels;
 
 namespace viaggia_server.DTOs.Hotel
 {

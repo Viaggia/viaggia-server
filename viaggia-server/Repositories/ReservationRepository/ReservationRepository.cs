@@ -1,19 +1,19 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using viaggia_server.Data;
 using viaggia_server.DTOs.Reservation;
-using viaggia_server.Models.Reservations;
+using viaggia_server.Models.Reserves;
 
 namespace viaggia_server.Repositories.ReservationRepository
 {
-    public class ReservationRepository : Repository<Reservation>, IReservationRepository
+    public class ReservationRepository : Repository<Reserve>, IReservationRepository
     {
         public ReservationRepository(AppDbContext context) : base(context) {}
 
-        public async Task<Reservation> CreateReservationAsync(Reservation reservation)
+        public async Task<Reserve> CreateReservationAsync(Reserve reservation)
         {
             try
             {
-                var result = await _context.Reservations.AddAsync(reservation);
+                var result = await _context.Reserves.AddAsync(reservation);
                 await _context.SaveChangesAsync();
                 return result.Entity;
             }
@@ -23,11 +23,11 @@ namespace viaggia_server.Repositories.ReservationRepository
             }
         } 
 
-        public async Task<List<Reservation>> GetAllReservationsAsync()
+        public async Task<List<Reserve>> GetAllReservationsAsync()
         {
             try
             {
-                var allReserves = await _context.Reservations.ToListAsync();
+                var allReserves = await _context.Reserves.ToListAsync();
                 if (allReserves == null) throw new Exception("Not found reserves");
                 return allReserves;
             }
@@ -36,12 +36,12 @@ namespace viaggia_server.Repositories.ReservationRepository
                 throw new Exception(ex.Message);
             }
         }
-        public async Task<Reservation> GetReservationByIdAsync(int id)
+        public async Task<Reserve> GetReservationByIdAsync(int id)
         {
             try
             {
-                var findReserve = await _context.Reservations.FirstOrDefaultAsync<Reservation>(r => r.ReservationId == id);
-                if (findReserve.ReservationId == null)
+                var findReserve = await _context.Reserves.FirstOrDefaultAsync<Reserve>(r => r.ReserveId == id);
+                if (findReserve.ReserveId == null)
                     throw new Exception("Not found this reserve");
                 return findReserve;
             }

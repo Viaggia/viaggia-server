@@ -1,10 +1,10 @@
-﻿using viaggia_server.Models.Reservations;
+﻿using viaggia_server.Models.Reserves;
 
-namespace viaggia_server.Repositories.Reservations
+namespace viaggia_server.Repositories.Reserves
 {
     public interface IReservationRepository
     {
-        Task<Reservation?> GetReservationByIdAsync(int id);
+        Task<Reserve?> GetReservationByIdAsync(int id);
     }
 
 }

@@ -1,6 +1,6 @@
-﻿using viaggia_server.DTOs.HotelFilterDTO;
+﻿
 using viaggia_server.Models.Commodities;
-using viaggia_server.Models.HotelRoomTypes;
+using viaggia_server.Models.CustomCommodities;
 using viaggia_server.Models.Hotels;
 using viaggia_server.Models.Medias;
 using viaggia_server.Models.Packages;
@@ -20,8 +20,8 @@ namespace viaggia_server.Repositories.HotelRepository
         Task<IEnumerable<Media>> GetMediasByHotelIdAsync(int hotelId);
         Task<IEnumerable<Review>> GetReviewsByHotelIdAsync(int hotelId);
         Task<IEnumerable<Package>> GetPackagesByHotelIdAsync(int hotelId);
-        Task<IEnumerable<Commoditie>> GetCommoditiesByHotelIdAsync(int hotelId);
-        Task<IEnumerable<CommoditieServices>> GetCommoditieServicesByHotelIdAsync(int hotelId);
+        Task<IEnumerable<Commodity>> GetCommodityByHotelIdAsync(int hotelId);
+        Task<IEnumerable<CustomCommodity>> GetCustomCommodityByHotelIdAsync(int hotelId);
         Task<IEnumerable<Hotel>> GetHotelsWithRelatedDataAsync();
 
         //Task<CommoditieServices?> GetCommoditieServiceByIdAsync(int commoditieServiceId);
@@ -38,5 +38,7 @@ namespace viaggia_server.Repositories.HotelRepository
         //Task<Review> AddReviewAsync(Review review);
 
         Task<Hotel?> GetHotelByIdWithDetailsAsync(int hotelId);
+        Task<IEnumerable<HotelRoomType>> GetAvailableRoomTypesAsync(int hotelId, int numberOfPeople, DateTime checkInDate, DateTime checkOutDate);
+  
     }
 }

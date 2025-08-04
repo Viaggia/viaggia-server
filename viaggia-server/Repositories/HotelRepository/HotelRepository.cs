@@ -1,13 +1,11 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using viaggia_server.Data;
-using viaggia_server.DTOs.HotelFilterDTO;
 using viaggia_server.Models.Commodities;
-using viaggia_server.Models.HotelRoomTypes;
+using viaggia_server.Models.CustomCommodities;
 using viaggia_server.Models.Hotels;
 using viaggia_server.Models.Medias;
 using viaggia_server.Models.Packages;
 using viaggia_server.Models.Reviews;
-using viaggia_server.Models.RoomTypeEnums;
 
 namespace viaggia_server.Repositories.HotelRepository
 {
@@ -156,142 +154,40 @@ namespace viaggia_server.Repositories.HotelRepository
                 .FirstOrDefaultAsync(p => p.PackageId == packageId && p.IsActive);
         }
 
-        public async Task<Commoditie> AddCommodityAsync(Commoditie commoditie)
+        public async Task<Commodity> AddCommodityAsync(Commodity commodity)
         {
-            await _context.Commodities.AddAsync(commoditie);
+            await _context.Commodities.AddAsync(commodity);
             await _context.SaveChangesAsync();
-            return commoditie;
+            return commodity;
         }
 
-        public async Task<IEnumerable<Commoditie>> GetCommoditiesByHotelIdAsync(int hotelId)
+        public async Task<IEnumerable<CustomCommodity>> GetCustomCommodityByHotelIdAsync(int hotelId)
         {
-            return await _context.Commodities
-                .Where(c => c.HotelId == hotelId && c.IsActive)
-                .ToListAsync();
-        }
-
-        public async Task<Commoditie?> GetCommodityByIdAsync(int commoditieId)
-        {
-            return await _context.Commodities
-                .FirstOrDefaultAsync(c => c.CommoditieId == commoditieId && c.IsActive);
-        }
-
-        public async Task<CommoditieServices> AddCommoditieServiceAsync(CommoditieServices commoditieService)
-        {
-            await _context.CommoditieServices.AddAsync(commoditieService);
-            await _context.SaveChangesAsync();
-            return commoditieService;
-        }
-
-        public async Task<IEnumerable<CommoditieServices>> GetCommoditieServicesByHotelIdAsync(int hotelId)
-        {
-            return await _context.CommoditieServices
+            return await _context.CustomCommodities
                 .Where(cs => cs.HotelId == hotelId && cs.IsActive)
                 .ToListAsync();
         }
 
-        public async Task<CommoditieServices?> GetCommoditieServiceByIdAsync(int commoditieServiceId)
+        public async Task<Commodity?> GetCommodityByIdAsync(int commodityId)
         {
-            return await _context.CommoditieServices
-                .FirstOrDefaultAsync(cs => cs.CommoditieServicesId == commoditieServiceId && cs.IsActive);
+            return await _context.Commodities
+                .FirstOrDefaultAsync(c => c.CommodityId == commodityId && c.IsActive);
         }
 
-        //public async Task<IEnumerable<Hotel>> FilterHotelsAsync(HotelFilterDTO filter)
-        //{
-        //    try
-        //    {
-        //        _logger.LogInformation("Filtering hotels with Commodities: {Commodities}, CommoditieServices: {CommoditieServices}, RoomTypes: {RoomTypes}",
-        //            string.Join(", ", filter.Commodities), string.Join(", ", filter.CommoditieServices), string.Join(", ", filter.RoomTypes));
+        public async Task<CustomCommodity> AddCustomCommodityAsync(CustomCommodity CustomCommodity)
+        {
+            await _context.CustomCommodities.AddAsync(CustomCommodity);
+            await _context.SaveChangesAsync();
+            return CustomCommodity;
+        }
 
-        //        var query = _context.Hotels
-        //            .Where(h => h.IsActive)
-        //            .Include(h => h.Commodities)
-        //            .Include(h => h.CommoditieServices)
-        //            .Include(h => h.RoomTypes)
-        //            .AsQueryable();
 
-        //        // Filter by Commodities (all specified commodities must be true)
-        //        if (filter.Commodities != null && filter.Commodities.Any())
-        //        {
-        //            foreach (var commodity in filter.Commodities)
-        //            {
-        //                switch (commodity.ToLower())
-        //                {
-        //                    case "haswifi":
-        //                        query = query.Where(h => h.Commodities.Any(c => c.IsActive && c.HasWiFi));
-        //                        break;
-        //                    case "haspool":
-        //                        query = query.Where(h => h.Commodities.Any(c => c.IsActive && c.HasPool));
-        //                        break;
-        //                    case "hasgym":
-        //                        query = query.Where(h => h.Commodities.Any(c => c.IsActive && c.HasGym));
-        //                        break;
-        //                    case "hasparking":
-        //                        query = query.Where(h => h.Commodities.Any(c => c.IsActive && c.HasParking));
-        //                        break;
-        //                    case "hasbreakfast":
-        //                        query = query.Where(h => h.Commodities.Any(c => c.IsActive && c.HasBreakfast));
-        //                        break;
-        //                    case "haslunch":
-        //                        query = query.Where(h => h.Commodities.Any(c => c.IsActive && c.HasLunch));
-        //                        break;
-        //                    case "hasdinner":
-        //                        query = query.Where(h => h.Commodities.Any(c => c.IsActive && c.HasDinner));
-        //                        break;
-        //                    case "hasspa":
-        //                        query = query.Where(h => h.Commodities.Any(c => c.IsActive && c.HasSpa));
-        //                        break;
-        //                    case "hasairconditioning":
-        //                        query = query.Where(h => h.Commodities.Any(c => c.IsActive && c.HasAirConditioning));
-        //                        break;
-        //                    case "hasaccessibilityfeatures":
-        //                        query = query.Where(h => h.Commodities.Any(c => c.IsActive && c.HasAccessibilityFeatures));
-        //                        break;
-        //                    case "ispetfriendly":
-        //                        query = query.Where(h => h.Commodities.Any(c => c.IsActive && c.IsPetFriendly));
-        //                        break;
-        //                    default:
-        //                        _logger.LogWarning("Invalid commodity: {Commodity}", commodity);
-        //                        break;
-        //                }
-        //            }
-        //        }
 
-        //        // Filter by CommoditieServices (all specified services must exist)
-        //        if (filter.CommoditieServices != null && filter.CommoditieServices.Any())
-        //        {
-        //            foreach (var service in filter.CommoditieServices)
-        //            {
-        //                query = query.Where(h => h.CommoditieServices.Any(cs => cs.IsActive && cs.Name.ToLower() == service.ToLower()));
-        //            }
-        //        }
-
-        //        // Filter by RoomTypes (all specified room types must exist)
-        //        if (filter.RoomTypes != null && filter.RoomTypes.Any())
-        //        {
-        //            foreach (var roomType in filter.RoomTypes)
-        //            {
-        //                if (Enum.TryParse<RoomTypeEnum>(roomType, true, out var parsedRoomType))
-        //                {
-        //                    query = query.Where(h => h.RoomTypes.Any(rt => rt.IsActive && rt.Name == parsedRoomType));
-        //                }
-        //                else
-        //                {
-        //                    _logger.LogWarning("Invalid room type: {RoomType}", roomType);
-        //                }
-        //            }
-        //        }
-
-        //        var hotels = await query.ToListAsync();
-        //        _logger.LogInformation("Found {Count} hotels matching filter criteria", hotels.Count);
-        //        return hotels;
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        _logger.LogError(ex, "Error filtering hotels");
-        //        throw;
-        //    }
-        //}
+        public async Task<CustomCommodity?> GetCustomCommodityByIdAsync(int customCommodityId)
+        {
+            return await _context.CustomCommodities
+                .FirstOrDefaultAsync(cs => cs.CustomCommodityId == customCommodityId && cs.IsActive);
+        }
 
         public async Task<IEnumerable<Hotel>> GetHotelsWithRelatedDataAsync()
         {
@@ -301,7 +197,7 @@ namespace viaggia_server.Repositories.HotelRepository
                 var hotels = await _context.Hotels
                     .Where(h => h.IsActive)
                     .Include(h => h.Commodities)
-                    .Include(h => h.CommoditieServices)
+                    .Include(h => h.CustomCommodities)
                     .Include(h => h.RoomTypes)
                     .Include(h => h.Medias)
                     .Include(h => h.Reviews)
@@ -317,6 +213,70 @@ namespace viaggia_server.Repositories.HotelRepository
             }
         }
 
+        public async Task<IEnumerable<HotelRoomType>> GetAvailableRoomTypesAsync(int hotelId, int numberOfPeople, DateTime checkInDate, DateTime checkOutDate)
+        {
+            try
+            {
+                _logger.LogInformation("Fetching available room types for HotelId: {HotelId}, People: {NumberOfPeople}, CheckIn: {CheckInDate}, CheckOut: {CheckOutDate}",
+                    hotelId, numberOfPeople, checkInDate, checkOutDate);
+
+                // Fetch room types with sufficient capacity
+                var roomTypes = await _context.RoomTypes
+                    .Where(rt => rt.HotelId == hotelId && rt.IsActive && rt.Capacity >= numberOfPeople)
+                    .ToListAsync();
+
+                // Fetch reservations that overlap with the requested dates
+                var reservations = await _context.Reserves
+                    .Where(r => r.HotelId == hotelId && r.IsActive &&
+                                (checkInDate <= r.CheckOutDate && checkOutDate >= r.CheckInDate))
+                    .ToListAsync();
+
+                // Calculate available rooms for each room type
+                var availableRoomTypes = new List<HotelRoomType>();
+                foreach (var roomType in roomTypes)
+                {
+                    // Count reserved rooms for this room type in the date range
+                    var reservedRooms = reservations
+                        .Where(r => r.RoomTypeId == roomType.RoomTypeId)
+                        .Sum(r => r.NumberOfRooms);
+
+                    var availableRooms = roomType.TotalRooms - reservedRooms;
+                    if (availableRooms > 0)
+                    {
+                        roomType.AvailableRooms = availableRooms;
+                        availableRoomTypes.Add(roomType);
+                    }
+                }
+
+                _logger.LogInformation("Found {Count} available room types for HotelId: {HotelId}", availableRoomTypes.Count, hotelId);
+                return availableRoomTypes;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error fetching available room types for HotelId: {HotelId}", hotelId);
+                throw;
+            }
+        }
+
+
+        public async Task<IEnumerable<Commodity>> GetCommodityByHotelIdAsync(int hotelId)
+        {
+            try
+            {
+                _logger.LogInformation("Fetching commodities for HotelId: {HotelId}", hotelId);
+                var commodities = await _context.Commodities
+                    .Where(c => c.HotelId == hotelId && c.IsActive)
+                    .ToListAsync();
+                _logger.LogInformation("Fetched {Count} commodities for HotelId: {HotelId}", commodities.Count, hotelId);
+                return commodities;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error fetching commodities for HotelId: {HotelId}", hotelId);
+                throw;
+            }
+        }
+
         public async Task<Hotel?> GetHotelByIdWithDetailsAsync(int hotelId)
         {
             return await _context.Hotels
@@ -326,7 +286,7 @@ namespace viaggia_server.Repositories.HotelRepository
                 .Include(h => h.Reviews)
                 .Include(h => h.Packages)
                 .Include(h => h.Commodities)
-                .Include(h => h.CommoditieServices)
+                .Include(h => h.CustomCommodities)
                 .FirstOrDefaultAsync(h => h.HotelId == hotelId);
         }
 
