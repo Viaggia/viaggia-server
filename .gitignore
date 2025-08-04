@@ -20,8 +20,6 @@ out/
 Debug/
 Release/
 
-
-
 # Arquivos temporários
 *.log
 *.tmp
