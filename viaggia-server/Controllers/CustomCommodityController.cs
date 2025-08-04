@@ -15,7 +15,6 @@ namespace viaggia_server.Controllers
         private readonly IHotelRepository _hotelRepository;
         private readonly ICommodityRepository _commodityRepository;
 
-
         public CustomCommodityController(
             ICustomCommodityRepository customCommodityRepository,
             IHotelRepository hotelRepository,
@@ -40,7 +39,6 @@ namespace viaggia_server.Controllers
                 IsActive = s.IsActive,
                 HotelName = s.Hotel?.Name ?? string.Empty
             });
-
             return Ok(new ApiResponse<IEnumerable<CustomCommodityResponseDTO>>(true, "Comodidades encontradas.", response));
         }
 
@@ -50,7 +48,6 @@ namespace viaggia_server.Controllers
             var customCommodity = await _customCommodityRepository.GetByIdAsync(id);
             if (customCommodity == null)
                 return NotFound(new ApiResponse<CustomCommodityDTO>(false, "Comodidade não encontrada."));
-
 
             var response = new CustomCommodityDTO
             {
@@ -64,11 +61,8 @@ namespace viaggia_server.Controllers
                 HotelId = customCommodity.HotelId,
                 CommodityId = customCommodity.CommodityId
             };
-
-
             return Ok(new ApiResponse<CustomCommodityDTO>(true, "Comodidade encontrada.", response));
         }
-
 
         [HttpPost]
         [Consumes("multipart/form-data")]
@@ -77,7 +71,6 @@ namespace viaggia_server.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(new ApiResponse<CreateCustomCommodityDTO>(false, "Dados inválidos.", null, ModelState));
 
-            // Buscar hotel pelo nome
             var hotel = await _hotelRepository.GetHotelByNameAsync(dto.HotelName);
             if (hotel == null)
                 return BadRequest(new ApiResponse<object>(false, $"Hotel com nome '{dto.HotelName}' não encontrado."));
@@ -161,7 +154,6 @@ namespace viaggia_server.Controllers
             return Ok(new ApiResponse<CustomCommodityDTO>(true, "Comodidade atualizada com sucesso.", response));
         }
 
-
         [HttpDelete("{id:int}")]
         public async Task<IActionResult> Delete(int id)
         {
@@ -171,6 +163,5 @@ namespace viaggia_server.Controllers
 
             return Ok(new ApiResponse<string>(true, "Comodidade desativada com sucesso."));
         }
-
     }
 }

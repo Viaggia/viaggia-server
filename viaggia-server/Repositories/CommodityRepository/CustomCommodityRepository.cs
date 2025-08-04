@@ -12,7 +12,6 @@ namespace viaggia_server.Repositories.CommodityRepository
         public CustomCommodityRepository(AppDbContext context)
         {
             _context = context;
-            _context = context ?? throw new ArgumentNullException(nameof(context));
         }
 
         public async Task<IEnumerable<CustomCommodity>> GetAllAsync()
@@ -68,8 +67,6 @@ namespace viaggia_server.Repositories.CommodityRepository
             return await _context.SaveChangesAsync() > 0;
         }
 
-
-
         public async Task<bool> SaveChangesAsync()
         {
             return await _context.SaveChangesAsync() > 0;
@@ -96,4 +93,3 @@ namespace viaggia_server.Repositories.CommodityRepository
         }
     }
 }
-
