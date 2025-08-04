@@ -496,5 +496,45 @@ namespace viaggia_server.Controllers
                     new ApiResponse<List<HotelDTO>>(false, $"Error filtering hotels: {ex.Message}"));
             }
         }
+
+        // GET: api/Hotel/search
+        [HttpGet("search")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> SearchHotels([FromQuery] HotelSearchDTO searchDto)
+        {
+            try
+            {
+                if (!ModelState.IsValid)
+                {
+                    _logger.LogError("ModelState is invalid: {Errors}", ModelState);
+                    return BadRequest(ModelState);
+                }
+
+                var response = await _hotelServices.SearchHotelsByDestinationAsync(searchDto);
+                if (!response.Success)
+                {
+                    _logger.LogWarning("Failed to retrieve hotels: {Message}", response.Message);
+                    return BadRequest(new ApiResponse<List<HotelDTO>>(false, response.Message));
+                }
+
+                if (!response.Data.Any())
+                {
+                    _logger.LogInformation("No available hotels found for City: {City}, People: {NumberOfPeople}, Rooms: {NumberOfRooms}",
+                        searchDto.City, searchDto.NumberOfPeople, searchDto.NumberOfRooms);
+                    return NotFound(new ApiResponse<List<HotelDTO>>(false, "No available hotels found."));
+                }
+
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error searching hotels for City: {City}", searchDto.City);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    new ApiResponse<List<HotelDTO>>(false, $"Error searching hotels: {ex.Message}"));
+            }
+        }
     }
 }

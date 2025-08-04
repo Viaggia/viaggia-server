@@ -278,5 +278,74 @@ namespace viaggia_server.Repositories.HotelRepository
             }
         }
 
+        public async Task<IEnumerable<Hotel>> GetAvailableHotelsByDestinationAsync(
+         string city,
+         int numberOfPeople,
+         int numberOfRooms,
+         DateTime checkInDate,
+         DateTime checkOutDate)
+        {
+            try
+            {
+                _logger.LogInformation(
+                    "Fetching available hotels for City: {City}, People: {NumberOfPeople}, Rooms: {NumberOfRooms}, CheckIn: {CheckInDate}, CheckOut: {CheckOutDate}",
+                    city, numberOfPeople, numberOfRooms, checkInDate, checkOutDate);
+
+                // Fetch hotels in the specified city
+                var hotels = await _context.Hotels
+                    .Where(h => h.IsActive && h.City.ToLower() == city.ToLower())
+                    .Include(h => h.RoomTypes.Where(rt => rt.IsActive && rt.Capacity >= numberOfPeople))
+                    .Include(h => h.Commodities)
+                    .Include(h => h.CustomCommodities)
+                    .Include(h => h.Medias)
+                    .Include(h => h.Reviews)
+                    .Include(h => h.Packages)
+                    .ToListAsync();
+
+                // Fetch reservations that overlap with the requested dates
+                var reservations = await _context.Reserves
+                    .Where(r => r.IsActive &&
+                                r.HotelId.HasValue &&
+                                hotels.Select(h => h.HotelId).Contains(r.HotelId.Value) &&
+                                (checkInDate <= r.CheckOutDate && checkOutDate >= r.CheckInDate))
+                    .ToListAsync();
+
+                // Filter hotels with sufficient available rooms
+                var availableHotels = new List<Hotel>();
+                foreach (var hotel in hotels)
+                {
+                    var availableRoomTypes = new List<HotelRoomType>();
+                    foreach (var roomType in hotel.RoomTypes)
+                    {
+                        // Count reserved rooms for this room type in the date range
+                        var reservedRooms = reservations
+                            .Where(r => r.HotelId == hotel.HotelId && r.RoomTypeId == roomType.RoomTypeId)
+                            .Sum(r => r.NumberOfRooms);
+
+                        var availableRooms = roomType.TotalRooms - reservedRooms;
+                        if (availableRooms >= numberOfRooms)
+                        {
+                            roomType.AvailableRooms = availableRooms;
+                            availableRoomTypes.Add(roomType);
+                        }
+                    }
+
+                    if (availableRoomTypes.Any())
+                    {
+                        hotel.RoomTypes = availableRoomTypes;
+                        availableHotels.Add(hotel);
+                    }
+                }
+
+                _logger.LogInformation("Found {Count} available hotels in {City}", availableHotels.Count, city);
+                return availableHotels;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error fetching available hotels for City: {City}", city);
+                throw;
+            }
+        }
     }
+
 }
