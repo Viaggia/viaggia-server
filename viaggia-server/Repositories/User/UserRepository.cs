@@ -3,9 +3,8 @@ using viaggia_server.Data;
 using viaggia_server.DTOs.Auth;
 using viaggia_server.DTOs.User;
 using viaggia_server.DTOs.Users;
-using viaggia_server.Models.UserRoles;
 using viaggia_server.Models.Users;
-using viaggia_server.Services.Media;
+using viaggia_server.Services.ImageService;
 
 namespace viaggia_server.Repositories.Users
 {

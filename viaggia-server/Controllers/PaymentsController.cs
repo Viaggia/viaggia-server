@@ -10,7 +10,7 @@ using viaggia_server.Data;
 using viaggia_server.DTOs;
 using viaggia_server.DTOs.Payments;
 using viaggia_server.DTOs.Reservation;
-using viaggia_server.Models.Reservations;
+using viaggia_server.Models.Reserves;
 using viaggia_server.Services.Payment;
 
 namespace viaggia_server.Controllers

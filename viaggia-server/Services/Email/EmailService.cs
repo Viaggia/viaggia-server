@@ -3,7 +3,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using System.Net;
 using System.Net.Mail;
-using viaggia_server.Models.Reservations;
+using viaggia_server.Models.Reserves;
 
 namespace viaggia_server.Services.Email
 {

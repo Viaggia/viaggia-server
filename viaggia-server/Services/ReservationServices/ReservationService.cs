@@ -1,7 +1,7 @@
 ﻿using Stripe;
 using viaggia_server.DTOs.Reservation;
 using viaggia_server.Models.Hotels;
-using viaggia_server.Models.Reservations;
+using viaggia_server.Models.Reserves;
 using viaggia_server.Models.Users;
 using viaggia_server.Repositories;
 using viaggia_server.Repositories.HotelRepository;
@@ -35,7 +35,7 @@ namespace viaggia_server.Services.Reservations
             var reservations = await _reservationRepository.GetAllAsync();
             return reservations.Select(r => new ReservationDTO
             {
-                ReservationId = r.ReservationId,
+                ReservationId = r.ReserveId,
                 UserId = r.UserId,
                 PackageId = r.PackageId,
                 HotelId = r.HotelId,
@@ -51,7 +51,7 @@ namespace viaggia_server.Services.Reservations
 
             return new ReservationDTO
             {
-                ReservationId = r.ReservationId,
+                ReservationId = r.ReserveId,
                 UserId = r.UserId,
                 PackageId = r.PackageId,
                 HotelId = r.HotelId,
@@ -65,7 +65,7 @@ namespace viaggia_server.Services.Reservations
             var userId = await _userRepository.GetByIdAsync(dto.UserId);
             if (userId == null) throw new Exception("Cliente não encontrado");
 
-            var reservation = new Reservation
+            var reservation = new Reserve
             {
                 UserId = dto.UserId,
                 PackageId = dto.PackageId,
@@ -77,7 +77,7 @@ namespace viaggia_server.Services.Reservations
             await _reservationRepository.AddAsync(reservation);
             await _reservationRepository.SaveChangesAsync();
 
-            return await GetByIdAsync(reservation.ReservationId) ?? throw new Exception("Erro ao criar reserva.");
+            return await GetByIdAsync(reservation.ReserveId) ?? throw new Exception("Erro ao criar reserva.");
         }
 
         public async Task<ReservationDTO> UpdateAsync(int id, ReservationUpdateDTO dto)

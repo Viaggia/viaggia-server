@@ -13,7 +13,6 @@ namespace viaggia_server.Repositories
         Task<bool> SaveChangesAsync();
         Task<T2?> GetByIdAsync<T2>(int id) where T2 : class, ISoftDeletable;
         Task<bool> SoftDeleteAsync<T2>(int id) where T2 : class, ISoftDeletable;
-
         Task<T?> GetByIdWithIncludesAsync(int id, params Expression<Func<T, object>>[] includes);
 
     }

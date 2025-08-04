@@ -3,7 +3,7 @@ using Stripe;
 using Stripe.Checkout;
 using System.Globalization;
 using viaggia_server.DTOs.Reservation;
-using viaggia_server.Models.Reservations;
+using viaggia_server.Models.Reserves;
 using viaggia_server.Models.Users;
 using viaggia_server.Repositories;
 
@@ -12,14 +12,14 @@ namespace viaggia_server.Services.Payment
     public class StripePaymentService : IStripePaymentService
     {
         private readonly IConfiguration _configuration;
-        private readonly IRepository<Reservation> _reservations;
+        private readonly IRepository<Reserve> _reservations;
         private readonly ILogger<StripePaymentService> _logger;
         private readonly string _stripeSecretKey;
         private readonly string _stripeWebhookSecret;
 
         public StripePaymentService(
             IConfiguration configuration,
-            IRepository<Reservation> reservations,
+            IRepository<Reserve> reservations,
             ILogger<StripePaymentService> logger
         )
         {
@@ -126,7 +126,7 @@ namespace viaggia_server.Services.Payment
                     }
                     try
                     {
-                        var reservation = new Reservation
+                        var reservation = new Reserve
                         {
                             UserId = int.Parse(session.Metadata["userId"]),
                             PackageId = int.Parse(session.Metadata["packageId"]),

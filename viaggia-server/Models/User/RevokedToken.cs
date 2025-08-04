@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace viaggia_server.Models.RevokedToken
+namespace viaggia_server.Models.Users
 {
     public class RevokedToken
     {

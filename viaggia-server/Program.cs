@@ -18,17 +18,18 @@ using viaggia_server.Repositories;
 using viaggia_server.Repositories.ReservationRepository;
 using viaggia_server.Repositories.Users;
 using viaggia_server.Repositories.Auth;
-using viaggia_server.Repositories.Commodities;
+using viaggia_server.Repositories.CommodityRepository;
 using viaggia_server.Repositories.HotelRepository;
 using viaggia_server.Services.Email;
 using viaggia_server.Services.HotelServices;
-using viaggia_server.Services.Media;
+using viaggia_server.Services.ImageService;
 using viaggia_server.Swagger;
 using viaggia_server.Services;
 using viaggia_server.Services.Payment;
 using viaggia_server.Services.ReservationServices;
 using viaggia_server.Validators;
 using viaggia_server.Services.Reservations;
+using viaggia_server.Repositories.Payment;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -93,13 +94,12 @@ builder.Services.AddScoped<IImageService, ImageService>();
 builder.Services.AddScoped<IPackageRepository, PackageRepository>();
 builder.Services.AddScoped<IHotelServices, HotelServices>();
 builder.Services.AddScoped<IHotelRepository, HotelRepository>();
-builder.Services.AddScoped<IReservationRepository, ReservationRepository>();
-builder.Services.AddScoped<IReservationService, ReservationService>();
-builder.Services.AddScoped<ICommoditieRepository, CommoditieRepository>();
-builder.Services.AddScoped<ICommoditieServicesRepository, CommoditieServicesRepository>();
-builder.Services.AddScoped<IStripePaymentService, StripePaymentService>();
+builder.Services.AddScoped<ICommodityRepository, CommodityRepository>();
+builder.Services.AddScoped<ICustomCommodityRepository, CustomCommodityRepository>();
+builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
 builder.Services.AddScoped<IAuthRepository, AuthRepository>();
 builder.Services.AddScoped<IGoogleAccountRepository, GoogleAccountRepository>();
+builder.Services.AddScoped<IReviewRepository, ReviewRepository>();
 
 //Services
 builder.Services.AddScoped<IHotelServices, HotelServices>();
