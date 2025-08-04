@@ -1,25 +1,36 @@
 ﻿using viaggia_server.DTOs;
 using viaggia_server.DTOs.Hotel;
+using viaggia_server.DTOs.Packages;
+using viaggia_server.DTOs.Reviews;
 using viaggia_server.Models.Hotels;
-using viaggia_server.Models.Medias;
 
 
 namespace viaggia_server.Services.HotelServices
 {
     public interface IHotelServices
     {
-        Task<IEnumerable<Hotel>> GetAllHotelsAsync();
-        Task<Hotel?> GetHotelByIdAsync(int id);
-        Task<Hotel> AddHotelAsync(Hotel hotel);
-        Task<Hotel> UpdateHotelAsync(UpdateHotelDto updateHotelDto);
-        Task<bool> SoftDeleteHotelAsync(int id);
-        Task<bool> SaveChangesAsync();
 
-        // New methods for media management
-        Task<IEnumerable<Media>> GetMediaByHotelIdAsync(int hotelId);
-        Task<Media?> GetMediaByIdAsync(int mediaId);
-        Task<Media> AddMediaToHotelAsync(Media mediaDto);
-        Task<bool> SoftDeleteMediaAsync(int mediaId);
+        //CRUD
+        Task<ApiResponse<List<HotelDTO>>> GetAllHotelAsync();
+        Task<ApiResponse<HotelDTO>> GetHotelByIdAsync(int id);
+        Task<ApiResponse<Hotel>> CreateHotelAsync(CreateHotelDTO createHotelDto, List<CreateHotelRoomTypeDTO> roomTypes);
+        Task<ApiResponse<HotelDTO>> UpdateHotelAsync(UpdateHotelDto updateHotelDto, List<CreateHotelRoomTypeDTO>? roomTypes);
+        Task<bool> SoftDeleteHotelAsync(int id);
+
+
+        //filtros e buscas
+        Task<ApiResponse<double>> GetHotelAverageRatingAsync(int hotelId);
+        Task<ApiResponse<IEnumerable<PackageDTO>>> GetPackagesByHotelIdAsync(int hotelId);
+        Task<ApiResponse<List<HotelDTO>>> FilterHotelsAsync(HotelFilterDTO filter);
+        Task<ApiResponse<List<HotelDTO>>> SearchHotelsByDestinationAsync(HotelSearchDTO searchDto);
+        Task<ApiResponse<List<HotelRoomTypeDTO>>> GetAvailableRoomsAsync(int hotelId, int numberOfPeople, DateTime checkInDate, DateTime checkOutDate);
+
+
+        //Reviews
+        Task<ApiResponse<ReviewDTO>> AddHotelReviewAsync(CreateReviewDTO reviewDto);
+        Task<ApiResponse<List<ReviewDTO>>> GetHotelReviewsAsync(int hotelId);
+        Task<ApiResponse<ReviewDTO>> UpdateHotelReviewAsync(int reviewId, CreateReviewDTO reviewDto);
+        Task<ApiResponse<bool>> RemoveHotelReviewAsync(int reviewId);
 
 
     }

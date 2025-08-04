@@ -1,5 +1,7 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using System.Linq.Expressions;
+using Microsoft.EntityFrameworkCore;
 using viaggia_server.Data;
+using viaggia_server.Models.Hotels;
 
 namespace viaggia_server.Repositories
 {
@@ -105,6 +107,11 @@ namespace viaggia_server.Repositories
             _context.Set<T>().Update(entity);
             await _context.SaveChangesAsync();
             return entity;
+        }
+
+        public Task<T?> GetByIdWithIncludesAsync(int id, params Expression<Func<T, object>>[] includes)
+        {
+            throw new NotImplementedException();
         }
     }
 }

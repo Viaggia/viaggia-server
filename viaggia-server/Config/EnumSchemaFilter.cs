@@ -1,4 +1,4 @@
-﻿using Microsoft.OpenApi.Any;
+using Microsoft.OpenApi.Any;
 using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
@@ -15,6 +15,8 @@ namespace viaggia_server.Config
                 {
                     schema.Enum.Add(new OpenApiString(name));
                 }
+                schema.Type = "string";
+                schema.Format = null;
             }
         }
     }

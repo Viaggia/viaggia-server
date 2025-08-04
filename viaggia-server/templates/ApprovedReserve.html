@@ -35,30 +35,15 @@
             color: #333;
         }
 
-        .token-box {
+        .info-box {
             background-color: #f8f9fa;
-            border: 2px dashed #007bff;
             padding: 20px;
-            margin: 20px 0;
-            text-align: center;
             border-radius: 8px;
-        }
-
-        .token {
-            font-size: 24px;
-            font-weight: bold;
-            color: #007bff;
-            letter-spacing: 3px;
-        }
-
-        .button {
-            display: inline-block;
-            background-color: #007bff;
-            color: white;
-            padding: 12px 30px;
-            text-decoration: none;
-            border-radius: 5px;
             margin: 20px 0;
+        }
+
+        .info-item {
+            margin-bottom: 10px;
         }
 
         .footer {
@@ -82,44 +67,47 @@
 <body>
     <div class='container'>
         <div class='header'>
-            <div class='logo'>🧳 VIAGGIA</div>
-            <h2>Redefinição de Senha</h2>
+            <div class='logo'>VIAGGIA</div>
+            <h2>Reserva Aprovada</h2>
         </div>
 
         <div class='content'>
             <p>Olá, <strong>{{UserName}}</strong>!</p>
 
-            <p>Você solicitou a redefinição de sua senha para acessar sua conta Viaggia.</p>
+            <p>Sua reserva no hotel <strong>{{NomeHotel}}</strong> foi aprovada com sucesso! Abaixo estão os detalhes da sua estadia:</p>
 
-            <p>Para continuar com o processo de redefinição, utilize o token abaixo:</p>
-
-            <div class='token-box'>
-                <p><strong>Seu Token de Segurança:</strong></p>
-                <div class='token'>{{Token}}</div>
+            <div class='info-box'>
+                <div class='info-item'><strong>Check-in:</strong> {{CheckIn}} às 14h00</div>
+                <div class='info-item'><strong>Check-out:</strong> {{CheckOut}} às 12h00</div>
+                <div class='info-item'><strong>Endereço do Hotel:</strong> {{HotelEndereco}}</div>
+                <div class='info-item'><strong>Email:</strong> {{HotelEmail}}</div>
+                <div class='info-item'><strong>Telefone:</strong> {{HotelPhone}}</div>
+                <div>
+                    <p>O código da sua reserva é: <strong>{{ReservaId}}</strong>
+                        <br />
+                     
+                    </p>
+                </div>
             </div>
 
-            <p style='text-align: center;'>
-                <a href='{{ValidateTokenLink}}' class='button'>🔗 Acessar Página de Reset</a>
-            </p>
-
             <div class='warning'>
-                <strong>⚠️ Informações Importantes:</strong>
+                <strong>Política de Cancelamento:</strong>
                 <ul>
-                    <li>Este token é válido por apenas <strong>1 hora</strong></li>
-                    <li>O token pode ser usado apenas <strong>uma vez</strong></li>
-                    <li>Nunca compartilhe este token com terceiros</li>
-                    <li>Se você não solicitou esta redefinição, ignore este email</li>
+                    <li>Cancelando até <strong>15 dias antes </strong> da reserva: reembolso de <strong>60%</strong>.</li>
+                    <li>Cancelando com menos de <strong>15 dias</strong>: reembolso de 15%</li>
+                </ul>
+                <strong>Política de Alteração de Data:</strong>
+                <ul>
+                    <li>A alteração da data está sujeita a taxa adicional que varia de acordo com o hotel.</li>
+                    <li>Taxa aplicada para <strong>{{NomeHotel}}</strong>: é de 5% da reserva.</li>
                 </ul>
             </div>
 
-            <p>Se você não conseguir clicar no botão, copie e cole o link abaixo em seu navegador:</p>
-            <p style='word-break: break-all; background-color: #f8f9fa; padding: 10px; border-radius: 5px;'>
-                {{ValidateTokenLink}}
-            </p>
+            <p>Agradecemos por escolher a Viaggia. Desejamos uma excelente estadia!</p>
         </div>
 
         <div class='footer'>
-            <p>© 2025 Viaggia - Sistema de Gestão Hoteleira</p>
+            <p>© 2025 Viaggia Societa Albergo</p>
             <p>Este é um email automático, não responda esta mensagem.</p>
         </div>
     </div>

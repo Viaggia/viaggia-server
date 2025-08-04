@@ -1,0 +1,30 @@
+# Development Dockerfile with hot reload
+FROM mcr.microsoft.com/dotnet/sdk:8.0
+WORKDIR /app
+
+# Install dotnet-ef tool for migrations
+RUN dotnet tool install --global dotnet-ef
+ENV PATH="$PATH:/root/.dotnet/tools"
+
+# Copy project files and restore dependencies
+COPY viaggia-server.sln ./
+COPY viaggia-server/viaggia-server.csproj ./viaggia-server/
+
+RUN dotnet restore
+
+# Copy the rest of the source code
+COPY . .
+
+# Create uploads directory
+RUN mkdir -p /app/wwwroot/Uploads/Packages
+
+# Expose ports
+EXPOSE 8080
+
+# Set environment
+ENV ASPNETCORE_ENVIRONMENT=Development
+ENV ASPNETCORE_URLS=http://+:8080
+ENV DOTNET_USE_POLLING_FILE_WATCHER=true
+
+# Run with hot reload
+CMD ["dotnet", "watch", "run", "--project", "viaggia-server/viaggia-server.csproj", "--urls", "http://0.0.0.0:8080"]

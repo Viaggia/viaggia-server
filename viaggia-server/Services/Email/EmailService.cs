@@ -1,10 +1,11 @@
-﻿
-using System.Net.Mail;
-using System.Net;
+
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using System.Net;
+using System.Net.Mail;
+using viaggia_server.Models.Reserves;
 
-namespace viaggia_server.Services
+namespace viaggia_server.Services.Email
 {
     public class EmailService : IEmailService
     {
@@ -23,7 +24,7 @@ namespace viaggia_server.Services
         {
             // Caminho para o template
             var templatePath = Path.Combine(_environment.ContentRootPath, "templates", "BeWelcomeTamplete.html");
-            
+
             // Verificar se o arquivo existe
             if (!File.Exists(templatePath))
             {
@@ -54,7 +55,7 @@ namespace viaggia_server.Services
                 _configuration["Smtp:FromName"]);
             var to = new MailAddress(email);
             var subject = "🎉 Bem-vindo ao Viaggia!";
-            
+
             // Obter o conteúdo HTML do template
             var htmlContent = await getBeWelcomeViaggia(userName);
 
@@ -91,11 +92,11 @@ namespace viaggia_server.Services
                 _configuration["Smtp:FromEmail"],
                 _configuration["Smtp:FromName"]);
             var to = new MailAddress(email);
-            var subject = "🔑 Redefinição de Senha - Viaggia";
-            
+            var subject = "Redefinição de Senha - Viaggia";
+
             // Link para validar token
             var validateTokenLink = $"http://localhost:5173/validate-token?token={token}";
-            
+
             // Obter o conteúdo HTML do template
             var htmlContent = await GetPasswordResetEmailTemplateAsync(userName, token, validateTokenLink);
 
@@ -123,7 +124,7 @@ namespace viaggia_server.Services
         {
             // Caminho para o template
             var templatePath = Path.Combine(_environment.ContentRootPath, "templates", "PasswordResetEmailTemplate.html");
-            
+
             // Verificar se o arquivo existe
             if (!File.Exists(templatePath))
             {
@@ -141,5 +142,67 @@ namespace viaggia_server.Services
 
             return htmlContent;
         }
+
+        public async Task SendApprovedReserve(string email, string userName, int ReservationId, string Hotel, DateTime checkIn, DateTime checkOut, string hotelEmail, string hotelPhone)
+        {
+            var smtpClient = new SmtpClient(_configuration["Smtp:Host"], int.Parse(_configuration["Smtp:Port"]))
+            {
+                Credentials = new NetworkCredential(
+                        _configuration["Smtp:Username"],
+                        _configuration["Smtp:Password"]),
+                EnableSsl = true
+            };
+
+            var from = new MailAddress(
+                _configuration["Smtp:FromEmail"],
+                _configuration["Smtp:FromName"]);
+            var to = new MailAddress(email);
+            var subject = "Reserva Aprovado - Viaggia";
+
+            //Obter o conteúdo HTML do template
+            var htmlContent = await GetApprovedReserve(userName, ReservationId, Hotel, checkIn, checkOut, hotelEmail, hotelPhone);
+
+            var mailMessage = new MailMessage(from, to)
+            {
+                Subject = subject,
+                Body = htmlContent,
+                IsBodyHtml = true
+            };
+
+            try
+            {
+                await smtpClient.SendMailAsync(mailMessage);
+                _logger.LogInformation("Email de aprovação de reserva enviado para {Email} (usuário: {UserName})", email, userName);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Falha ao enviar de aprovação para {Email}", email);
+                throw new Exception("Falha ao enviar o e-mail de aprovação.");
+            }
+        }
+
+        public async Task<string> GetApprovedReserve(string userName, int reservationId, string hotel, DateTime checkIn, DateTime checkOut, string hotelEmail, string hotelPhone)
+        {
+            var templatePath = Path.Combine(_environment.ContentRootPath, "templates", "ApprovedReserve.html");
+            if (!File.Exists(templatePath))
+            {
+                throw new FileNotFoundException();
+            }
+
+            var templateContent = await File.ReadAllTextAsync(templatePath);
+
+            var htmlContent = templateContent
+                .Replace("{{UserName}}", userName)
+                .Replace("{{NomeHotel}}", hotel)
+                .Replace("{{ReservaId}}", reservationId.ToString())
+                .Replace("{{CheckIn}}", checkIn.ToString())
+                .Replace("{{CheckOut}}", checkOut.ToString())
+                .Replace("{{HotelEmail}}", hotelEmail)
+                .Replace("{{HotelPhone}}", hotelPhone);
+
+
+            return htmlContent;
+        }
+
     }
 }
