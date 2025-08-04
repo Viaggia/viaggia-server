@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using viaggia_server.DTOs.Commodity;
 
 
 namespace viaggia_server.DTOs.Hotel
@@ -53,5 +54,10 @@ namespace viaggia_server.DTOs.Hotel
         
         [Required(ErrorMessage = "RoomTypesJson is required.")]
         public string RoomTypesJson { get; set; } = null!;
+
+        public List<IFormFile>? Medias { get; set; }
+        public CreateCommodityDTO? Commodity { get; set; }
+
+
     }
 }
