@@ -75,19 +75,28 @@ namespace viaggia_server.Services.Payment
                 new SessionLineItemOptions
                 {
                     Price = price.Id,
-                    Quantity = createReservation.PackageId,
+                    Quantity = createReservation.PackageId == 0
+                ? createReservation.NumberOfGuests
+                : createReservation.PackageId
                 }
             },
+
                     Mode = "payment",
                     SuccessUrl = $"http://localhost:5173/api/Reservation/{createReservation.UserId}",
                     CancelUrl = "http://localhost:5173/cancelado",
                     Metadata = new Dictionary<string, string>
             {
                 { "userId", createReservation.UserId.ToString() },
-                { "packageId", createReservation.PackageId.ToString() ?? "0" },
+                { "packageId", createReservation.PackageId.ToString() ?? "" },
+                { "roomTypeId", createReservation.RoomTypeId.ToString() },
+                { "hotelId", createReservation.HotelId.ToString() },
+                { "checkInDate", createReservation.CheckInDate.ToString("o") },
+                { "checkOutDate", createReservation.CheckOutDate.ToString( "o") },
+                { "numberOfGuests", createReservation.NumberOfGuests.ToString() },
+                { "status", createReservation.Status.ToString() },
                 { "TotalPrice", total.ToString(CultureInfo.InvariantCulture) },
-                { "status", createReservation.Status }
             }
+
                 };
 
                 var sessionService = new SessionService();
@@ -130,8 +139,15 @@ namespace viaggia_server.Services.Payment
                         {
                             UserId = int.Parse(session.Metadata["userId"]),
                             PackageId = int.Parse(session.Metadata["packageId"]),
-                            RoomTypeId = int.Parse(session.Metadata["roomTypeId"])
+                            RoomTypeId = int.Parse(session.Metadata["roomTypeId"]),
+                            HotelId = int.Parse(session.Metadata["hotelId"]),
+                            CheckInDate = DateTime.Parse(session.Metadata["checkInDate"], null, DateTimeStyles.RoundtripKind),
+                            CheckOutDate = DateTime.Parse(session.Metadata["checkOutDate"], null, DateTimeStyles.RoundtripKind),
+                            NumberOfGuests = int.Parse(session.Metadata["numberOfGuests"]),
+                            Status = session.Metadata.ContainsKey("status") ? session.Metadata["status"] : "Pendente",
+                            CreatedAt = DateTime.UtcNow
                         };
+
 
                         await _reservations.AddAsync(reservation);
                         await _reservations.SaveChangesAsync();

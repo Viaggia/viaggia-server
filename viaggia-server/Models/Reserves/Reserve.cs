@@ -1,10 +1,8 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using viaggia_server.Models.Companions;
 using viaggia_server.Models.Hotels;
 using viaggia_server.Models.Packages;
 using viaggia_server.Models.Users;
-using viaggia_server.Models.Payments;
 using viaggia_server.Repositories;
 
 namespace viaggia_server.Models.Reserves
@@ -27,7 +25,6 @@ namespace viaggia_server.Models.Reserves
 
         public int? PackageId { get; set; }
 
-        [ForeignKey("PackageId")]
         public virtual Package? Package { get; set; }
 
         public int? RoomTypeId { get; set; }
@@ -35,29 +32,25 @@ namespace viaggia_server.Models.Reserves
         [ForeignKey("RoomTypeId")]
         public virtual HotelRoomType? HotelRoomType { get; set; }
 
-        [Required(ErrorMessage = "Start date is required.")]
+        [Required]
         public DateTime CheckInDate { get; set; }
 
-        [Required(ErrorMessage = "End date is required.")]
+        [Required]
         public DateTime CheckOutDate { get; set; }
 
-        [Required(ErrorMessage = "Total price is required.")]
+        [Required]
+        [Range(1, int.MaxValue, ErrorMessage = "Number of guests must be at least 1.")]
+        public int NumberOfGuests { get; set; }
+
+        [Required]
         [Column(TypeName = "decimal(10,2)")]
         public decimal TotalPrice { get; set; }
 
-        [Required(ErrorMessage = "Number of guests is required.")]
-        [Range(1, 10, ErrorMessage = "Number of guests must be between 1 and 10.")]
-        public int NumberOfGuests { get; set; }
-
-        [Required(ErrorMessage = "Status is required.")]
-        [StringLength(20, ErrorMessage = "Status cannot exceed 20 characters.")]
-        public string Status { get; set; } = null!; // Ex.: "Confirmed", "Cancelled", "Pending"
-
         public decimal TotalDiscount { get; set; }
-
+        public string? Status { get; set; }
         public int NumberOfRooms { get; set; }
-        public bool IsActive { get; set; } = true;
 
-        public virtual ICollection<Payment> Payments { get; set; } = new List<Payment>();
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public bool IsActive { get; set; } = true;
     }
 }

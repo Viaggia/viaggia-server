@@ -146,19 +146,6 @@ namespace viaggia_server.Data
                 .IsRequired(false)
                 .OnDelete(DeleteBehavior.NoAction);
 
-            // Payment
-            modelBuilder.Entity<Payment>()
-                .HasOne(p => p.User)
-                .WithMany(u => u.Payments)
-                .HasForeignKey(p => p.UserId)
-                .OnDelete(DeleteBehavior.NoAction);
-
-            modelBuilder.Entity<Payment>()
-                .HasOne(p => p.Reserve)
-                .WithMany(r => r.Payments)
-                .HasForeignKey(p => p.ReservationId)
-                .OnDelete(DeleteBehavior.NoAction);
-
             // Review
             modelBuilder.Entity<Review>()
                 .HasOne(r => r.User)
