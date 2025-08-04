@@ -370,7 +370,7 @@ namespace viaggia_server.Services.HotelServices
                         using var stream = new FileStream(filePath, FileMode.Create);
                         await file.CopyToAsync(stream);
 
-                        await _hotelRepository.AddMediaAsync(new Media
+                        await _hotelRepository.AddMediaAsync(new Models.Medias.Media
                         {
                             MediaUrl = $"/Uploads/Hotel/{fileName}",
                             MediaType = file.ContentType,

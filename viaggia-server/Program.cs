@@ -1,5 +1,3 @@
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
 using System.Text;
 using FluentValidation;
 using FluentValidation.AspNetCore;
@@ -11,20 +9,28 @@ using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Stripe;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 using Viaggia.Swagger;
 using viaggia_server.Config;
 using viaggia_server.Data;
 using viaggia_server.Repositories;
+using viaggia_server.Repositories.ReservationRepository;
+using viaggia_server.Repositories.Users;
 using viaggia_server.Repositories.Auth;
 using viaggia_server.Repositories.CommodityRepository;
 using viaggia_server.Repositories.HotelRepository;
-using viaggia_server.Repositories.Payment;
-using viaggia_server.Repositories.Users;
-using viaggia_server.Services.EmailResetPassword;
+using viaggia_server.Services.Email;
 using viaggia_server.Services.HotelServices;
 using viaggia_server.Services.ImageService;
 using viaggia_server.Swagger;
+using viaggia_server.Services;
+using viaggia_server.Services.Payment;
+using viaggia_server.Services.ReservationServices;
 using viaggia_server.Validators;
+using viaggia_server.Services.Reservations;
+using viaggia_server.Repositories.Payment;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -37,7 +43,6 @@ builder.Services.AddControllers()
         options.JsonSerializerOptions.DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull;
         options.JsonSerializerOptions.AllowTrailingCommas = true;
         options.JsonSerializerOptions.ReadCommentHandling = System.Text.Json.JsonCommentHandling.Skip;
-
     });
 
 // Add Swagger
@@ -56,17 +61,17 @@ builder.Services.AddSwaggerGen(c =>
     });
     c.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
     {
+    {
+        new Microsoft.OpenApi.Models.OpenApiSecurityScheme
         {
-            new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+            Reference = new Microsoft.OpenApi.Models.OpenApiReference
             {
-                Reference = new Microsoft.OpenApi.Models.OpenApiReference
-                {
-                    Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme,
-                    Id = "Bearer"
-                }
-            },
-            new string[] { }
-        }
+                Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme,
+                Id = "Bearer"
+            }
+        },
+        new string[] { }
+    }
     });
     c.EnableAnnotations();
     c.SchemaFilter<EnumSchemaFilter>();
@@ -75,16 +80,19 @@ builder.Services.AddSwaggerGen(c =>
     c.OperationFilter<MultipartFormDataOperationFilter>();
 });
 
-
 // Configure DbContext
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"),
     sqlOptions => sqlOptions.CommandTimeout(60)));
 
 // Repositories
+
+// Register repositories and services
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IImageService, ImageService>();
 builder.Services.AddScoped<IPackageRepository, PackageRepository>();
+builder.Services.AddScoped<IHotelServices, HotelServices>();
 builder.Services.AddScoped<IHotelRepository, HotelRepository>();
 builder.Services.AddScoped<ICommodityRepository, CommodityRepository>();
 builder.Services.AddScoped<ICustomCommodityRepository, CustomCommodityRepository>();
@@ -96,7 +104,13 @@ builder.Services.AddScoped<IReviewRepository, ReviewRepository>();
 //Services
 builder.Services.AddScoped<IHotelServices, HotelServices>();
 builder.Services.AddScoped<IEmailService, EmailService>();
-builder.Services.AddScoped<IImageService, ImageService>();
+builder.Services.AddScoped<Stripe.TokenService>();
+builder.Services.AddScoped<Stripe.CustomerService>();
+builder.Services.AddScoped<Stripe.ChargeService>();
+builder.Services.AddScoped<Stripe.PaymentIntentService>();
+builder.Services.AddScoped<Stripe.ProductService>();
+
+
 
 // Configure Stripe
 StripeConfiguration.ApiKey = builder.Configuration["Stripe:SecretKey"];
@@ -113,7 +127,7 @@ builder.Services.AddLogging(logging =>
 });
 
 // Configure authentication (JWT and Google OAuth)
-builder.Services.AddAuthentication(options =>
+ builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
     options.DefaultChallengeScheme = GoogleDefaults.AuthenticationScheme;
@@ -154,6 +168,7 @@ builder.Services.AddAuthentication(options =>
     options.ClientId = builder.Configuration["Authentication:Google:ClientId"];
     options.ClientSecret = builder.Configuration["Authentication:Google:ClientSecret"];
     options.SignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+    options.SignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
     options.SaveTokens = true;
     options.ClaimActions.MapJsonKey(ClaimTypes.NameIdentifier, "sub");
     options.ClaimActions.MapJsonKey(ClaimTypes.Name, "name");
@@ -187,7 +202,6 @@ builder.Services.AddCors(options =>
     });
 });
 
-
 // Add file upload support
 builder.Services.Configure<IISServerOptions>(options =>
 {
@@ -197,6 +211,7 @@ builder.Services.Configure<KestrelServerOptions>(options =>
 {
     options.Limits.MaxRequestBodySize = 5 * 1024 * 1024; // 5MB
 });
+
 
 var app = builder.Build();
 
@@ -208,12 +223,12 @@ if (app.Environment.IsDevelopment())
 }
 
 
-app.UseStaticFiles();
+
 app.UseHttpsRedirection();
 app.UseStaticFiles(); // For serving images in wwwroot
 app.UseCors("AllowFrontend");
 app.UseAuthentication();
-app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+

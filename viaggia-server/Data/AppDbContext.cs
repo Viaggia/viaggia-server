@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using viaggia_server.Models.Commodities;
 using viaggia_server.Models.CustomCommodities;
 using viaggia_server.Models.Hotels;
@@ -56,7 +56,7 @@ namespace viaggia_server.Data
                 .HasMany(p => p.PackageDates)
                 .WithOne(pd => pd.Package)
                 .HasForeignKey(pd => pd.PackageId)
-                .OnDelete(DeleteBehavior.Cascade);
+                .OnDelete(DeleteBehavior.Cascade); // Enable cascade delete
 
             modelBuilder.Entity<Package>()
                 .HasMany(p => p.Medias)
@@ -165,7 +165,29 @@ namespace viaggia_server.Data
                 .HasForeignKey(r => r.UserId)
                 .OnDelete(DeleteBehavior.NoAction);
 
-            // PasswordResetToken
+
+            // Hotel 1:N Commoditie
+            modelBuilder.Entity<Hotel>()
+                .HasMany(h => h.Commodities) // Assuming Hotel has a collection of Commodities
+                .WithOne(c => c.Hotel) // Assuming Commoditie has a Hotel property
+                .HasForeignKey(c => c.HotelId) // Foreign key in Commoditie
+                .OnDelete(DeleteBehavior.Cascade); // Cascade delete if Hotel is deleted
+
+            // Commodity 1:N CustomCommodities
+            modelBuilder.Entity<Commodity>()
+              .HasMany(c => c.CustomCommodities)
+              .WithOne(cs => cs.Commodity)
+              .HasForeignKey(cs => cs.CommodityId)
+              .OnDelete(DeleteBehavior.NoAction); // Evita ciclos de deleção
+
+            // CustomCommodities 1:N Hotel
+            modelBuilder.Entity<CustomCommodity>()
+                .HasOne(cs => cs.Hotel)
+                .WithMany(h => h.CustomCommodities)
+                .HasForeignKey(cs => cs.HotelId)
+                .OnDelete(DeleteBehavior.NoAction); // Evita ciclos de deleção
+
+            //  PasswordResetToken
             modelBuilder.Entity<PasswordResetToken>()
                 .HasOne(prt => prt.User)
                 .WithMany()
@@ -179,10 +201,11 @@ namespace viaggia_server.Data
                 entity.Property(rt => rt.Id).ValueGeneratedOnAdd();
                 entity.Property(rt => rt.Token).HasColumnType("nvarchar(max)").IsRequired();
                 entity.Property(rt => rt.RevokedAt).IsRequired();
-                entity.Property(rt => rt.ExpiryDate).IsRequired(false);
+                entity.Property(rt => rt.ExpiryDate).IsRequired(false); 
             });
 
-            // Media
+
+            // Configuration for Media
             modelBuilder.Entity<Media>()
                 .ToTable(t => t.HasCheckConstraint("CK_Media_OneEntity",
                     "([PackageId] IS NOT NULL AND [HotelId] IS NULL) OR ([PackageId] IS NULL AND [HotelId] IS NOT NULL)"));
