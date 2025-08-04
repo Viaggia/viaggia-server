@@ -37,5 +37,7 @@ namespace viaggia_server.DTOs.Hotel
         [EmailAddress(ErrorMessage = "Invalid email format.")]
         public string? ContactEmail { get; set; }
         public bool IsActive { get; set; } = true;
+        public List<IFormFile>? MediaFiles { get; set; }
+        public string? RoomTypesJson { get; set; }
     }
 }

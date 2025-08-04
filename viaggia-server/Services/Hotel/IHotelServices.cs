@@ -12,7 +12,7 @@ namespace viaggia_server.Services.HotelServices
         Task<ApiResponse<List<HotelDTO>>> GetAllHotelAsync();
         Task<ApiResponse<HotelDTO>> GetHotelByIdAsync(int id);
         Task<ApiResponse<Hotel>> CreateHotelAsync(CreateHotelDTO createHotelDto, List<CreateHotelRoomTypeDTO> roomTypes);
-        Task<Hotel> UpdateHotelAsync(UpdateHotelDto updateHotelDto);
+        Task<ApiResponse<HotelDTO>> UpdateHotelAsync(UpdateHotelDto updateHotelDto, List<CreateHotelRoomTypeDTO>? roomTypes);
         Task<bool> SoftDeleteHotelAsync(int id);
         Task<ApiResponse<double>> GetHotelAverageRatingAsync(int hotelId);
         Task<ApiResponse<IEnumerable<PackageDTO>>> GetPackagesByHotelIdAsync(int hotelId);

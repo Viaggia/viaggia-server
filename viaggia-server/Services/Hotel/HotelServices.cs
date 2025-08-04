@@ -431,39 +431,258 @@ namespace viaggia_server.Services.HotelServices
             }
         }
 
-        public async Task<Hotel> UpdateHotelAsync(UpdateHotelDto updateHotelDto)
+        public async Task<ApiResponse<HotelDTO>> UpdateHotelAsync(UpdateHotelDto updateHotelDto, List<CreateHotelRoomTypeDTO>? roomTypes)
         {
-            var hotel = await _genericRepository.GetByIdAsync(updateHotelDto.HotelId);
-            if (hotel == null)
-                throw new Exception("Hotel not found.");
+            try
+            {
+                var hotel = await _genericRepository.GetByIdAsync(updateHotelDto.HotelId);
+                if (hotel == null || !hotel.IsActive)
+                {
+                    _logger.LogWarning("Hotel not found or inactive for ID: {HotelId}", updateHotelDto.HotelId);
+                    return new ApiResponse<HotelDTO>(false, "Hotel not found or inactive.");
+                }
 
-            hotel.Name = updateHotelDto.Name ?? hotel.Name;
-            hotel.Cnpj = updateHotelDto.Cnpj ?? hotel.Cnpj;
-            hotel.Street = updateHotelDto.Street ?? hotel.Street;
-            hotel.City = updateHotelDto.City ?? hotel.City;
-            hotel.State = updateHotelDto.State ?? hotel.State;
-            hotel.ZipCode = updateHotelDto.ZipCode ?? hotel.ZipCode;
-            hotel.Description = updateHotelDto.Description ?? hotel.Description;
-            hotel.CheckInTime = updateHotelDto.CheckInTime ?? hotel.CheckInTime;
-            hotel.CheckOutTime = updateHotelDto.CheckOutTime ?? hotel.CheckOutTime;
-            hotel.ContactPhone = updateHotelDto.ContactPhone ?? hotel.ContactPhone;
-            hotel.ContactEmail = updateHotelDto.ContactEmail ?? hotel.ContactEmail;
-            hotel.StarRating = updateHotelDto.StarRating != 0 ? updateHotelDto.StarRating : hotel.StarRating;
-            hotel.IsActive = updateHotelDto.IsActive;
+                // Validate Name and CNPJ if provided
+                if (!string.IsNullOrEmpty(updateHotelDto.Name) && updateHotelDto.Name != hotel.Name)
+                {
+                    var nameExists = await _hotelRepository.NameExistsAsync(updateHotelDto.Name);
+                    if (nameExists)
+                    {
+                        _logger.LogWarning("Hotel name already exists: {Name}", updateHotelDto.Name);
+                        return new ApiResponse<HotelDTO>(false, "Hotel name already exists.");
+                    }
+                    hotel.Name = updateHotelDto.Name;
+                }
 
-            return await _genericRepository.UpdateAsync(hotel);
+                if (!string.IsNullOrEmpty(updateHotelDto.Cnpj) && updateHotelDto.Cnpj != hotel.Cnpj)
+                {
+                    var cnpjExists = await _hotelRepository.CnpjExistsAsync(updateHotelDto.Cnpj);
+                    if (cnpjExists)
+                    {
+                        _logger.LogWarning("CNPJ already exists: {Cnpj}", updateHotelDto.Cnpj);
+                        return new ApiResponse<HotelDTO>(false, "CNPJ already exists.");
+                    }
+                    hotel.Cnpj = updateHotelDto.Cnpj;
+                }
+
+                // Update other fields if provided
+                hotel.Street = updateHotelDto.Street ?? hotel.Street;
+                hotel.City = updateHotelDto.City ?? hotel.City;
+                hotel.State = updateHotelDto.State ?? hotel.State;
+                hotel.ZipCode = updateHotelDto.ZipCode ?? hotel.ZipCode;
+                hotel.Description = updateHotelDto.Description ?? hotel.Description;
+                hotel.StarRating = updateHotelDto.StarRating != 0 ? updateHotelDto.StarRating : hotel.StarRating;
+                hotel.CheckInTime = updateHotelDto.CheckInTime ?? hotel.CheckInTime;
+                hotel.CheckOutTime = updateHotelDto.CheckOutTime ?? hotel.CheckOutTime;
+                hotel.ContactPhone = updateHotelDto.ContactPhone ?? hotel.ContactPhone;
+                hotel.ContactEmail = updateHotelDto.ContactEmail ?? hotel.ContactEmail;
+                hotel.IsActive = updateHotelDto.IsActive;
+
+                await _genericRepository.UpdateAsync(hotel);
+                _logger.LogInformation("Hotel updated with ID: {HotelId}", hotel.HotelId);
+
+                // Handle media file uploads
+                if (updateHotelDto.MediaFiles != null && updateHotelDto.MediaFiles.Any())
+                {
+                    var uploadPath = Path.Combine(_environment.WebRootPath, "Uploads", "Hotel");
+                    Directory.CreateDirectory(uploadPath);
+
+                    foreach (var file in updateHotelDto.MediaFiles)
+                    {
+                        var ext = Path.GetExtension(file.FileName).ToLower();
+                        if (!new[] { ".jpg", ".jpeg", ".png", ".mp4" }.Contains(ext) || file.Length > 10 * 1024 * 1024)
+                        {
+                            _logger.LogWarning("Invalid media file: {FileName}", file.FileName);
+                            continue;
+                        }
+
+                        var fileName = $"{Guid.NewGuid()}{ext}";
+                        var filePath = Path.Combine(uploadPath, fileName);
+                        using var stream = new FileStream(filePath, FileMode.Create);
+                        await file.CopyToAsync(stream);
+
+                        await _hotelRepository.AddMediaAsync(new Media
+                        {
+                            MediaUrl = $"/Uploads/Hotel/{fileName}",
+                            MediaType = file.ContentType,
+                            HotelId = hotel.HotelId,
+                            IsActive = true
+                        });
+                        _logger.LogInformation("Media added for hotel ID: {HotelId}, File: {FileName}", hotel.HotelId, fileName);
+                    }
+                }
+
+                // Handle room types if provided
+                if (roomTypes != null && roomTypes.Any())
+                {
+                    var existingRoomTypes = (await _hotelRepository.GetHotelRoomTypesAsync(hotel.HotelId)).ToList();
+                    foreach (var roomTypeDto in roomTypes)
+                    {
+                        if (!Enum.IsDefined(typeof(RoomTypeEnum), roomTypeDto.Name))
+                        {
+                            _logger.LogWarning("Invalid RoomTypeEnum value: {Name}", roomTypeDto.Name);
+                            continue;
+                        }
+
+                        var existingRoomType = existingRoomTypes.FirstOrDefault(rt => rt.Name == roomTypeDto.Name && rt.IsActive);
+                        if (existingRoomType != null)
+                        {
+                            // Update existing room type
+                            existingRoomType.Description = roomTypeDto.Description ?? existingRoomType.Description;
+                            existingRoomType.Price = roomTypeDto.Price != 0 ? roomTypeDto.Price : existingRoomType.Price;
+                            existingRoomType.Capacity = roomTypeDto.Capacity != 0 ? roomTypeDto.Capacity : existingRoomType.Capacity;
+                            existingRoomType.BedType = roomTypeDto.BedType ?? existingRoomType.BedType;
+                            existingRoomType.TotalRooms = roomTypeDto.TotalRooms != 0 ? roomTypeDto.TotalRooms : existingRoomType.TotalRooms;
+                            existingRoomType.AvailableRooms = roomTypeDto.TotalRooms != 0 ? roomTypeDto.TotalRooms : existingRoomType.AvailableRooms;
+                            await _genericRepository.SaveChangesAsync();
+                            _logger.LogInformation("Room type updated: {Name}, HotelId: {HotelId}", existingRoomType.Name, hotel.HotelId);
+                        }
+                        else
+                        {
+                            // Add new room type
+                            var roomType = new HotelRoomType
+                            {
+                                Name = roomTypeDto.Name,
+                                Description = roomTypeDto.Description,
+                                Price = roomTypeDto.Price,
+                                Capacity = roomTypeDto.Capacity,
+                                BedType = roomTypeDto.BedType,
+                                TotalRooms = roomTypeDto.TotalRooms,
+                                AvailableRooms = roomTypeDto.TotalRooms,
+                                IsActive = true,
+                                HotelId = hotel.HotelId
+                            };
+                            await _hotelRepository.AddRoomTypeAsync(roomType);
+                            _logger.LogInformation("Room type added: {Name}, TotalRooms: {TotalRooms}, HotelId: {HotelId}",
+                                roomType.Name, roomType.TotalRooms, hotel.HotelId);
+                        }
+                    }
+                }
+
+                // Fetch updated hotel with related data
+                var hotels = await _hotelRepository.GetHotelsWithRelatedDataAsync();
+                var updatedHotel = hotels.FirstOrDefault(h => h.HotelId == hotel.HotelId && h.IsActive);
+                if (updatedHotel == null)
+                {
+                    _logger.LogWarning("Updated hotel not found for ID: {HotelId}", hotel.HotelId);
+                    return new ApiResponse<HotelDTO>(false, "Updated hotel not found.");
+                }
+
+                // Map to HotelDTO
+                var hotelDto = new HotelDTO
+                {
+                    HotelId = updatedHotel.HotelId,
+                    Name = updatedHotel.Name,
+                    Cnpj = updatedHotel.Cnpj,
+                    Street = updatedHotel.Street,
+                    City = updatedHotel.City,
+                    State = updatedHotel.State,
+                    ZipCode = updatedHotel.ZipCode,
+                    Description = updatedHotel.Description,
+                    StarRating = updatedHotel.StarRating,
+                    CheckInTime = updatedHotel.CheckInTime,
+                    CheckOutTime = updatedHotel.CheckOutTime,
+                    ContactPhone = updatedHotel.ContactPhone,
+                    ContactEmail = updatedHotel.ContactEmail,
+                    IsActive = updatedHotel.IsActive,
+                    AverageRating = updatedHotel.AverageRating,
+                    RoomTypes = updatedHotel.RoomTypes.Select(rt => new HotelRoomTypeDTO
+                    {
+                        RoomTypeId = rt.RoomTypeId,
+                        Name = rt.Name,
+                        Description = rt.Description,
+                        Price = rt.Price,
+                        Capacity = rt.Capacity,
+                        BedType = rt.BedType,
+                        TotalRooms = rt.TotalRooms,
+                        AvailableRooms = rt.AvailableRooms,
+                        IsActive = rt.IsActive
+                    }).ToList(),
+                    Medias = updatedHotel.Medias.Select(m => new MediaDTO
+                    {
+                        MediaId = m.MediaId,
+                        MediaUrl = m.MediaUrl,
+                        MediaType = m.MediaType
+                    }).ToList(),
+                    Reviews = updatedHotel.Reviews.Select(r => new ReviewDTO
+                    {
+                        ReviewId = r.ReviewId,
+                        UserId = r.UserId,
+                        ReviewType = r.ReviewType,
+                        HotelId = r.HotelId,
+                        Rating = r.Rating,
+                        Comment = r.Comment,
+                        CreatedAt = r.CreatedAt,
+                        IsActive = r.IsActive
+                    }).ToList(),
+                    Packages = updatedHotel.Packages.Select(p => new PackageDTO
+                    {
+                        PackageId = p.PackageId,
+                        Name = p.Name,
+                        Description = p.Description,
+                        BasePrice = p.BasePrice,
+                        IsActive = p.IsActive
+                    }).ToList(),
+                    Commodities = updatedHotel.Commodities.Select(c => new CommodityDTO
+                    {
+                        HotelId = c.HotelId,
+                        HasParking = c.HasParking,
+                        IsParkingPaid = c.IsParkingPaid,
+                        ParkingPrice = c.ParkingPrice,
+                        HasBreakfast = c.HasBreakfast,
+                        IsBreakfastPaid = c.IsBreakfastPaid,
+                        BreakfastPrice = c.BreakfastPrice,
+                        HasLunch = c.HasLunch,
+                        IsLunchPaid = c.IsLunchPaid,
+                        LunchPrice = c.LunchPrice,
+                        HasDinner = c.HasDinner,
+                        IsDinnerPaid = c.IsDinnerPaid,
+                        DinnerPrice = c.DinnerPrice,
+                        HasSpa = c.HasSpa,
+                        IsSpaPaid = c.IsSpaPaid,
+                        SpaPrice = c.SpaPrice,
+                        HasPool = c.HasPool,
+                        IsPoolPaid = c.IsPoolPaid,
+                        PoolPrice = c.PoolPrice,
+                        HasGym = c.HasGym,
+                        IsGymPaid = c.IsGymPaid,
+                        GymPrice = c.GymPrice,
+                        HasWiFi = c.HasWiFi,
+                        IsWiFiPaid = c.IsWiFiPaid,
+                        WiFiPrice = c.WiFiPrice,
+                        HasAirConditioning = c.HasAirConditioning,
+                        IsAirConditioningPaid = c.IsAirConditioningPaid,
+                        AirConditioningPrice = c.AirConditioningPrice,
+                        HasAccessibilityFeatures = c.HasAccessibilityFeatures,
+                        IsAccessibilityFeaturesPaid = c.IsAccessibilityFeaturesPaid,
+                        AccessibilityFeaturesPrice = c.AccessibilityFeaturesPrice,
+                        IsPetFriendly = c.IsPetFriendly,
+                        IsPetFriendlyPaid = c.IsPetFriendlyPaid,
+                        PetFriendlyPrice = c.PetFriendlyPrice,
+                        IsActive = c.IsActive
+                    }).ToList(),
+                    CustomCommodities = updatedHotel.CustomCommodities.Select(cs => new CustomCommodityDTO
+                    {
+                        CustomCommodityId = cs.CustomCommodityId,
+                        HotelId = cs.HotelId,
+                        Name = cs.Name,
+                        IsPaid = cs.IsPaid,
+                        Price = cs.Price,
+                        Description = cs.Description,
+                        IsActive = cs.IsActive
+                    }).ToList()
+                };
+
+                return new ApiResponse<HotelDTO>(true, "Hotel updated successfully.", hotelDto);
+            }
+            catch (Exception ex)
+            {
+                var innerMessage = ex.InnerException != null ? ex.InnerException.Message : ex.Message;
+                _logger.LogError(ex, "Error updating hotel with ID {HotelId}: {Message}", updateHotelDto.HotelId, innerMessage);
+                return new ApiResponse<HotelDTO>(false, $"Error updating hotel: {innerMessage}");
+            }
         }
 
-        public async Task<bool> SoftDeleteHotelAsync(int id)
-        {
-            var hotel = await _genericRepository.GetByIdAsync(id);
-            if (hotel == null)
-                return false;
-
-            hotel.IsActive = false;
-            await _genericRepository.UpdateAsync(hotel);
-            return true;
-        }
 
         public async Task<ApiResponse<double>> GetHotelAverageRatingAsync(int hotelId)
         {
@@ -1032,6 +1251,11 @@ namespace viaggia_server.Services.HotelServices
                 _logger.LogError(ex, "Error deleting review with ReviewId {ReviewId}: {Message}", reviewId, innerMessage);
                 return new ApiResponse<bool>(false, $"Error deleting review: {innerMessage}");
             }
+        }
+
+        public Task<bool> SoftDeleteHotelAsync(int id)
+        {
+            throw new NotImplementedException();
         }
     }
 }

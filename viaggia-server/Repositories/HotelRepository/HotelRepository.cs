@@ -259,9 +259,24 @@ namespace viaggia_server.Repositories.HotelRepository
             }
         }
 
-        public Task<IEnumerable<Commodity>> GetCommodityByHotelIdAsync(int hotelId)
+
+        public async Task<IEnumerable<Commodity>> GetCommodityByHotelIdAsync(int hotelId)
         {
-            throw new NotImplementedException();
+            try
+            {
+                _logger.LogInformation("Fetching commodities for HotelId: {HotelId}", hotelId);
+                var commodities = await _context.Commodities
+                    .Where(c => c.HotelId == hotelId && c.IsActive)
+                    .ToListAsync();
+                _logger.LogInformation("Fetched {Count} commodities for HotelId: {HotelId}", commodities.Count, hotelId);
+                return commodities;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error fetching commodities for HotelId: {HotelId}", hotelId);
+                throw;
+            }
         }
+
     }
 }
