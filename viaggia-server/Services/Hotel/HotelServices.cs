@@ -1261,6 +1261,11 @@ namespace viaggia_server.Services.HotelServices
             throw new NotImplementedException();
         }
 
+        public Task<bool> SoftDeleteHotelAsync(int id)
+        {
+            throw new NotImplementedException();
+        }
+
         public async Task<ApiResponse<List<HotelDTO>>> SearchHotelsByDestinationAsync(HotelSearchDTO searchDto)
         {
             try

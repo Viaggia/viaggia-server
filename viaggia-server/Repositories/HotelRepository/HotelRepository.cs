@@ -412,6 +412,7 @@ namespace viaggia_server.Repositories.HotelRepository
                 .Include(r => r.Hotel)
                 .ToListAsync();
         }
+
     }
 
 }
