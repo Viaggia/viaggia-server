@@ -1,8 +1,8 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
-using viaggia_server.DTOs.Hotel;
+using viaggia_server.DTOs.Commodity;
 
-namespace viaggia_server.DTOs.CreateHotelDTO
+
+namespace viaggia_server.DTOs.Hotel
 {
     public class CreateHotelDTO
     {
@@ -51,8 +51,13 @@ namespace viaggia_server.DTOs.CreateHotelDTO
         public bool IsActive { get; set; } = true;
 
         public List<IFormFile>? MediaFiles { get; set; }
-        
+
         [Required(ErrorMessage = "RoomTypesJson is required.")]
         public string RoomTypesJson { get; set; } = null!;
+
+        public List<IFormFile>? Medias { get; set; }
+        public CreateCommodityDTO? Commodity { get; set; }
+
+
     }
 }

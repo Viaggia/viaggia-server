@@ -9,8 +9,8 @@ using System.Security.Claims;
 using viaggia_server.Data;
 using viaggia_server.DTOs;
 using viaggia_server.DTOs.Payments;
-using viaggia_server.DTOs.Reservation;
-using viaggia_server.Models.Reservations;
+using viaggia_server.DTOs.Reserve;
+using viaggia_server.Models.Reserves;
 using viaggia_server.Services.Payment;
 
 namespace viaggia_server.Controllers
@@ -28,11 +28,11 @@ namespace viaggia_server.Controllers
         }
 
         [HttpPost("create-payment-intent")]
-        public async Task<IActionResult> CreatePaymentIntent([FromBody] ReservationCreateDTO createReservation)
+        public async Task<IActionResult> CreatePaymentIntent([FromBody] ReserveCreateDTO createReserve)
         {
             try
             {
-                var session = await _stripePaymentService.CreatePaymentIntentAsync(createReservation);
+                var session = await _stripePaymentService.CreatePaymentIntentAsync(createReserve);
 
                 if (session == null)
                 {

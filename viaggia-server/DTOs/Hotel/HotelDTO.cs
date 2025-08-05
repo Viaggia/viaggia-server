@@ -1,8 +1,6 @@
-using System.ComponentModel.DataAnnotations;
-using viaggia_server.DTOs.Commoditie;
 using viaggia_server.DTOs.Commodity;
-using viaggia_server.DTOs.Hotels;
 using viaggia_server.DTOs.Packages;
+using viaggia_server.DTOs.Reserve;
 using viaggia_server.DTOs.Reviews;
 
 namespace viaggia_server.DTOs.Hotel
@@ -24,11 +22,16 @@ namespace viaggia_server.DTOs.Hotel
         public string? ContactEmail { get; set; }
         public bool IsActive { get; set; }
         public double AverageRating { get; set; }
+
+        public int UserId { get; set; }
         public List<HotelRoomTypeDTO> RoomTypes { get; set; } = new List<HotelRoomTypeDTO>();
         public List<MediaDTO> Medias { get; set; } = new List<MediaDTO>();
-        public List<ReviewDTO> Reviews { get; set; } = new List<ReviewDTO>(); 
+        public List<ReviewDTO> Reviews { get; set; } = new List<ReviewDTO>();
         public List<PackageDTO> Packages { get; set; } = new List<PackageDTO>();
-        public List<CommoditieDTO> Commodities { get; set; } = new List<CommoditieDTO>();
-        public List<CommoditieServicesDTO> CommoditieServices { get; set; } = new List<CommoditieServicesDTO>();
+        public List<CommodityDTO> Commodities { get; set; } = new List<CommodityDTO>();
+        public List<CustomCommodityDTO> CustomCommodities { get; set; } = new List<CustomCommodityDTO>();
+        public List<ReserveDTO> Reserves { get; set; } = new List<ReserveDTO>();
+        public List<CommodityReadDTO> CommodityRead { get; set; } = new List<CommodityReadDTO>();
+
     }
 }

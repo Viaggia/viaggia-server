@@ -1,14 +1,10 @@
-<<<<<<< HEAD:viaggia-server/Services/Email/EmailService.cs
-﻿
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using System.Net;
 using System.Net.Mail;
-using viaggia_server.Models.Reservations;
-=======
-﻿using System.Net.Mail;
+using viaggia_server.Models.Reserves;
+using System.Net.Mail;
 using System.Net;
->>>>>>> 4ab8ac3dc4732ca91d9c662fc8b90e047b46890d:viaggia-server/Services/EmailResetPassword/EmailService.cs
 
 namespace viaggia_server.Services.Email
 {
