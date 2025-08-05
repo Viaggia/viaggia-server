@@ -14,5 +14,8 @@ namespace viaggia_server.Repositories
         Task<IEnumerable<Package>> SearchPackagesByDestinationAndDateAsync(string destination, DateTime startDate, DateTime endDate);
         Task<bool> ReactivateAsync(int packageId);
         Task<int?> GetHotelIdByNameAsync(string hotelName);
+
+        Task<IEnumerable<Package>> GetByHotelIdAsync(int hotelId);
+
     }
 }

@@ -219,8 +219,16 @@ namespace viaggia_server.Controllers
         public async Task<IActionResult> GetHotelsList()
         {
             var hotels = await _genericRepository.GetAllAsync();
-            var list = hotels.Select(h => new { h.HotelId, h.Name }).ToList();
-            return Ok(new ApiResponse<object>(true, "Lista de hotéis", list));
+            var list = hotels
+                .Where(h => h.IsActive)
+                .Select(h => new { h.HotelId, h.Name })
+                .OrderBy(h => h.Name)
+                .ToList();
+
+            if (!list.Any())
+                return NotFound(new ApiResponse<object>(false, "Nenhum hotel ativo encontrado."));
+
+            return Ok(new ApiResponse<object>(true, "Lista de hotéis recuperada com sucesso.", list));
         }
 
         // POST: api/Commodity
@@ -272,7 +280,7 @@ namespace viaggia_server.Controllers
                 IsPetFriendlyPaid = dto.IsPetFriendlyPaid,
                 PetFriendlyPrice = dto.PetFriendlyPrice,
                 IsActive = dto.IsActive,
-                CustomCommodities = dto.CustomCommodities.Select(cs => new CustomCommodity
+                CustomCommodities = dto.CustomCommodities?.Select(cs => new CustomCommodity
                 {
                     Name = cs.Name,
                     Description = cs.Description,
@@ -280,59 +288,61 @@ namespace viaggia_server.Controllers
                     Price = (decimal)cs.Price,
                     IsActive = cs.IsActive,
                     HotelId = hotel.HotelId
-                    // CommodityId será preenchido após salvar a commodity
-                }).ToList()
+                }).ToList() ?? new List<CustomCommodity>()
             };
 
             var result = await _commodityRepository.AddAsync(commodity);
 
-            // Atualizar o CommodityId dos CustomCommodities
             foreach (var customCommodity in commodity.CustomCommodities)
             {
                 customCommodity.CommodityId = result.CommodityId;
             }
-            await _commodityRepository.UpdateAsync(commodity);
+            await _genericRepository.SaveChangesAsync(); 
+
+            var reloadedCommodity = await _commodityRepository.GetByIdAsync(result.CommodityId);
+            if (reloadedCommodity == null)
+                return StatusCode(StatusCodes.Status500InternalServerError, new ApiResponse<object>(false, "Erro ao recuperar a commodity após criação."));
 
             var response = new CommodityReadDTO
             {
-                CommodityId = result.CommodityId,
-                HotelId = result.HotelId,
+                CommodityId = reloadedCommodity.CommodityId,
+                HotelId = reloadedCommodity.HotelId,
                 HotelName = hotel.Name,
-                HasParking = result.HasParking,
-                IsParkingPaid = result.IsParkingPaid,
-                ParkingPrice = result.ParkingPrice,
-                HasBreakfast = result.HasBreakfast,
-                IsBreakfastPaid = result.IsBreakfastPaid,
-                BreakfastPrice = result.BreakfastPrice,
-                HasLunch = result.HasLunch,
-                IsLunchPaid = result.IsLunchPaid,
-                LunchPrice = result.LunchPrice,
-                HasDinner = result.HasDinner,
-                IsDinnerPaid = result.IsDinnerPaid,
-                DinnerPrice = result.DinnerPrice,
-                HasSpa = result.HasSpa,
-                IsSpaPaid = result.IsSpaPaid,
-                SpaPrice = result.SpaPrice,
-                HasPool = result.HasPool,
-                IsPoolPaid = result.IsPoolPaid,
-                PoolPrice = result.PoolPrice,
-                HasGym = result.HasGym,
-                IsGymPaid = result.IsGymPaid,
-                GymPrice = result.GymPrice,
-                HasWiFi = result.HasWiFi,
-                IsWiFiPaid = result.IsWiFiPaid,
-                WiFiPrice = result.WiFiPrice,
-                HasAirConditioning = result.HasAirConditioning,
-                IsAirConditioningPaid = result.IsAirConditioningPaid,
-                AirConditioningPrice = result.AirConditioningPrice,
-                HasAccessibilityFeatures = result.HasAccessibilityFeatures,
-                IsAccessibilityFeaturesPaid = result.IsAccessibilityFeaturesPaid,
-                AccessibilityFeaturesPrice = result.AccessibilityFeaturesPrice,
-                IsPetFriendly = result.IsPetFriendly,
-                IsPetFriendlyPaid = result.IsPetFriendlyPaid,
-                PetFriendlyPrice = result.PetFriendlyPrice,
-                IsActive = result.IsActive,
-                CustomCommodities = result.CustomCommodities.Select(cs => new CustomCommodityDTO
+                HasParking = reloadedCommodity.HasParking,
+                IsParkingPaid = reloadedCommodity.IsParkingPaid,
+                ParkingPrice = reloadedCommodity.ParkingPrice,
+                HasBreakfast = reloadedCommodity.HasBreakfast,
+                IsBreakfastPaid = reloadedCommodity.IsBreakfastPaid,
+                BreakfastPrice = reloadedCommodity.BreakfastPrice,
+                HasLunch = reloadedCommodity.HasLunch,
+                IsLunchPaid = reloadedCommodity.IsLunchPaid,
+                LunchPrice = reloadedCommodity.LunchPrice,
+                HasDinner = reloadedCommodity.HasDinner,
+                IsDinnerPaid = reloadedCommodity.IsDinnerPaid,
+                DinnerPrice = reloadedCommodity.DinnerPrice,
+                HasSpa = reloadedCommodity.HasSpa,
+                IsSpaPaid = reloadedCommodity.IsSpaPaid,
+                SpaPrice = reloadedCommodity.SpaPrice,
+                HasPool = reloadedCommodity.HasPool,
+                IsPoolPaid = reloadedCommodity.IsPoolPaid,
+                PoolPrice = reloadedCommodity.PoolPrice,
+                HasGym = reloadedCommodity.HasGym,
+                IsGymPaid = reloadedCommodity.IsGymPaid,
+                GymPrice = reloadedCommodity.GymPrice,
+                HasWiFi = reloadedCommodity.HasWiFi,
+                IsWiFiPaid = reloadedCommodity.IsWiFiPaid,
+                WiFiPrice = reloadedCommodity.WiFiPrice,
+                HasAirConditioning = reloadedCommodity.HasAirConditioning,
+                IsAirConditioningPaid = reloadedCommodity.IsAirConditioningPaid,
+                AirConditioningPrice = reloadedCommodity.AirConditioningPrice,
+                HasAccessibilityFeatures = reloadedCommodity.HasAccessibilityFeatures,
+                IsAccessibilityFeaturesPaid = reloadedCommodity.IsAccessibilityFeaturesPaid,
+                AccessibilityFeaturesPrice = reloadedCommodity.AccessibilityFeaturesPrice,
+                IsPetFriendly = reloadedCommodity.IsPetFriendly,
+                IsPetFriendlyPaid = reloadedCommodity.IsPetFriendlyPaid,
+                PetFriendlyPrice = reloadedCommodity.PetFriendlyPrice,
+                IsActive = reloadedCommodity.IsActive,
+                CustomCommodities = reloadedCommodity.CustomCommodities.Select(cs => new CustomCommodityDTO
                 {
                     CustomCommodityId = cs.CustomCommodityId,
                     Name = cs.Name,

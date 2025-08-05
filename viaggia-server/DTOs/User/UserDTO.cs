@@ -1,4 +1,6 @@
-﻿namespace viaggia_server.DTOs.Users
+﻿using viaggia_server.Models.Users;
+
+namespace viaggia_server.DTOs.Users
 {
     public class UserDTO
     {
@@ -13,6 +15,11 @@
         public string? EmployerCompanyName { get; set; }
         public string? EmployeeId { get; set; }
         public bool IsActive { get; set; }
+        public string? AvatarUrl { get; set; } = null!;
         public List<string> Roles { get; set; } = new List<string>();
+        public List<UserRole> UserRoles { get; set; } = new List<UserRole>();
+
+
+
     }
 }

@@ -7,8 +7,10 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Stripe;
 using Viaggia.Swagger;
@@ -19,6 +21,7 @@ using viaggia_server.Repositories.Auth;
 using viaggia_server.Repositories.CommodityRepository;
 using viaggia_server.Repositories.HotelRepository;
 using viaggia_server.Repositories.Payment;
+using viaggia_server.Repositories.Reserves;
 using viaggia_server.Repositories.Users;
 using viaggia_server.Services.EmailResetPassword;
 using viaggia_server.Services.HotelServices;
@@ -92,7 +95,7 @@ builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
 builder.Services.AddScoped<IAuthRepository, AuthRepository>();
 builder.Services.AddScoped<IGoogleAccountRepository, GoogleAccountRepository>();
 builder.Services.AddScoped<IReviewRepository, ReviewRepository>();
-
+builder.Services.AddScoped<IReserveRepository, ReserveRepository>();
 //Services
 builder.Services.AddScoped<IHotelServices, HotelServices>();
 builder.Services.AddScoped<IEmailService, EmailService>();
@@ -111,6 +114,12 @@ builder.Services.AddLogging(logging =>
     logging.AddConsole();
     logging.AddDebug();
 });
+
+// Add IHttpContextAccessor for authorization handlers
+builder.Services.AddHttpContextAccessor();
+
+// Configure Authorization Handlers
+builder.Services.AddSingleton<IAuthorizationHandler, HotelAccessHandler>();
 
 // Configure authentication (JWT and Google OAuth)
 builder.Services.AddAuthentication(options =>
@@ -169,7 +178,29 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
-builder.Services.AddAuthorization();
+
+// Configure Authorization Policies
+builder.Services.AddAuthorization(options =>
+{
+    // Política para SERVICE_PROVIDER que requer HotelId válido
+    options.AddPolicy("HotelAccess", policy =>
+        policy.Requirements.Add(new HotelAccessRequirement()));
+
+// Política para CLIENT (acesso a funcionalidades específicas de clientes)
+options.AddPolicy("ClientAccess", policy =>
+    policy.RequireRole("CLIENT"));
+
+// Política para ATTENDANT (acesso a funcionalidades específicas de atendentes)
+options.AddPolicy("AttendantAccess", policy =>
+    policy.RequireRole("ATTENDANT")
+          .RequireClaim("EmployerCompanyName"));
+
+// Política genérica para usuários autenticados
+options.AddPolicy("AuthenticatedUser", policy =>
+    policy.RequireAuthenticatedUser());
+});
+
+
 
 // Configure CORS
 builder.Services.AddCors(options =>

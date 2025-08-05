@@ -1,11 +1,13 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using viaggia_server.Models.Commodities;
+using viaggia_server.Models.CustomCommodities;
 using viaggia_server.Models.Medias;
 using viaggia_server.Models.Packages;
-using viaggia_server.Models.Reviews;
-using viaggia_server.Repositories;
 using viaggia_server.Models.Reserves;
-using viaggia_server.Models.CustomCommodities;
+using viaggia_server.Models.Reviews;
+using viaggia_server.Models.Users;
+using viaggia_server.Repositories;
 
 namespace viaggia_server.Models.Hotels
 {
@@ -59,6 +61,11 @@ namespace viaggia_server.Models.Hotels
         public bool IsActive { get; set; } = true;
 
         public double AverageRating { get; set; }
+       
+  
+        [ForeignKey("UserId")]
+        public int? UserId { get; set; } 
+        public virtual User? User { get; set; } 
 
         // Relationships
         public virtual ICollection<HotelRoomType> RoomTypes { get; set; } = new List<HotelRoomType>();
