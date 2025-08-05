@@ -34,6 +34,7 @@ using viaggia_server.Services.Payment;
 using viaggia_server.Services.ReservationServices;
 using viaggia_server.Validators;
 using viaggia_server.Services.Reservations;
+using viaggia_server.Repositories.Payment;
 
 var builder = WebApplication.CreateBuilder(args);
 

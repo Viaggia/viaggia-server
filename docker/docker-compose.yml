@@ -12,7 +12,7 @@ services:
       - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT:-Development}
       - ASPNETCORE_URLS=http://+:8080
     ports:
-      - "${API_PORT:-5001}:8080"
+      - "${API_PORT:-7164}:8080"
     volumes:
       # Only mount volumes in development
       - ${VOLUME_MOUNT:-../:/app}

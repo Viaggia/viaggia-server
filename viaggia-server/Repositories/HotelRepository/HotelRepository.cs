@@ -82,6 +82,7 @@ namespace viaggia_server.Repositories.HotelRepository
                 return false;
             return await _context.Hotels.AnyAsync(h => h.Cnpj.ToLower() == cnpj.ToLower() && h.IsActive);
         }
+
         public async Task<Hotel?> GetHotelByNameAsync(string name)
         {
             return await _context.Hotels

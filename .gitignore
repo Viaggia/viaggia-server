@@ -5,20 +5,14 @@
 *.suo
 *.user
 *.userosscache
-*.s# Uploads e arquivos gerados
-uploads/
-wwwroot/Uploads/
-**/wwwroot/Uploads/**
-**/Uploads/**
+*.s#
+
 
 # Migrations (geradas automaticamente)
 **/Migrations/
 *.Designer.cs
 *ModelSnapshot.cs
 
-# Arquivos de teste duplicados
-viaggia-server.tests/bin/
-viaggia-server.tests/obj/
 # Pastas de build
 bin/
 obj/
@@ -37,10 +31,6 @@ Release/
 # Arquivos do Visual Studio Code
 .vscode/
 
-# Arquivos de configuração que não devem ser versionados
-appsettings.json
-appsettings.*.json
-
 # Arquivos de ambiente e configuração sensível
 .env
 .env.*
@@ -49,6 +39,12 @@ docker/.env
 docker/.env.*
 docker/.env.development
 docker/.env.production
+
+# Docker files adicionais
+docker-compose.override.yml
+docker-compose.override.*.yml
+docker-data/
+.docker/
 
 # Sistema operacional
 .DS_Store
@@ -65,8 +61,6 @@ Thumbs.db
 /viaggia-server/.vs/
 /viaggia-server/bin/
 /viaggia-server/obj/
-/viaggia-server/appsettings.json
-/viaggia-server/appsettings.*.json
 /viaggia-server/appsettings.Development.json
 /viaggia-server/Migrations/
 /viaggia-server/*.csproj.user
@@ -83,12 +77,6 @@ wwwroot/Uploads/
 **/Migrations/
 *.Designer.cs
 *ModelSnapshot.cs
-
-/viaggia-server/wwwroot/Uploads/Packages/
 /viaggia-server/appsettings.Development.json
 viaggia-server.tests/bin/
 viaggia-server.tests/obj/
-/viaggia-server/wwwroot/Uploads/Packages/
-/viaggia-server/wwwroot/Uploads/Hotel/
-/viaggia-server/wwwroot/Uploads/User/
-

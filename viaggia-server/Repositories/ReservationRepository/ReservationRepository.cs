@@ -2,6 +2,7 @@
 using viaggia_server.Data;
 using viaggia_server.DTOs.Reservation;
 using viaggia_server.Models.Reserves;
+using viaggia_server.Repositories.Reserves;
 
 namespace viaggia_server.Repositories.ReservationRepository
 {
@@ -41,7 +42,7 @@ namespace viaggia_server.Repositories.ReservationRepository
             try
             {
                 var findReserve = await _context.Reserves.FirstOrDefaultAsync<Reserve>(r => r.ReserveId == id);
-                if (findReserve.ReserveId == null)
+                if (findReserve == null)
                     throw new Exception("Not found this reserve");
                 return findReserve;
             }

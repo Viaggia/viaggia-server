@@ -1,4 +1,4 @@
-using System.Text.Json;
+﻿using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using viaggia_server.DTOs;
 using viaggia_server.DTOs.Commodity;
@@ -9,10 +9,6 @@ using viaggia_server.DTOs.Reviews;
 using viaggia_server.Models.Hotels;
 using viaggia_server.Models.Medias;
 using viaggia_server.Models.Reviews;
-using Media = viaggia_server.Models.Medias.Media;
-using viaggia_server.Models.Packages;
-using viaggia_server.Models.Reviews;
-using viaggia_server.Models.Users;
 using viaggia_server.Repositories;
 using viaggia_server.Repositories.HotelRepository;
 

@@ -56,6 +56,7 @@ namespace viaggia_server.Services.Reservations
 
             return new ReservationDTO
             {
+                ReservationId = r.ReserveId,
                 UserId = r.UserId,
                 PackageId = r.PackageId,
                 RoomTypeId = r.RoomTypeId,
