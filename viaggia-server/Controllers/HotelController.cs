@@ -514,18 +514,20 @@ namespace viaggia_server.Controllers
                 }
 
                 var response = await _hotelServices.SearchHotelsByDestinationAsync(searchDto);
+                if (response.Data == null || !response.Data.Any())
+                {
+                    _logger.LogInformation("No available hotels found for City: {City}, People: {NumberOfPeople}, Rooms: {NumberOfRooms}",
+                        searchDto.City, searchDto.NumberOfPeople, searchDto.NumberOfRooms);
+                    return Ok(new ApiResponse<List<HotelDTO>>(true, "No available hotels found.", new List<HotelDTO>()));
+                }
+
                 if (!response.Success)
                 {
                     _logger.LogWarning("Failed to retrieve hotels: {Message}", response.Message);
                     return BadRequest(new ApiResponse<List<HotelDTO>>(false, response.Message));
                 }
 
-                if (!response.Data.Any())
-                {
-                    _logger.LogInformation("No available hotels found for City: {City}, People: {NumberOfPeople}, Rooms: {NumberOfRooms}",
-                        searchDto.City, searchDto.NumberOfPeople, searchDto.NumberOfRooms);
-                    return NotFound(new ApiResponse<List<HotelDTO>>(false, "No available hotels found."));
-                }
+                
 
                 return Ok(response);
             }
