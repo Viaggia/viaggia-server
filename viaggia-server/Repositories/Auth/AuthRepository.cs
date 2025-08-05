@@ -30,7 +30,7 @@ namespace viaggia_server.Repositories.Auth
             {
                 throw new UnauthorizedAccessException("Email ou senha incorretos.");
             }
-            return await GenerateJwtTokenAsync(user); // Ensure GenerateJwtTokenAsync is used
+            return await GenerateJwtTokenAsync(user); 
         }
 
         public async Task<User> GetUserByEmailAsync(string email)
@@ -41,6 +41,7 @@ namespace viaggia_server.Repositories.Auth
                 .FirstOrDefaultAsync(u => u.Email == email && u.IsActive);
         }
 
+
         public async Task<string> GenerateJwtTokenAsync(User user)
         {
             var claims = new List<Claim>
@@ -49,7 +50,30 @@ namespace viaggia_server.Repositories.Auth
                 new Claim(ClaimTypes.Name, user.Name),
                 new Claim(ClaimTypes.Email, user.Email)
             };
-            claims.AddRange(user.UserRoles.Select(ur => new Claim(ClaimTypes.Role, ur.Role.Name)));
+
+            // Adicionar roles dinamicamente com base em UserRoles
+            var roles = user.UserRoles.Select(ur => ur.Role.Name).ToList();
+            claims.AddRange(roles.Select(role => new Claim(ClaimTypes.Role, role)));
+
+            // Adicionar HotelId apenas se for válido
+            if (user.HotelId.HasValue)
+            {
+                claims.Add(new Claim("HotelId", user.HotelId.Value.ToString()));
+            }
+
+            // Adicionar claims específicas para outras roles, se necessário
+            if (roles.Contains("ATTENDANT"))
+            {
+                // Exemplo: Adicionar uma claim específica para ATTENDANT
+                var companyName = await _context.Users
+                    .Where(u => u.Id == user.Id)
+                    .Select(u => u.EmployerCompanyName) // Supondo que existe essa propriedade
+                    .FirstOrDefaultAsync();
+                if (!string.IsNullOrEmpty(companyName))
+                {
+                    claims.Add(new Claim("EmployerCompanyName", companyName));
+                }
+            }
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
@@ -63,8 +87,12 @@ namespace viaggia_server.Repositories.Auth
                 signingCredentials: creds
             );
 
+            _logger.LogInformation("Token JWT gerado para o usuário {UserId} com roles: {Roles} e HotelId: {HotelId}",
+                user.Id, string.Join(", ", roles), user.HotelId?.ToString() ?? "Nenhum");
+
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
+
 
         public async Task RevokeTokenAsync(string token)
         {
@@ -83,24 +111,7 @@ namespace viaggia_server.Repositories.Auth
             return await _context.RevokedTokens.AnyAsync(rt => rt.Token == token);
         }
 
-        //public async Task<string> GeneratePasswordResetTokenAsync(string email)
-        //{
-        //    var user = await GetUserByEmailAsync(email);
-        //    if (user == null)
-        //        throw new ArgumentException("Usuário não encontrado.");
 
-        //    var token = Guid.NewGuid().ToString();
-        //    var resetToken = new PasswordResetToken
-        //    {
-        //        UserId = user.Id,
-        //        Token = token,
-        //        ExpiryDate = DateTime.UtcNow.AddHours(1)
-        //    };
-
-        //    await _context.PasswordResetTokens.AddAsync(resetToken);
-        //    await _context.SaveChangesAsync();
-        //    return token;
-        //}
 
         public async Task<string> GeneratePasswordResetTokenAsync(string email)
         {

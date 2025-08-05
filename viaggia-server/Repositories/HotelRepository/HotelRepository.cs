@@ -5,6 +5,7 @@ using viaggia_server.Models.CustomCommodities;
 using viaggia_server.Models.Hotels;
 using viaggia_server.Models.Medias;
 using viaggia_server.Models.Packages;
+using viaggia_server.Models.Reserves;
 using viaggia_server.Models.Reviews;
 
 namespace viaggia_server.Repositories.HotelRepository
@@ -20,7 +21,37 @@ namespace viaggia_server.Repositories.HotelRepository
             _logger = logger;
         }
 
+        public async Task UpdateAsync(Hotel hotel)
+        {
+            _context.Hotels.Update(hotel);
+            await _context.SaveChangesAsync();
+        }
 
+        public async Task<Hotel?> GetByIdAsync(int id)
+        {
+            try
+            {
+                _logger.LogInformation("Fetching hotel with ID: {HotelId}", id);
+                var hotel = await _context.Hotels
+                    .Include(h => h.Commodities)
+                    .Include(h => h.CustomCommodities)
+                    .Include(h => h.RoomTypes)
+                    .Include(h => h.Medias)
+                    .Include(h => h.Reviews)
+                    .Include(h => h.Packages)
+                    .FirstOrDefaultAsync(h => h.HotelId == id && h.IsActive);
+                if (hotel == null)
+                    _logger.LogWarning("Hotel with ID: {HotelId} not found or inactive", id);
+                else
+                    _logger.LogInformation("Hotel with ID: {HotelId} fetched successfully", id);
+                return hotel;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error fetching hotel with ID: {HotelId}", id);
+                throw;
+            }
+        }
         public async Task<HotelRoomType> AddRoomTypeAsync(HotelRoomType roomType)
         {
             try
@@ -345,6 +376,41 @@ namespace viaggia_server.Repositories.HotelRepository
                 _logger.LogError(ex, "Error fetching available hotels for City: {City}", city);
                 throw;
             }
+        }
+        public async Task<Hotel?> GetHotelByIdWithDetailsAsync(int hotelId)
+        {
+            return await _context.Hotels
+                .Include(h => h.RoomTypes)
+                .Include(h => h.HotelDates)
+                .Include(h => h.Medias)
+                .Include(h => h.Reviews)
+                .Include(h => h.Packages)
+                .Include(h => h.Commodities)
+                .Include(h => h.CustomCommodities)
+                .FirstOrDefaultAsync(h => h.HotelId == hotelId);
+        }
+
+
+        public async Task<IEnumerable<Hotel>> GetHotelsByUserIdAsync(int userId)
+        {
+            return await _context.Hotels
+                .Where(h => h.UserId == userId && h.IsActive)
+                .Include(h => h.RoomTypes)
+                .Include(h => h.Medias)
+                .Include(h => h.Reviews)
+                .Include(h => h.Packages)
+                .Include(h => h.Commodities)
+                .Include(h => h.CustomCommodities)
+                .ToListAsync();
+        }
+
+        public async Task<IEnumerable<Reserve>> GetReservationsByHotelIdAsync(int hotelId)
+        {
+            return await _context.Reserves
+                .Where(r => r.HotelId == hotelId && r.IsActive)
+                .Include(r => r.User)
+                .Include(r => r.Hotel)
+                .ToListAsync();
         }
     }
 

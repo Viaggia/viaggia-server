@@ -2,16 +2,19 @@
 using viaggia_server.Data;
 using viaggia_server.DTOs.Auth;
 using viaggia_server.Models.Users;
+using viaggia_server.Repositories.Users;
 
 namespace viaggia_server.Repositories.Auth
 {
     public class GoogleAccountRepository : IGoogleAccountRepository
     {
         private readonly AppDbContext _context;
+        private readonly IUserRepository _userRepository;
 
-        public GoogleAccountRepository(AppDbContext context)
+        public GoogleAccountRepository(AppDbContext context, IUserRepository userRepository)
         {
             _context = context ?? throw new ArgumentNullException(nameof(context));
+            _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
         }
 
         public async Task<User> CreateOrLoginOAuth(OAuthRequest dto)
@@ -36,7 +39,7 @@ namespace viaggia_server.Repositories.Auth
                     IsActive = true,
                     CreateDate = DateTime.UtcNow
                 };
-                await _context.Users.AddAsync(user);
+                user = await _userRepository.CreateWithRoleAsync(user, "CLIENT");
             }
             else
             {
@@ -44,6 +47,20 @@ namespace viaggia_server.Repositories.Auth
                 user.Email = dto.Email;
                 user.Name = dto.Name;
                 user.AvatarUrl = dto.Picture ?? string.Empty;
+
+                if (!user.UserRoles.Any(ur => ur.Role.Name == "CLIENT"))
+                {
+                    var clientRole = await _context.Roles.FirstOrDefaultAsync(r => r.Name == "CLIENT");
+                    if (clientRole != null)
+                    {
+                        await _context.UserRoles.AddAsync(new UserRole
+                        {
+                            UserId = user.Id,
+                            RoleId = clientRole.Id
+                        });
+                        await _context.SaveChangesAsync();
+                    }
+                }
             }
 
             await _context.SaveChangesAsync();

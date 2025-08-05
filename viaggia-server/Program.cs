@@ -5,8 +5,10 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Stripe;
 using System.IdentityModel.Tokens.Jwt;
@@ -20,6 +22,9 @@ using viaggia_server.Repositories.Users;
 using viaggia_server.Repositories.Auth;
 using viaggia_server.Repositories.CommodityRepository;
 using viaggia_server.Repositories.HotelRepository;
+using viaggia_server.Repositories.Payment;
+using viaggia_server.Repositories.Reserves;
+using viaggia_server.Repositories.Users;
 using viaggia_server.Services.Email;
 using viaggia_server.Services.HotelServices;
 using viaggia_server.Services.ImageService;
@@ -29,8 +34,6 @@ using viaggia_server.Services.Payment;
 using viaggia_server.Services.ReservationServices;
 using viaggia_server.Validators;
 using viaggia_server.Services.Reservations;
-using viaggia_server.Repositories.Payment;
-
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -86,21 +89,22 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     sqlOptions => sqlOptions.CommandTimeout(60)));
 
 // Repositories
-
-// Register repositories and services
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IImageService, ImageService>();
 builder.Services.AddScoped<IPackageRepository, PackageRepository>();
 builder.Services.AddScoped<IHotelServices, HotelServices>();
 builder.Services.AddScoped<IHotelRepository, HotelRepository>();
+builder.Services.AddScoped<IReservationRepository, ReservationRepository>();
+builder.Services.AddScoped<IReservationService, ReservationService>();
+builder.Services.AddScoped<IStripePaymentService, StripePaymentService>();
 builder.Services.AddScoped<ICommodityRepository, CommodityRepository>();
 builder.Services.AddScoped<ICustomCommodityRepository, CustomCommodityRepository>();
-builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
+//builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
 builder.Services.AddScoped<IAuthRepository, AuthRepository>();
 builder.Services.AddScoped<IGoogleAccountRepository, GoogleAccountRepository>();
 builder.Services.AddScoped<IReviewRepository, ReviewRepository>();
-
+builder.Services.AddScoped<IReserveRepository, ReserveRepository>();
 //Services
 builder.Services.AddScoped<IHotelServices, HotelServices>();
 builder.Services.AddScoped<IEmailService, EmailService>();
@@ -126,11 +130,14 @@ builder.Services.AddLogging(logging =>
     logging.AddDebug();
 });
 
+// Add IHttpContextAccessor for authorization handlers
+builder.Services.AddHttpContextAccessor();
+
 // Configure authentication (JWT and Google OAuth)
  builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-    options.DefaultChallengeScheme = GoogleDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
 })
 .AddJwtBearer(options =>
 {
@@ -168,7 +175,6 @@ builder.Services.AddLogging(logging =>
     options.ClientId = builder.Configuration["Authentication:Google:ClientId"];
     options.ClientSecret = builder.Configuration["Authentication:Google:ClientSecret"];
     options.SignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
-    options.SignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
     options.SaveTokens = true;
     options.ClaimActions.MapJsonKey(ClaimTypes.NameIdentifier, "sub");
     options.ClaimActions.MapJsonKey(ClaimTypes.Name, "name");
@@ -183,8 +189,6 @@ builder.Services.AddLogging(logging =>
         return Task.CompletedTask;
     };
 });
-
-builder.Services.AddAuthorization();
 
 // Configure CORS
 builder.Services.AddCors(options =>
@@ -228,7 +232,7 @@ app.UseHttpsRedirection();
 app.UseStaticFiles(); // For serving images in wwwroot
 app.UseCors("AllowFrontend");
 app.UseAuthentication();
+app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
-

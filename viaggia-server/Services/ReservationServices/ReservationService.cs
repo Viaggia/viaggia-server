@@ -19,9 +19,9 @@ namespace viaggia_server.Services.Reservations
         private readonly IEmailService _emailService;
 
         public ReservationService(
-            IReservationRepository reservationRepo, 
-            IUserRepository userRepository, 
-            IHotelRepository hotelRepository, 
+            IReservationRepository reservationRepo,
+            IUserRepository userRepository,
+            IHotelRepository hotelRepository,
             IEmailService emailService)
         {
             _reservationRepository = reservationRepo;
@@ -38,24 +38,33 @@ namespace viaggia_server.Services.Reservations
                 ReservationId = r.ReserveId,
                 UserId = r.UserId,
                 PackageId = r.PackageId,
+                RoomTypeId = r.RoomTypeId,
                 HotelId = r.HotelId,
+                CheckInDate = r.CheckInDate,
+                CheckOutDate = r.CheckOutDate,
                 TotalPrice = r.TotalPrice,
+                NumberOfGuests = r.NumberOfGuests,
+                Status = r.Status,
                 IsActive = r.IsActive
             }).ToList();
         }
 
         public async Task<ReservationDTO?> GetByIdAsync(int id)
         {
-            var r = await _reservationRepository.GetByIdAsync(id);
+            var r = await _reservationRepository.GetReservationByIdAsync(id);
             if (r == null) return null;
 
             return new ReservationDTO
             {
-                ReservationId = r.ReserveId,
                 UserId = r.UserId,
                 PackageId = r.PackageId,
+                RoomTypeId = r.RoomTypeId,
                 HotelId = r.HotelId,
+                CheckInDate = r.CheckInDate,
+                CheckOutDate = r.CheckOutDate,
                 TotalPrice = r.TotalPrice,
+                NumberOfGuests = r.NumberOfGuests,
+                Status = r.Status,
                 IsActive = r.IsActive
             };
         }
@@ -87,8 +96,13 @@ namespace viaggia_server.Services.Reservations
 
             reservation.UserId = dto.UserId;
             reservation.PackageId = dto.PackageId;
+            reservation.RoomTypeId = dto.RoomTypeId;
             reservation.HotelId = dto.HotelId;
+            reservation.CheckInDate = dto.CheckInDate;
+            reservation.CheckOutDate = dto.CheckOutDate;
             reservation.TotalPrice = dto.TotalPrice;
+            reservation.NumberOfGuests = dto.NumberOfGuests;
+            reservation.Status = dto.Status;
             reservation.IsActive = dto.IsActive;
 
             await _reservationRepository.UpdateAsync(reservation);

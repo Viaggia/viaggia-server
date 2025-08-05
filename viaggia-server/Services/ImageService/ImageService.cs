@@ -2,45 +2,42 @@ namespace viaggia_server.Services.ImageService
 {
     public class ImageService : IImageService
     {
-        private readonly IConfiguration _configuration;
+        private readonly IWebHostEnvironment _environment;
         private readonly ILogger<ImageService> _logger;
 
-        public ImageService(IConfiguration configuration, ILogger<ImageService> logger)
+        public ImageService(IWebHostEnvironment environment, ILogger<ImageService> logger)
         {
-            _configuration = configuration;
-            _logger = logger;
+            _environment = environment ?? throw new ArgumentNullException(nameof(environment));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
-        public async Task<string?> UploadImageAsync(IFormFile? image, string userId)
+        public async Task<string?> UploadImageAsync(IFormFile file, string userId)
         {
-            if (image == null)
+            if (file == null || file.Length == 0)
                 return null;
 
-            var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/uploads/avatars");
+            var allowedExtensions = new[] { ".jpg", ".jpeg", ".png" };
+            var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
+            if (!allowedExtensions.Contains(extension))
+                throw new ArgumentException("Invalid image format. Only jpg, jpeg, and png are allowed.");
+
+            if (file.Length > 5 * 1024 * 1024) // 5MB
+                throw new ArgumentException("Image size exceeds 5MB.");
+
+            var uploadsFolder = Path.Combine(_environment.WebRootPath, "avatars");
             if (!Directory.Exists(uploadsFolder))
-            {
                 Directory.CreateDirectory(uploadsFolder);
-            }
 
-            var uniqueFileName = $"{userId}_{Guid.NewGuid()}{Path.GetExtension(image.FileName)}";
-            var filePath = Path.Combine(uploadsFolder, uniqueFileName);
+            var fileName = $"{userId}_{Guid.NewGuid()}{extension}";
+            var filePath = Path.Combine(uploadsFolder, fileName);
 
-            try
+            using (var stream = new FileStream(filePath, FileMode.Create))
             {
-                using (var fileStream = new FileStream(filePath, FileMode.Create))
-                {
-                    await image.CopyToAsync(fileStream);
-                }
+                await file.CopyToAsync(stream);
+            }
 
-                // Return URL relative to the application
-                var baseUrl = _configuration["AppSettings:BaseUrl"] ?? "http://localhost:5000";
-                return $"{baseUrl}/uploads/avatars/{uniqueFileName}";
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Failed to upload image for user {UserId}", userId);
-                throw new Exception("Failed to upload image.");
-            }
+            // Retorna a URL relativa para a imagem
+            return $"/avatars/{fileName}";
         }
     }
 }

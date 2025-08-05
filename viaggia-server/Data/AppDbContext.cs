@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using viaggia_server.Models.Commodities;
 using viaggia_server.Models.CustomCommodities;
@@ -34,6 +35,14 @@ namespace viaggia_server.Data
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+
+            // User to Hotel relationship
+            modelBuilder.Entity<User>()
+                .HasOne(u => u.Hotel)
+                .WithOne(h => h.User)
+                .HasForeignKey<User>("HotelId")
+                .IsRequired(false)
+                .OnDelete(DeleteBehavior.NoAction);
 
             // UserRole
             modelBuilder.Entity<UserRole>()
@@ -117,21 +126,21 @@ namespace viaggia_server.Data
                 .HasForeignKey(cs => cs.HotelId)
                 .OnDelete(DeleteBehavior.NoAction);
 
-            // Configure RoomTypeEnum
             modelBuilder.Entity<HotelRoomType>()
                 .Property(rt => rt.Name)
                 .HasConversion(
                     v => v.ToString(),
                     v => (RoomTypeEnum)Enum.Parse(typeof(RoomTypeEnum), v));
 
-
+            
+            // Commodity
             modelBuilder.Entity<Commodity>()
                 .HasMany(c => c.CustomCommodities)
                 .WithOne(cs => cs.Commodity)
                 .HasForeignKey(cs => cs.CommodityId)
                 .OnDelete(DeleteBehavior.NoAction);
 
-            // Reservation
+            // Reservations
             modelBuilder.Entity<Reserve>()
                 .HasOne(r => r.User)
                 .WithMany(u => u.Reserves)
@@ -145,19 +154,6 @@ namespace viaggia_server.Data
                 .IsRequired(false)
                 .OnDelete(DeleteBehavior.NoAction);
 
-            // Payment
-            modelBuilder.Entity<Payment>()
-                .HasOne(p => p.User)
-                .WithMany(u => u.Payments)
-                .HasForeignKey(p => p.UserId)
-                .OnDelete(DeleteBehavior.NoAction);
-
-            modelBuilder.Entity<Payment>()
-                .HasOne(p => p.Reserve)
-                .WithMany(r => r.Payments)
-                .HasForeignKey(p => p.ReservationId)
-                .OnDelete(DeleteBehavior.NoAction);
-
             // Review
             modelBuilder.Entity<Review>()
                 .HasOne(r => r.User)
@@ -165,29 +161,7 @@ namespace viaggia_server.Data
                 .HasForeignKey(r => r.UserId)
                 .OnDelete(DeleteBehavior.NoAction);
 
-
-            // Hotel 1:N Commoditie
-            modelBuilder.Entity<Hotel>()
-                .HasMany(h => h.Commodities) // Assuming Hotel has a collection of Commodities
-                .WithOne(c => c.Hotel) // Assuming Commoditie has a Hotel property
-                .HasForeignKey(c => c.HotelId) // Foreign key in Commoditie
-                .OnDelete(DeleteBehavior.Cascade); // Cascade delete if Hotel is deleted
-
-            // Commodity 1:N CustomCommodities
-            modelBuilder.Entity<Commodity>()
-              .HasMany(c => c.CustomCommodities)
-              .WithOne(cs => cs.Commodity)
-              .HasForeignKey(cs => cs.CommodityId)
-              .OnDelete(DeleteBehavior.NoAction); // Evita ciclos de deleção
-
-            // CustomCommodities 1:N Hotel
-            modelBuilder.Entity<CustomCommodity>()
-                .HasOne(cs => cs.Hotel)
-                .WithMany(h => h.CustomCommodities)
-                .HasForeignKey(cs => cs.HotelId)
-                .OnDelete(DeleteBehavior.NoAction); // Evita ciclos de deleção
-
-            //  PasswordResetToken
+            // PasswordResetToken
             modelBuilder.Entity<PasswordResetToken>()
                 .HasOne(prt => prt.User)
                 .WithMany()
