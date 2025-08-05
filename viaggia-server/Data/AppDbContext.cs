@@ -36,6 +36,14 @@ namespace viaggia_server.Data
         {
             base.OnModelCreating(modelBuilder);
 
+            // User to Hotel relationship
+            modelBuilder.Entity<User>()
+                .HasOne(u => u.Hotel)
+                .WithOne(h => h.User)
+                .HasForeignKey<User>("HotelId")
+                .IsRequired(false)
+                .OnDelete(DeleteBehavior.NoAction);
+
             // UserRole
             modelBuilder.Entity<UserRole>()
                 .HasKey(ur => new { ur.UserId, ur.RoleId });
@@ -118,21 +126,21 @@ namespace viaggia_server.Data
                 .HasForeignKey(cs => cs.HotelId)
                 .OnDelete(DeleteBehavior.NoAction);
 
-            // Configure RoomTypeEnum
             modelBuilder.Entity<HotelRoomType>()
                 .Property(rt => rt.Name)
                 .HasConversion(
                     v => v.ToString(),
                     v => (RoomTypeEnum)Enum.Parse(typeof(RoomTypeEnum), v));
 
-
+            
+            // Commodity
             modelBuilder.Entity<Commodity>()
                 .HasMany(c => c.CustomCommodities)
                 .WithOne(cs => cs.Commodity)
                 .HasForeignKey(cs => cs.CommodityId)
                 .OnDelete(DeleteBehavior.NoAction);
 
-            // Reservation
+            // Reservations
             modelBuilder.Entity<Reserve>()
                 .HasOne(r => r.User)
                 .WithMany(u => u.Reserves)

@@ -20,7 +20,37 @@ namespace viaggia_server.Repositories.HotelRepository
             _logger = logger;
         }
 
+        public async Task UpdateAsync(Hotel hotel)
+        {
+            _context.Hotels.Update(hotel);
+            await _context.SaveChangesAsync();
+        }
 
+        public async Task<Hotel?> GetByIdAsync(int id)
+        {
+            try
+            {
+                _logger.LogInformation("Fetching hotel with ID: {HotelId}", id);
+                var hotel = await _context.Hotels
+                    .Include(h => h.Commodities)
+                    .Include(h => h.CustomCommodities)
+                    .Include(h => h.RoomTypes)
+                    .Include(h => h.Medias)
+                    .Include(h => h.Reviews)
+                    .Include(h => h.Packages)
+                    .FirstOrDefaultAsync(h => h.HotelId == id && h.IsActive);
+                if (hotel == null)
+                    _logger.LogWarning("Hotel with ID: {HotelId} not found or inactive", id);
+                else
+                    _logger.LogInformation("Hotel with ID: {HotelId} fetched successfully", id);
+                return hotel;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error fetching hotel with ID: {HotelId}", id);
+                throw;
+            }
+        }
         public async Task<HotelRoomType> AddRoomTypeAsync(HotelRoomType roomType)
         {
             try

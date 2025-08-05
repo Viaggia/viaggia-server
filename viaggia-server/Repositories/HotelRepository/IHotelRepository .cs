@@ -10,6 +10,8 @@ namespace viaggia_server.Repositories.HotelRepository
 {
     public interface IHotelRepository
     {
+        Task UpdateAsync(Hotel hotel);
+        Task<Hotel?> GetByIdAsync(int id); // Add this method
         Task<bool> NameExistsAsync(string name);
         Task<bool> CnpjExistsAsync(string? cnpj);
         Task<HotelRoomType> AddRoomTypeAsync(HotelRoomType roomType);

@@ -2,6 +2,7 @@
 using System.ComponentModel.DataAnnotations.Schema;
 using viaggia_server.Models.Hotels;
 using viaggia_server.Models.Packages;
+using viaggia_server.Models.Payments;
 using viaggia_server.Models.Users;
 using viaggia_server.Repositories;
 
@@ -38,19 +39,23 @@ namespace viaggia_server.Models.Reserves
         [Required]
         public DateTime CheckOutDate { get; set; }
 
-        [Required]
-        [Range(1, int.MaxValue, ErrorMessage = "Number of guests must be at least 1.")]
-        public int NumberOfGuests { get; set; }
+        public string Status { get; set; } = "Pending"; // Default status
 
         [Required]
         [Column(TypeName = "decimal(10,2)")]
         public decimal TotalPrice { get; set; }
 
         public decimal TotalDiscount { get; set; }
-        public string? Status { get; set; }
         public int NumberOfRooms { get; set; }
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public bool IsActive { get; set; } = true;
+
+        [Required]
+        [Range(1, int.MaxValue, ErrorMessage = "Number of guests must be at least 1.")]
+        public int NumberOfGuests { get; set; }
+
+
+        public virtual ICollection<Payment> Payments { get; set; } = new List<Payment>();
     }
 }
