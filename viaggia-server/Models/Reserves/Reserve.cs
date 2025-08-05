@@ -40,7 +40,7 @@ namespace viaggia_server.Models.Reserves
         [Required]
         public DateTime CheckOutDate { get; set; }
 
-        public string Status { get; set; } = "Pending"; // Default status
+        public string Status { get; set; } = "Pending";
 
         [Required]
         [Column(TypeName = "decimal(10,2)")]
