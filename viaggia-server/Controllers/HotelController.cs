@@ -140,7 +140,7 @@ namespace viaggia_server.Controllers
         //    }
         //}
         [HttpPost]
-        [Authorize(Roles = "SERVICE_PROVIDER")]
+        [Authorize(Roles = "SERVICE_PROVIDER, ADMIN")]
         [Consumes("multipart/form-data")]
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
