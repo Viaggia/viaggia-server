@@ -37,8 +37,7 @@ namespace viaggia_server.Controllers
                 RoomTypeId = r.RoomTypeId, // Nullable int? is safe
                 CheckInDate = r.CheckInDate,
                 CheckOutDate = r.CheckOutDate,
-                NumberOfRooms = r.NumberOfRooms,
-                NumberOfPeople = r.NumberOfGuests, // Matches Reserve model
+                NumberOfGuests = r.NumberOfGuests, // Matches Reserve model
                 TotalPrice = r.TotalPrice,
                 Status = r.Status,
                 IsActive = r.IsActive
@@ -67,8 +66,7 @@ namespace viaggia_server.Controllers
                 RoomTypeId = reservation.RoomTypeId,
                 CheckInDate = reservation.CheckInDate,
                 CheckOutDate = reservation.CheckOutDate,
-                NumberOfRooms = reservation.NumberOfRooms,
-                NumberOfPeople = reservation.NumberOfGuests,
+                NumberOfGuests= reservation.NumberOfGuests,
                 TotalPrice = reservation.TotalPrice,
                 Status = reservation.Status,
                 IsActive = reservation.IsActive
@@ -91,7 +89,6 @@ namespace viaggia_server.Controllers
 
             reservation.CheckInDate = dto.CheckInDate;
             reservation.CheckOutDate = dto.CheckOutDate;
-            reservation.NumberOfRooms = dto.NumberOfRooms;
             reservation.NumberOfGuests = dto.NumberOfPeople; // Matches Reserve model
             reservation.TotalPrice = dto.TotalPrice;
             reservation.Status = dto.Status;

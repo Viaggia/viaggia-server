@@ -133,8 +133,7 @@ namespace viaggia_server.Controllers
                     RoomTypeId = r.RoomTypeId,
                     CheckInDate = r.CheckInDate,
                     CheckOutDate = r.CheckOutDate,
-                    NumberOfRooms = r.NumberOfRooms,
-                    NumberOfPeople = r.NumberOfGuests,
+                    NumberOfGuests = r.NumberOfGuests,
                     TotalPrice = r.TotalPrice,
                     Status = r.Status,
                     IsActive = r.IsActive
@@ -195,7 +194,7 @@ namespace viaggia_server.Controllers
                 CheckInDate = r.CheckInDate,
                 CheckOutDate = r.CheckOutDate,
                 NumberOfRooms = r.NumberOfRooms,
-                NumberOfPeople = r.NumberOfGuests,
+                NumberOfGuests = r.NumberOfGuests,
                 TotalPrice = r.TotalPrice,
                 Status = r.Status,
                 IsActive = r.IsActive

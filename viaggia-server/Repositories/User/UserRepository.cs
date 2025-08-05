@@ -197,6 +197,19 @@ namespace viaggia_server.Repositories.Users
             return true;
         }
 
+        public async Task<User> GetUserById(int id)
+        {
+            try
+            {
+                var user = await _context.Users.FirstOrDefaultAsync(r => r.Id == id);
+                if (user == null) throw new ArgumentException("Usuáriio não encontrado");
+                return user;
+            }
+            catch (Exception ex) {
+                throw new Exception(ex.Message);
+            }
+        }
+
         public async Task<UserDTO> UpdateAsync(int id, UpdateUserDTO request)
         {
             var user = await _context.Users

@@ -2,16 +2,24 @@ using Microsoft.AspNetCore.Mvc;
 using Stripe;
 using Stripe.Checkout;
 using System.Globalization;
-using viaggia_server.DTOs.Reservation;
+using viaggia_server.DTOs.Commodity;
+using viaggia_server.DTOs.Payments;
+using viaggia_server.DTOs.Reserves;
+using viaggia_server.Models.Commodities;
+using viaggia_server.Models.Hotels;
 using viaggia_server.Models.Reserves;
 using viaggia_server.Models.Users;
 using viaggia_server.Repositories;
+using viaggia_server.Repositories.Users;
+using viaggia_server.Services.Email;
 
 namespace viaggia_server.Services.Payment
 {
     public class StripePaymentService : IStripePaymentService
     {
         private readonly IConfiguration _configuration;
+        private readonly IEmailService _emailService;
+        private readonly IUserRepository _IuserRepository;
         private readonly IRepository<Reserve> _reservations;
         private readonly ILogger<StripePaymentService> _logger;
         private readonly string _stripeSecretKey;
@@ -20,17 +28,19 @@ namespace viaggia_server.Services.Payment
         public StripePaymentService(
             IConfiguration configuration,
             IRepository<Reserve> reservations,
+            IUserRepository userRepository,
             ILogger<StripePaymentService> logger
         )
         {
             _configuration = configuration;
             _reservations = reservations;
+            _IuserRepository = userRepository;
             _logger = logger;
             _stripeSecretKey = _configuration["Stripe:SecretKey"];
             _stripeWebhookSecret = _configuration["Stripe:WebhookSecret"];
         }
 
-        public async Task<Session> CreatePaymentIntentAsync(ReservationCreateDTO createReservation)
+        public async Task<Session> CreatePaymentIntentAsync(ReservesCreateDTO createReservation)
         {
             decimal total = createReservation.TotalPrice;
             try
@@ -48,7 +58,7 @@ namespace viaggia_server.Services.Payment
                     throw new ArgumentException("TotalPrice deve ser maior que zero.");
                 }
 
-                var productName = $"Reserva para o pacote {createReservation.PackageId} para o id {createReservation.UserId}";
+                var productName = $"Reserva para o id {createReservation.UserId}";
                 _logger.LogInformation("Nome do produto: {ProductName}", productName);
 
                 var amount = (long)(total * 100);
@@ -60,13 +70,18 @@ namespace viaggia_server.Services.Payment
                     Currency = "brl",
                     ProductData = new PriceProductDataOptions
                     {
-                        Name = productName
+                        Name = productName,
                     }
                 };
 
                 var priceService = new PriceService();
                 var price = await priceService.CreateAsync(priceOptions);
                 _logger.LogInformation("Pre�o criado: {PriceId}", price.Id);
+
+                if(createReservation.PackageId == null)
+                {
+                    var quantity = createReservation.NumberOfGuests;
+                }
 
                 var sessionOptions = new SessionCreateOptions
                 {
@@ -75,9 +90,7 @@ namespace viaggia_server.Services.Payment
                 new SessionLineItemOptions
                 {
                     Price = price.Id,
-                    Quantity = createReservation.PackageId == 0
-                ? createReservation.NumberOfGuests
-                : createReservation.PackageId
+                    Quantity = createReservation.PackageId ?? createReservation.NumberOfGuests ,
                 }
             },
 
@@ -101,9 +114,7 @@ namespace viaggia_server.Services.Payment
 
                 var sessionService = new SessionService();
                 var session = await sessionService.CreateAsync(sessionOptions);
-
                 _logger.LogInformation("Sess�o de pagamento criada com sucesso: {SessionUrl}", session.Url);
-
                 return session;
             }
             catch (Exception ex)
@@ -133,6 +144,7 @@ namespace viaggia_server.Services.Payment
                         _logger.LogError("Falha ao converter stripeEvent.Data.Object em Session");
                         return;
                     }
+
                     try
                     {
                         var reservation = new Reserve
@@ -152,12 +164,18 @@ namespace viaggia_server.Services.Payment
                         await _reservations.AddAsync(reservation);
                         await _reservations.SaveChangesAsync();
 
-                        _logger.LogInformation($"Reserva criada com sucesso para o usu�rio {reservation.UserId}");
+                        _logger.LogInformation($"Reserva criada com sucesso para o usuário {reservation.UserId}");
+
+                        var user = await _IuserRepository.GetByIdAsync(reservation.UserId);
+                        var hotel = await _reservations.GetByIdAsync<Hotel>(Convert.ToInt32(reservation.HotelId));
+
+                        string userName = session.Metadata["userNameReservation"];
                     }
                     catch (Exception ex)
                     {
-                        _logger.LogError(ex, "Erro ao salvar reserva do webhook.");
+                        _logger.LogError(ex, "Erro ao processar reserva no webhook Stripe.");
                     }
+
                 }
             }
             catch (StripeException ex)

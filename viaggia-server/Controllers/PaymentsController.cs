@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Stripe;
@@ -9,8 +9,9 @@ using System.Security.Claims;
 using viaggia_server.Data;
 using viaggia_server.DTOs;
 using viaggia_server.DTOs.Payments;
-using viaggia_server.DTOs.Reservation;
+using viaggia_server.DTOs.Reserves;
 using viaggia_server.Models.Reserves;
+using viaggia_server.Services.Email;
 using viaggia_server.Services.Payment;
 
 namespace viaggia_server.Controllers
@@ -28,7 +29,7 @@ namespace viaggia_server.Controllers
         }
 
         [HttpPost("create-payment-intent")]
-        public async Task<IActionResult> CreatePaymentIntent([FromBody] ReservationCreateDTO createReservation)
+        public async Task<IActionResult> CreatePaymentIntent([FromBody] ReservesCreateDTO createReservation)
         {
             try
             {
@@ -38,7 +39,6 @@ namespace viaggia_server.Controllers
                 {
                     return StatusCode(500, "Falha ao criar sessão de pagamento.");
                 }
-
                 return Ok(new { url = session.Url });
             }
             catch (Exception ex)
@@ -51,7 +51,7 @@ namespace viaggia_server.Controllers
 
         [AllowAnonymous]
         [HttpPost("/webhook")]
-        
+
         public async Task<IActionResult> Post()
         {
             await _stripePaymentService.HandleStripeWebhookAsync(Request);

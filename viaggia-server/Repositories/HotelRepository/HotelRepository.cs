@@ -377,19 +377,6 @@ namespace viaggia_server.Repositories.HotelRepository
                 throw;
             }
         }
-        public async Task<Hotel?> GetHotelByIdWithDetailsAsync(int hotelId)
-        {
-            return await _context.Hotels
-                .Include(h => h.RoomTypes)
-                .Include(h => h.HotelDates)
-                .Include(h => h.Medias)
-                .Include(h => h.Reviews)
-                .Include(h => h.Packages)
-                .Include(h => h.Commodities)
-                .Include(h => h.CustomCommodities)
-                .FirstOrDefaultAsync(h => h.HotelId == hotelId);
-        }
-
 
         public async Task<IEnumerable<Hotel>> GetHotelsByUserIdAsync(int userId)
         {
@@ -402,6 +389,19 @@ namespace viaggia_server.Repositories.HotelRepository
                 .Include(h => h.Commodities)
                 .Include(h => h.CustomCommodities)
                 .ToListAsync();
+        }
+        public async Task<Hotel> GetByIdHotel(int Hotel)
+        {
+            try
+            {
+                var hotelId = await _context.Hotels.FindAsync(Hotel);
+                _logger.LogInformation($"Hotel: {Hotel}");
+                return hotelId;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message);
+            }
         }
 
         public async Task<IEnumerable<Reserve>> GetReservationsByHotelIdAsync(int hotelId)

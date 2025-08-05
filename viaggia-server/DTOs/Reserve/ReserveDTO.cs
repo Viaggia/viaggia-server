@@ -9,7 +9,7 @@
         public DateTime CheckInDate { get; set; }
         public DateTime CheckOutDate { get; set; }
         public int? NumberOfRooms { get; set; }
-        public int? NumberOfPeople { get; set; }
+        public int? NumberOfGuests { get; set; }
         public decimal?  TotalPrice { get; set; }
         public string Status { get; set; } = null!;
         public bool IsActive { get; set; }

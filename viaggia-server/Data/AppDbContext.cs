@@ -4,7 +4,6 @@ using viaggia_server.Models.CustomCommodities;
 using viaggia_server.Models.Hotels;
 using viaggia_server.Models.Medias;
 using viaggia_server.Models.Packages;
-using viaggia_server.Models.Payments;
 using viaggia_server.Models.Reserves;
 using viaggia_server.Models.Reviews;
 using viaggia_server.Models.Users;
@@ -25,7 +24,6 @@ namespace viaggia_server.Data
         public DbSet<Commodity> Commodities { get; set; } = null!;
         public DbSet<CustomCommodity> CustomCommodities { get; set; } = null!;
         public DbSet<Reserve> Reserves { get; set; } = null!;
-        public DbSet<Payment> Payments { get; set; } = null!;
         public DbSet<Media> Medias { get; set; } = null!;
         public DbSet<Review> Reviews { get; set; } = null!;
         public DbSet<RevokedToken> RevokedTokens { get; set; } = null!;
@@ -153,19 +151,6 @@ namespace viaggia_server.Data
                 .IsRequired(false)
                 .OnDelete(DeleteBehavior.NoAction);
 
-            // Payment
-            modelBuilder.Entity<Payment>()
-                .HasOne(p => p.User)
-                .WithMany(u => u.Payments)
-                .HasForeignKey(p => p.UserId)
-                .OnDelete(DeleteBehavior.NoAction);
-
-            modelBuilder.Entity<Payment>()
-                .HasOne(p => p.Reserve)
-                .WithMany(r => r.Payments)
-                .HasForeignKey(p => p.ReservationId)
-                .OnDelete(DeleteBehavior.NoAction);
-
             // Review
             modelBuilder.Entity<Review>()
                 .HasOne(r => r.User)
@@ -186,14 +171,14 @@ namespace viaggia_server.Data
               .HasMany(c => c.CustomCommodities)
               .WithOne(cs => cs.Commodity)
               .HasForeignKey(cs => cs.CommodityId)
-              .OnDelete(DeleteBehavior.NoAction); // Evita ciclos de deleção
+              .OnDelete(DeleteBehavior.NoAction); // Evita ciclos de deleï¿½ï¿½o
 
             // CustomCommodities 1:N Hotel
             modelBuilder.Entity<CustomCommodity>()
                 .HasOne(cs => cs.Hotel)
                 .WithMany(h => h.CustomCommodities)
                 .HasForeignKey(cs => cs.HotelId)
-                .OnDelete(DeleteBehavior.NoAction); // Evita ciclos de deleção
+                .OnDelete(DeleteBehavior.NoAction); // Evita ciclos de deleï¿½ï¿½o
 
             //  PasswordResetToken
             modelBuilder.Entity<PasswordResetToken>()
@@ -233,7 +218,6 @@ namespace viaggia_server.Data
             modelBuilder.Entity<Hotel>().HasQueryFilter(h => h.IsActive);
             modelBuilder.Entity<HotelRoomType>().HasQueryFilter(rt => rt.IsActive);
             modelBuilder.Entity<Reserve>().HasQueryFilter(r => r.IsActive);
-            modelBuilder.Entity<Payment>().HasQueryFilter(p => p.IsActive);
             modelBuilder.Entity<Media>().HasQueryFilter(m => m.IsActive);
             modelBuilder.Entity<Review>().HasQueryFilter(r => r.IsActive);
             modelBuilder.Entity<Commodity>().HasQueryFilter(c => c.IsActive);

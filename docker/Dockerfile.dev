@@ -2,18 +2,31 @@
 FROM mcr.microsoft.com/dotnet/sdk:8.0
 WORKDIR /app
 
+# Set environment variables to avoid Windows-specific paths
+ENV NUGET_PACKAGES=/root/.nuget/packages
+ENV DOTNET_NOLOGO=true
+ENV DOTNET_CLI_TELEMETRY_OPTOUT=true
+
 # Install dotnet-ef tool for migrations
 RUN dotnet tool install --global dotnet-ef
 ENV PATH="$PATH:/root/.dotnet/tools"
+
+# Copy NuGet configuration first
+COPY NuGet.Config ./
 
 # Copy project files and restore dependencies
 COPY viaggia-server.sln ./
 COPY viaggia-server/viaggia-server.csproj ./viaggia-server/
 
-RUN dotnet restore
+# Clear cache and restore with force
+RUN dotnet nuget locals all --clear
+RUN dotnet restore --configfile ./NuGet.Config --verbosity minimal --force
 
 # Copy the rest of the source code
 COPY . .
+
+# Restore again after copying all files to ensure all dependencies
+RUN dotnet restore --configfile ./NuGet.Config --verbosity minimal --force
 
 # Create uploads directory
 RUN mkdir -p /app/wwwroot/Uploads/Packages
