@@ -61,6 +61,11 @@ namespace viaggia_server.Models.Hotels
         public bool IsActive { get; set; } = true;
 
         public double AverageRating { get; set; }
+       
+  
+        [ForeignKey("UserId")]
+        public int? UserId { get; set; } 
+        public virtual User? User { get; set; } 
 
 
         [ForeignKey("UserId")]

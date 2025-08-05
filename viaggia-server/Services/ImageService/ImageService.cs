@@ -28,9 +28,7 @@ namespace viaggia_server.Services.ImageService
 
             var uploadsFolder = Path.Combine(_environment.WebRootPath, "avatars");
             if (!Directory.Exists(uploadsFolder))
-            {
                 Directory.CreateDirectory(uploadsFolder);
-            }
 
             var fileName = $"{userId}_{Guid.NewGuid()}{extension}";
             var filePath = Path.Combine(uploadsFolder, fileName);

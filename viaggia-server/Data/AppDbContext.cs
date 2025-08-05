@@ -148,7 +148,6 @@ namespace viaggia_server.Data
                 .HasForeignKey(cs => cs.CommodityId)
                 .OnDelete(DeleteBehavior.NoAction);
 
-
             // Reservation
             modelBuilder.Entity<Reserve>()
                 .HasOne(r => r.User)
