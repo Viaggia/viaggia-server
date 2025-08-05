@@ -2,10 +2,8 @@ using System.ComponentModel.DataAnnotations;
 
 namespace viaggia_server.DTOs.Commodity
 {
-
     public class CustomCommodityDTO
     {
-
         public int CustomCommodityId { get; set; }
         // Nome do hotel associado ao serviço
         [Required(ErrorMessage = "HotelName is required.")]
@@ -29,6 +27,7 @@ namespace viaggia_server.DTOs.Commodity
 
         // Indica se o serviço está ativo
         public bool IsActive { get; set; } = true;
+
 
         public int CommodityId { get; set; }
         public int HotelId { get; set; }

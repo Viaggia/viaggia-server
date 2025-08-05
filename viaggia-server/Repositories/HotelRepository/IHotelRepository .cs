@@ -35,5 +35,6 @@ namespace viaggia_server.Repositories.HotelRepository
               DateTime checkInDate,
               DateTime checkOutDate);
 
+        Task<Hotel> GetByIdHotel(int  hotelId);
     }
 }

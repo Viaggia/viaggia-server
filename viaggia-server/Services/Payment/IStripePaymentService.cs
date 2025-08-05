@@ -1,5 +1,5 @@
 using Stripe.Checkout;
-using viaggia_server.DTOs.Reserve;
+using viaggia_server.DTOs.Reserves;
 
 namespace viaggia_server.Services.Payment
 {

@@ -1,7 +1,6 @@
 ﻿using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
 using viaggia_server.Data;
-using viaggia_server.Models.Commodities;
 using viaggia_server.Models.CustomCommodities;
 
 namespace viaggia_server.Repositories.CommodityRepository
@@ -13,11 +12,14 @@ namespace viaggia_server.Repositories.CommodityRepository
         public CustomCommodityRepository(AppDbContext context)
         {
             _context = context;
+            _context = context ?? throw new ArgumentNullException(nameof(context));
         }
 
         public async Task<IEnumerable<CustomCommodity>> GetAllAsync()
         {
             return await _context.CustomCommodities
+                .Include(cs => cs.Hotel)
+                .Include(cs => cs.Commodity)
                 .Where(s => s.IsActive)
                 .OrderBy(s => s.CustomCommodityId)
                 .ToListAsync();
@@ -26,15 +28,17 @@ namespace viaggia_server.Repositories.CommodityRepository
         public async Task<CustomCommodity?> GetByIdAsync(int id)
         {
             return await _context.CustomCommodities
-                 .Include(cs => cs.Hotel)
+                .Include(cs => cs.Hotel)
+                .Include(cs => cs.Commodity)
                 .FirstOrDefaultAsync(s => s.CustomCommodityId == id && s.IsActive);
         }
 
-        public async Task<IEnumerable<CustomCommodity>> GetByCommodityIdAsync(int commoditieId)
+        public async Task<IEnumerable<CustomCommodity>> GetByCommodityIdAsync(int commodityId)
         {
             return await _context.CustomCommodities
-                .Where(s => s.CommodityId == commoditieId && s.IsActive)
-                .Include(s => s.Hotel)
+                .Include(cs => cs.Hotel)
+                .Include(cs => cs.Commodity)
+                .Where(s => s.CommodityId == commodityId && s.IsActive)
                 .OrderBy(s => s.CustomCommodityId)
                 .ToListAsync();
         }
@@ -68,8 +72,7 @@ namespace viaggia_server.Repositories.CommodityRepository
 
         public async Task<bool> SaveChangesAsync()
         {
-            var changes = await _context.SaveChangesAsync();
-            return changes > 0;
+            return await _context.SaveChangesAsync() > 0;
         }
 
         Task<T2?> IRepository<CustomCommodity>.GetByIdAsync<T2>(int id) where T2 : class
@@ -82,9 +85,14 @@ namespace viaggia_server.Repositories.CommodityRepository
             throw new NotImplementedException();
         }
 
-        public Task<CustomCommodity?> GetByIdWithIncludesAsync(int id, params Expression<Func<CustomCommodity, object>>[] includes)
+        public async Task<CustomCommodity?> GetByIdWithIncludesAsync(int id, params Expression<Func<CustomCommodity, object>>[] includes)
         {
-            throw new NotImplementedException();
+            var query = _context.CustomCommodities.AsQueryable();
+            foreach (var include in includes)
+            {
+                query = query.Include(include);
+            }
+            return await query.FirstOrDefaultAsync(s => s.CustomCommodityId == id && s.IsActive);
         }
     }
 }

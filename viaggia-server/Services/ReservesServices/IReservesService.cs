@@ -1,8 +1,9 @@
-﻿using viaggia_server.DTOs.Reserve;
+﻿using viaggia_server.DTOs.Reserves;
 using viaggia_server.Models.Hotels;
+using viaggia_server.Models.Reserves;
 using viaggia_server.Models.Users;
 
-namespace viaggia_server.Services.Reservations
+namespace viaggia_server.Services.Reserves
 {
     public interface IReservesService
     {

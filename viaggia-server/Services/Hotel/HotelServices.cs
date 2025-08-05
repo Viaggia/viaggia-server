@@ -4,7 +4,7 @@ using viaggia_server.DTOs;
 using viaggia_server.DTOs.Commodity;
 using viaggia_server.DTOs.Hotel;
 using viaggia_server.DTOs.Packages;
-using viaggia_server.DTOs.Reserve;
+using viaggia_server.DTOs.Reserves;
 using viaggia_server.DTOs.Reviews;
 using viaggia_server.Models.Hotels;
 using viaggia_server.Models.Medias;
@@ -1568,7 +1568,7 @@ namespace viaggia_server.Services.HotelServices
                     RoomTypeId = r.RoomTypeId,
                     CheckInDate = r.CheckInDate,
                     CheckOutDate = r.CheckOutDate,
-                    NumberOfPeople = r.NumberOfGuests,
+                    NumberOfPeople = r.NumberOfPeople,
                     TotalPrice = r.TotalPrice,
                     Status = r.Status,
                     CreatedAt = r.CreatedAt,

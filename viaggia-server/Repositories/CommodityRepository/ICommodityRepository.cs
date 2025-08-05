@@ -1,4 +1,6 @@
-﻿using viaggia_server.Models.Commodities;
+﻿using System.Linq.Expressions;
+using viaggia_server.Models.Commodities;
+using viaggia_server.Models.CustomCommodities;
 
 namespace viaggia_server.Repositories.CommodityRepository
 {
@@ -12,6 +14,8 @@ namespace viaggia_server.Repositories.CommodityRepository
         Task<Commodity> UpdateAsync(Commodity entity);
         Task<bool> SoftDeleteAsync(int id);
         Task<bool> DeleteAsync(int id);
+        Task<Commodity?> GetByIdWithIncludesAsync(int id, params Expression<Func<Commodity, object>>[] includes);
+
 
     }
 }

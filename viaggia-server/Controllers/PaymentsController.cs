@@ -9,8 +9,9 @@ using System.Security.Claims;
 using viaggia_server.Data;
 using viaggia_server.DTOs;
 using viaggia_server.DTOs.Payments;
-using viaggia_server.DTOs.Reserve;
+using viaggia_server.DTOs.Reserves;
 using viaggia_server.Models.Reserves;
+using viaggia_server.Services.Email;
 using viaggia_server.Services.Payment;
 
 namespace viaggia_server.Controllers
@@ -38,7 +39,6 @@ namespace viaggia_server.Controllers
                 {
                     return StatusCode(500, "Falha ao criar sessão de pagamento.");
                 }
-
                 return Ok(new { url = session.Url });
             }
             catch (Exception ex)

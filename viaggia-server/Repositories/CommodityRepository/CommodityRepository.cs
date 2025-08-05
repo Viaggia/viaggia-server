@@ -14,9 +14,12 @@ namespace viaggia_server.Repositories.CommodityRepository
             _context = context;
         }
 
+
         public async Task<IEnumerable<Commodity>> GetAllAsync()
         {
             return await _context.Commodities
+                .Include(c => c.CustomCommodities)
+                .Include(c => c.Hotel)
                 .Where(c => c.IsActive)
                 .ToListAsync();
         }
@@ -24,13 +27,15 @@ namespace viaggia_server.Repositories.CommodityRepository
         public async Task<Commodity?> GetByIdAsync(int id)
         {
             return await _context.Commodities
+                .Include(c => c.CustomCommodities)
+                .Include(c => c.Hotel)
                 .FirstOrDefaultAsync(c => c.CommodityId == id && c.IsActive);
         }
-
         public async Task<Commodity?> GetByHotelIdAsync(int hotelId)
         {
             return await _context.Commodities
                 .Include(c => c.CustomCommodities)
+                .Include(c => c.Hotel)
                 .FirstOrDefaultAsync(c => c.HotelId == hotelId && c.IsActive);
         }
 
@@ -92,18 +97,21 @@ namespace viaggia_server.Repositories.CommodityRepository
             }
             return Task.FromResult(false);
         }
-
+        public async Task<Commodity?> GetByIdWithIncludesAsync(int id, params Expression<Func<Commodity, object>>[] includes)
+        {
+            IQueryable<Commodity> query = _context.Commodities.Where(c => c.CommodityId == id && c.IsActive);
+            foreach (var include in includes)
+            {
+                query = query.Include(include);
+            }
+            return await query.FirstOrDefaultAsync();
+        }
 
         public async Task<Commodity?> GetByHotelNameAsync(string hotelName)
         {
             return await _context.Commodities
                 .Include(c => c.Hotel)
                 .FirstOrDefaultAsync(c => c.Hotel.Name == hotelName);
-        }
-
-        public Task<Commodity?> GetByIdWithIncludesAsync(int id, params Expression<Func<Commodity, object>>[] includes)
-        {
-            throw new NotImplementedException();
         }
     }
 }

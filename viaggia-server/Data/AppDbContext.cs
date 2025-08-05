@@ -33,7 +33,6 @@ namespace viaggia_server.Data
         {
             base.OnModelCreating(modelBuilder);
 
-            // User to Hotel relationship
             modelBuilder.Entity<User>()
                 .HasOne(u => u.Hotel)
                 .WithOne(h => h.User)
@@ -41,7 +40,7 @@ namespace viaggia_server.Data
                 .IsRequired(false)
                 .OnDelete(DeleteBehavior.NoAction);
 
-            // Configuration for UserRole (composite key)
+            // UserRole
             modelBuilder.Entity<UserRole>()
                 .HasKey(ur => new { ur.UserId, ur.RoleId });
 
@@ -77,6 +76,13 @@ namespace viaggia_server.Data
                 .IsRequired(false)
                 .OnDelete(DeleteBehavior.NoAction);
 
+            modelBuilder.Entity<Package>()
+                .HasOne(p => p.Hotel)
+                .WithMany(h => h.Packages)
+                .HasForeignKey(p => p.HotelId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            // Hotel
             modelBuilder.Entity<Hotel>()
                 .HasMany(h => h.RoomTypes)
                 .WithOne(rt => rt.Hotel)
@@ -110,7 +116,12 @@ namespace viaggia_server.Data
                 .HasForeignKey(c => c.HotelId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            // Configure RoomTypeEnum
+            modelBuilder.Entity<Hotel>()
+                .HasMany(h => h.CustomCommodities)
+                .WithOne(cs => cs.Hotel)
+                .HasForeignKey(cs => cs.HotelId)
+                .OnDelete(DeleteBehavior.NoAction);
+
             modelBuilder.Entity<HotelRoomType>()
                 .Property(rt => rt.Name)
                 .HasConversion(
@@ -129,17 +140,22 @@ namespace viaggia_server.Data
               .HasMany(c => c.CustomCommodities)
               .WithOne(cs => cs.Commodity)
               .HasForeignKey(cs => cs.CommodityId)
-              .OnDelete(DeleteBehavior.NoAction); 
+              .OnDelete(DeleteBehavior.NoAction);
 
             // CommoditieServices 1:N Hotel
             modelBuilder.Entity<CustomCommodity>()
                 .HasOne(cs => cs.Hotel)
                 .WithMany(h => h.CustomCommodities)
-                .HasForeignKey(cs => cs.HotelId)
+                .HasForeignKey(cs => cs.HotelId);
+            
+            // Commodity
+            modelBuilder.Entity<Commodity>()
+                .HasMany(c => c.CustomCommodities)
+                .WithOne(cs => cs.Commodity)
+                .HasForeignKey(cs => cs.CommodityId)
                 .OnDelete(DeleteBehavior.NoAction);
 
-
-            // Reservation
+            // Reservations
             modelBuilder.Entity<Reserve>()
                 .HasOne(r => r.User)
                 .WithMany(u => u.Reserves)
@@ -181,7 +197,6 @@ namespace viaggia_server.Data
             modelBuilder.Entity<Media>()
                 .ToTable(t => t.HasCheckConstraint("CK_Media_OneEntity",
                     "([PackageId] IS NOT NULL AND [HotelId] IS NULL) OR ([PackageId] IS NULL AND [HotelId] IS NOT NULL)"));
-
 
             // Seed Roles
             modelBuilder.Entity<Role>().HasData(

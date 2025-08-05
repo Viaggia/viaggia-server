@@ -1,8 +1,7 @@
-﻿using viaggia_server.DTOs.Reserve;
+﻿using viaggia_server.DTOs.Reserves;
 using viaggia_server.Models.Reserves;
-using viaggia_server.Repositories.ReservationRepository;
 
-namespace viaggia_server.Repositories.ReservationRepository
+namespace viaggia_server.Repositories.ReserveRepository
 {
     public interface IReserveRepository 
     {

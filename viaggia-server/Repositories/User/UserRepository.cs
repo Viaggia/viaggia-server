@@ -11,10 +11,12 @@ namespace viaggia_server.Repositories.Users
     public class UserRepository : Repository<User>, IUserRepository
     {
         private readonly IImageService _imageService;
+        private readonly ILogger<UserRepository> _logger;
 
-        public UserRepository(AppDbContext context, IImageService imageService) : base(context)
+        public UserRepository(AppDbContext context, IImageService imageService, ILogger<UserRepository> logger) : base(context)
         {
             _imageService = imageService ?? throw new ArgumentNullException(nameof(imageService));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
         public async Task<bool> EmailExistsAsync(string email)
@@ -160,17 +162,21 @@ namespace viaggia_server.Repositories.Users
 
         public async Task<List<UserDTO>> GetAllAsync()
         {
-            var users = await base.GetAllAsync();
+            var users = await _context.Users
+                .Include(u => u.UserRoles)
+                .ThenInclude(ur => ur.Role)
+                .Where(u => u.IsActive)
+                .ToListAsync();
             return users.Select(ToDTO).ToList();
         }
 
         public async Task<UserDTO> GetByIdAsync(int id)
         {
-            var user = await base.GetByIdAsync(id);
-            if (user == null)
-            {
-                throw new ArgumentException("User not found.");
-            }
+            var user = await _context.Users
+                .Include(u => u.UserRoles)
+                .ThenInclude(ur => ur.Role)
+                .FirstOrDefaultAsync(u => u.Id == id && u.IsActive)
+                ?? throw new ArgumentException("User not found.");
             return ToDTO(user);
         }
 
@@ -191,9 +197,25 @@ namespace viaggia_server.Repositories.Users
             return true;
         }
 
+        public async Task<User> GetUserById(int id)
+        {
+            try
+            {
+                var user = await _context.Users.FirstOrDefaultAsync(r => r.Id == id);
+                if (user == null) throw new ArgumentException("Usuáriio não encontrado");
+                return user;
+            }
+            catch (Exception ex) {
+                throw new Exception(ex.Message);
+            }
+        }
+
         public async Task<UserDTO> UpdateAsync(int id, UpdateUserDTO request)
         {
-            var user = await base.GetByIdAsync(id)
+            var user = await _context.Users
+                .Include(u => u.UserRoles)
+                .ThenInclude(ur => ur.Role)
+                .FirstOrDefaultAsync(u => u.Id == id && u.IsActive)
                 ?? throw new ArgumentException("User not found.");
 
             var roles = user.UserRoles.Select(ur => ur.Role.Name).ToList();
@@ -237,11 +259,32 @@ namespace viaggia_server.Repositories.Users
 
             if (request.Avatar != null)
             {
-                user.AvatarUrl = await _imageService.UploadImageAsync(request.Avatar, id.ToString())
-                    ?? throw new Exception("Failed to upload avatar image.");
+                _logger.LogInformation("Iniciando upload da imagem para usuário {UserId}", id);
+                try
+                {
+                    var avatarUrl = await _imageService.UploadImageAsync(request.Avatar, id.ToString());
+                    if (string.IsNullOrEmpty(avatarUrl))
+                    {
+                        _logger.LogWarning("UploadImageAsync retornou null ou vazio para usuário {UserId}", id);
+                        throw new Exception("Image upload returned null or empty URL.");
+                    }
+                    user.AvatarUrl = avatarUrl;
+                    _logger.LogInformation("Imagem do avatar salva com sucesso para usuário {UserId}: {AvatarUrl}", id, avatarUrl);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Erro ao fazer upload da imagem do avatar para usuário {UserId}", id);
+                    // Não falha a atualização do usuário, apenas loga o erro
+                }
+            }
+            else
+            {
+                _logger.LogInformation("Nenhuma imagem de avatar fornecida para usuário {UserId}", id);
             }
 
             await base.UpdateAsync(user);
+            await _context.SaveChangesAsync();
+            _logger.LogInformation("Usuário {UserId} atualizado com sucesso", id);
             return ToDTO(user);
         }
 
@@ -259,7 +302,8 @@ namespace viaggia_server.Repositories.Users
                 EmployerCompanyName = user.EmployerCompanyName,
                 EmployeeId = user.EmployeeId,
                 IsActive = user.IsActive,
-                Roles = user.UserRoles.Select(ur => ur.Role.Name).ToList()
+                Roles = user.UserRoles?.Select(ur => ur.Role.Name).ToList() ?? new List<string>(),
+                AvatarUrl = user.AvatarUrl ?? string.Empty
             };
         }
     }

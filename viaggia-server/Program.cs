@@ -7,15 +7,17 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Stripe;
 using Viaggia.Swagger;
 using viaggia_server.Config;
 using viaggia_server.Data;
 using viaggia_server.Repositories;
-using viaggia_server.Repositories.ReservationRepository;
+using viaggia_server.Repositories.ReserveRepository;
 using viaggia_server.Repositories.Users;
 using viaggia_server.Repositories.Auth;
 using viaggia_server.Repositories.CommodityRepository;
@@ -29,6 +31,7 @@ using viaggia_server.Swagger;
 using viaggia_server.Validators;
 using viaggia_server.Services;
 using viaggia_server.Services.Email;
+using viaggia_server.Repositories.ReserveRepository;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -94,7 +97,7 @@ builder.Services.AddScoped<ICustomCommodityRepository, CustomCommodityRepository
 builder.Services.AddScoped<IAuthRepository, AuthRepository>();
 builder.Services.AddScoped<IGoogleAccountRepository, GoogleAccountRepository>();
 builder.Services.AddScoped<IReviewRepository, ReviewRepository>();
-
+builder.Services.AddScoped<IReserveRepository, ReserveRepository>();
 //Services
 builder.Services.AddScoped<IHotelServices, HotelServices>();
 builder.Services.AddScoped<IEmailService, EmailService>();
@@ -117,6 +120,9 @@ builder.Services.AddLogging(logging =>
     logging.AddConsole();
     logging.AddDebug();
 });
+
+// Add IHttpContextAccessor for authorization handlers
+builder.Services.AddHttpContextAccessor();
 
 // Configure authentication (JWT and Google OAuth)
 builder.Services.AddAuthentication(options =>
@@ -174,8 +180,6 @@ builder.Services.AddAuthentication(options =>
         return Task.CompletedTask;
     };
 });
-
-builder.Services.AddAuthorization();
 
 // Configure CORS
 builder.Services.AddCors(options =>

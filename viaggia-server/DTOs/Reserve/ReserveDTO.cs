@@ -1,4 +1,4 @@
-﻿namespace viaggia_server.DTOs.Reserve
+namespace viaggia_server.DTOs.Reserves
 {
     public class ReserveDTO
     {
@@ -12,6 +12,8 @@
         public DateTime CheckOutDate { get; set; }
         public decimal TotalPrice { get; set; }
         public int NumberOfPeople { get; set; }
+
+        public int NumberOfRooms { get; set; }
         public DateTime CreatedAt { get; set; }
         public string Status { get; set; } = string.Empty;
         public bool IsActive { get; set; }

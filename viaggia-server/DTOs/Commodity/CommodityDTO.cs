@@ -45,6 +45,6 @@ namespace viaggia_server.DTOs.Commodity
         public bool IsActive { get; set; }
 
         // Lista de serviços personalizados
-        public List<CustomCommodityDTO> CustomCommodity { get; set; } = new List<CustomCommodityDTO>();
+        public List<CustomCommodityDTO> CustomCommodities { get; set; } = new List<CustomCommodityDTO>();
     }
 }

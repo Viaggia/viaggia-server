@@ -1,4 +1,4 @@
-﻿namespace viaggia_server.DTOs.Reserve
+﻿namespace viaggia_server.DTOs.Reserves
 {
     public class ReserveUpdateDTO
     {

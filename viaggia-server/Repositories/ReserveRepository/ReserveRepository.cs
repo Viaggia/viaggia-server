@@ -1,10 +1,10 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using viaggia_server.Data;
-using viaggia_server.DTOs.Reserve;
+using viaggia_server.DTOs.Reserves;
 using viaggia_server.Models.Hotels;
 using viaggia_server.Models.Reserves;
 
-namespace viaggia_server.Repositories.ReservationRepository
+namespace viaggia_server.Repositories.ReserveRepository
 {
     public class ReserveRepository : IReserveRepository
     {
