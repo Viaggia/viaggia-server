@@ -133,9 +133,6 @@ builder.Services.AddLogging(logging =>
 // Add IHttpContextAccessor for authorization handlers
 builder.Services.AddHttpContextAccessor();
 
-// Configure Authorization Handlers
-builder.Services.AddSingleton<IAuthorizationHandler, HotelAccessHandler>();
-
 // Configure authentication (JWT and Google OAuth)
  builder.Services.AddAuthentication(options =>
 {
@@ -192,30 +189,6 @@ builder.Services.AddSingleton<IAuthorizationHandler, HotelAccessHandler>();
         return Task.CompletedTask;
     };
 });
-
-
-// Configure Authorization Policies
-builder.Services.AddAuthorization(options =>
-{
-    // Política para SERVICE_PROVIDER que requer HotelId válido
-    options.AddPolicy("HotelAccess", policy =>
-        policy.Requirements.Add(new HotelAccessRequirement()));
-
-// Política para CLIENT (acesso a funcionalidades específicas de clientes)
-options.AddPolicy("ClientAccess", policy =>
-    policy.RequireRole("CLIENT"));
-
-// Política para ATTENDANT (acesso a funcionalidades específicas de atendentes)
-options.AddPolicy("AttendantAccess", policy =>
-    policy.RequireRole("ATTENDANT")
-          .RequireClaim("EmployerCompanyName"));
-
-// Política genérica para usuários autenticados
-options.AddPolicy("AuthenticatedUser", policy =>
-    policy.RequireAuthenticatedUser());
-});
-
-
 
 // Configure CORS
 builder.Services.AddCors(options =>

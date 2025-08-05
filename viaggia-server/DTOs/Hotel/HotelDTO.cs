@@ -25,6 +25,8 @@ namespace viaggia_server.DTOs.Hotel
         public string? ContactEmail { get; set; }
         public bool IsActive { get; set; }
         public double AverageRating { get; set; }
+
+        public int UserId { get; set; }
         public List<HotelRoomTypeDTO> RoomTypes { get; set; } = new List<HotelRoomTypeDTO>();
         public List<MediaDTO> Medias { get; set; } = new List<MediaDTO>();
         public List<ReviewDTO> Reviews { get; set; } = new List<ReviewDTO>();

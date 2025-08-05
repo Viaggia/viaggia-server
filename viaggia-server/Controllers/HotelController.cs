@@ -1,9 +1,12 @@
-﻿using System.Text.Json;
+﻿using System.Security.Claims;
+using System.Text.Json;
 using System.Text.Json.Serialization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using viaggia_server.DTOs;
 using viaggia_server.DTOs.Hotel;
 using viaggia_server.DTOs.Packages;
+using viaggia_server.DTOs.Reserve;
 using viaggia_server.DTOs.Reviews;
 using viaggia_server.Models.Hotels;
 using viaggia_server.Services.HotelServices;
@@ -82,10 +85,67 @@ namespace viaggia_server.Controllers
         }
 
         // POST: api/Hotel
+        //[HttpPost]
+        //[Consumes("multipart/form-data")]
+        //[ProducesResponseType(StatusCodes.Status201Created)]
+        //[ProducesResponseType(StatusCodes.Status400BadRequest)]
+        //[ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        //public async Task<IActionResult> CreateHotel([FromForm] CreateHotelDTO createHotelDto)
+        //{
+        //    try
+        //    {
+        //        if (!ModelState.IsValid)
+        //        {
+        //            _logger.LogError("ModelState is invalid: {Errors}", ModelState);
+        //            return BadRequest(ModelState);
+        //        }
+
+        //        List<CreateHotelRoomTypeDTO> roomTypes;
+        //        try
+        //        {
+        //            var options = new JsonSerializerOptions
+        //            {
+        //                PropertyNameCaseInsensitive = true,
+        //                Converters = { new JsonStringEnumConverter() }
+        //            };
+
+        //            roomTypes = JsonSerializer.Deserialize<List<CreateHotelRoomTypeDTO>>(createHotelDto.RoomTypesJson, options)!;
+
+        //            if (roomTypes == null || !roomTypes.Any())
+        //            {
+        //                _logger.LogWarning("No room types provided in JSON.");
+        //                return BadRequest(new ApiResponse<HotelDTO>(false, "At least one room type must be provided."));
+        //            }
+        //        }
+        //        catch (Exception ex)
+        //        {
+        //            _logger.LogError(ex, "Invalid RoomTypesJson");
+        //            return BadRequest(new ApiResponse<HotelDTO>(false, "RoomTypesJson is invalid or malformed."));
+        //        }
+
+        //        var response = await _hotelServices.CreateHotelAsync(createHotelDto, roomTypes);
+        //        if (!response.Success)
+        //        {
+        //            _logger.LogError("Failed to create hotel: {Message}", response.Message);
+        //            return BadRequest(new ApiResponse<HotelDTO>(false, response.Message));
+        //        }
+
+        //        return CreatedAtAction(nameof(GetHotelById), new { id = response.Data.HotelId }, response);
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        _logger.LogError(ex, "Error creating hotel");
+        //        return StatusCode(StatusCodes.Status500InternalServerError,
+        //            new ApiResponse<HotelDTO>(false, $"Error creating hotel: {ex.Message}"));
+        //    }
+        //}
         [HttpPost]
+        [Authorize(Roles = "SERVICE_PROVIDER")]
         [Consumes("multipart/form-data")]
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> CreateHotel([FromForm] CreateHotelDTO createHotelDto)
         {
@@ -95,6 +155,13 @@ namespace viaggia_server.Controllers
                 {
                     _logger.LogError("ModelState is invalid: {Errors}", ModelState);
                     return BadRequest(ModelState);
+                }
+
+                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
+                {
+                    _logger.LogWarning("Invalid or missing UserId in claims");
+                    return Unauthorized(new ApiResponse<HotelDTO>(false, "User not authenticated."));
                 }
 
                 List<CreateHotelRoomTypeDTO> roomTypes;
@@ -120,7 +187,7 @@ namespace viaggia_server.Controllers
                     return BadRequest(new ApiResponse<HotelDTO>(false, "RoomTypesJson is invalid or malformed."));
                 }
 
-                var response = await _hotelServices.CreateHotelAsync(createHotelDto, roomTypes);
+                var response = await _hotelServices.CreateHotelAsync(createHotelDto, roomTypes, userId);
                 if (!response.Success)
                 {
                     _logger.LogError("Failed to create hotel: {Message}", response.Message);
@@ -536,6 +603,105 @@ namespace viaggia_server.Controllers
                 _logger.LogError(ex, "Error searching hotels for City: {City}", searchDto.City);
                 return StatusCode(StatusCodes.Status500InternalServerError,
                     new ApiResponse<List<HotelDTO>>(false, $"Error searching hotels: {ex.Message}"));
+            }
+        }
+
+        // GET: api/Hotel/user/{userId}
+        [HttpGet("user/{userId}")]
+        [Authorize(Roles = "ADMIN,SERVICE_PROVIDER")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> GetHotelsByUserId(int userId)
+        {
+            try
+            {
+                // Verify authorization
+                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (!User.IsInRole("ADMIN") && (userIdClaim == null || userIdClaim != userId.ToString()))
+                {
+                    _logger.LogWarning("User {UserId} attempted to access hotels of another user: {TargetUserId}", userIdClaim, userId);
+                    return StatusCode(StatusCodes.Status403Forbidden,
+                        new ApiResponse<List<HotelDTO>>(false, "You can only access your own hotels unless you are an Admin."));
+                }
+
+                if (userId <= 0)
+                {
+                    _logger.LogWarning("Invalid user ID: {UserId}", userId);
+                    return BadRequest(new ApiResponse<List<HotelDTO>>(false, "Invalid user ID."));
+                }
+
+                var response = await _hotelServices.GetHotelsByUserIdAsync(userId);
+                if (!response.Success)
+                {
+                    _logger.LogWarning("Failed to retrieve hotels for UserId {UserId}: {Message}", userId, response.Message);
+                    return NotFound(new ApiResponse<List<HotelDTO>>(false, response.Message));
+                }
+
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving hotels for UserId: {UserId}", userId);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    new ApiResponse<List<HotelDTO>>(false, $"Error retrieving hotels: {ex.Message}"));
+            }
+        }
+
+        [HttpGet("{hotelId}/reservations")]
+        [Authorize(Roles = "ADMIN,SERVICE_PROVIDER,ATTENDANT")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> GetReservationsByHotelId(int hotelId)
+        {
+            try
+            {
+                if (hotelId <= 0)
+                {
+                    _logger.LogWarning("Invalid hotel ID: {HotelId}", hotelId);
+                    return BadRequest(new ApiResponse<List<ReserveDTO>>(false, "Invalid hotel ID."));
+                }
+
+                // Authorization check for SERVICE_PROVIDER
+                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (!User.IsInRole("ADMIN") && !User.IsInRole("ATTENDANT"))
+                {
+                    if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
+                    {
+                        _logger.LogWarning("Invalid or missing UserId in claims");
+                        return Unauthorized(new ApiResponse<List<ReserveDTO>>(false, "User not authenticated."));
+                    }
+
+                    var hotel = await _hotelServices.GetHotelByIdAsync(hotelId);
+                    if (hotel.Data?.UserId != userId)
+                    {
+                        _logger.LogWarning("User {UserId} attempted to access reservations for hotel {HotelId} they do not own", userId, hotelId);
+                        return StatusCode(StatusCodes.Status403Forbidden,
+                            new ApiResponse<List<ReserveDTO>>(false, "You can only access reservations for your own hotels."));
+                    }
+                }
+
+                var response = await _hotelServices.GetReservationsByHotelIdAsync(hotelId);
+                if (!response.Success)
+                {
+                    _logger.LogWarning("Failed to retrieve reservations for HotelId {HotelId}: {Message}", hotelId, response.Message);
+                    return NotFound(new ApiResponse<List<ReserveDTO>>(false, response.Message));
+                }
+
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving reservations for HotelId: {HotelId}", hotelId);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    new ApiResponse<List<ReserveDTO>>(false, $"Error retrieving reservations: {ex.Message}"));
             }
         }
     }

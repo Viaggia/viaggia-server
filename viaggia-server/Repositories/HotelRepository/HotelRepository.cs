@@ -5,6 +5,7 @@ using viaggia_server.Models.CustomCommodities;
 using viaggia_server.Models.Hotels;
 using viaggia_server.Models.Medias;
 using viaggia_server.Models.Packages;
+using viaggia_server.Models.Reserves;
 using viaggia_server.Models.Reviews;
 
 namespace viaggia_server.Repositories.HotelRepository
@@ -388,6 +389,28 @@ namespace viaggia_server.Repositories.HotelRepository
                 .FirstOrDefaultAsync(h => h.HotelId == hotelId);
         }
 
+
+        public async Task<IEnumerable<Hotel>> GetHotelsByUserIdAsync(int userId)
+        {
+            return await _context.Hotels
+                .Where(h => h.UserId == userId && h.IsActive)
+                .Include(h => h.RoomTypes)
+                .Include(h => h.Medias)
+                .Include(h => h.Reviews)
+                .Include(h => h.Packages)
+                .Include(h => h.Commodities)
+                .Include(h => h.CustomCommodities)
+                .ToListAsync();
+        }
+
+        public async Task<IEnumerable<Reserve>> GetReservationsByHotelIdAsync(int hotelId)
+        {
+            return await _context.Reserves
+                .Where(r => r.HotelId == hotelId && r.IsActive)
+                .Include(r => r.User)
+                .Include(r => r.Hotel)
+                .ToListAsync();
+        }
     }
 
 }
