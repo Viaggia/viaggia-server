@@ -5,6 +5,7 @@ using viaggia_server.Models.CustomCommodities;
 using viaggia_server.Models.Hotels;
 using viaggia_server.Models.Medias;
 using viaggia_server.Models.Packages;
+using viaggia_server.Models.Reserves;
 using viaggia_server.Models.Reviews;
 
 namespace viaggia_server.Repositories.HotelRepository
@@ -20,7 +21,37 @@ namespace viaggia_server.Repositories.HotelRepository
             _logger = logger;
         }
 
+        public async Task UpdateAsync(Hotel hotel)
+        {
+            _context.Hotels.Update(hotel);
+            await _context.SaveChangesAsync();
+        }
 
+        public async Task<Hotel?> GetByIdAsync(int id)
+        {
+            try
+            {
+                _logger.LogInformation("Fetching hotel with ID: {HotelId}", id);
+                var hotel = await _context.Hotels
+                    .Include(h => h.Commodities)
+                    .Include(h => h.CustomCommodities)
+                    .Include(h => h.RoomTypes)
+                    .Include(h => h.Medias)
+                    .Include(h => h.Reviews)
+                    .Include(h => h.Packages)
+                    .FirstOrDefaultAsync(h => h.HotelId == id && h.IsActive);
+                if (hotel == null)
+                    _logger.LogWarning("Hotel with ID: {HotelId} not found or inactive", id);
+                else
+                    _logger.LogInformation("Hotel with ID: {HotelId} fetched successfully", id);
+                return hotel;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error fetching hotel with ID: {HotelId}", id);
+                throw;
+            }
+        }
         public async Task<HotelRoomType> AddRoomTypeAsync(HotelRoomType roomType)
         {
             try
@@ -277,6 +308,88 @@ namespace viaggia_server.Repositories.HotelRepository
                 throw;
             }
         }
+
+        public async Task<IEnumerable<Hotel>> GetAvailableHotelsByDestinationAsync(
+         string city,
+         int numberOfPeople,
+         int numberOfRooms,
+         DateTime checkInDate,
+         DateTime checkOutDate)
+        {
+            try
+            {
+                _logger.LogInformation(
+                    "Fetching available hotels for City: {City}, People: {NumberOfPeople}, Rooms: {NumberOfRooms}, CheckIn: {CheckInDate}, CheckOut: {CheckOutDate}",
+                    city, numberOfPeople, numberOfRooms, checkInDate, checkOutDate);
+
+                // Fetch hotels in the specified city
+                var hotels = await _context.Hotels
+                    .Where(h => h.IsActive && h.City.ToLower() == city.ToLower())
+                    .Include(h => h.RoomTypes.Where(rt => rt.IsActive && rt.Capacity >= numberOfPeople))
+                    .Include(h => h.Commodities)
+                    .Include(h => h.CustomCommodities)
+                    .Include(h => h.Medias)
+                    .Include(h => h.Reviews)
+                    .Include(h => h.Packages)
+                    .ToListAsync();
+
+                // Fetch reservations that overlap with the requested dates
+                var reservations = await _context.Reserves
+                    .Where(r => r.IsActive &&
+                                r.HotelId.HasValue &&
+                                hotels.Select(h => h.HotelId).Contains(r.HotelId.Value) &&
+                                (checkInDate <= r.CheckOutDate && checkOutDate >= r.CheckInDate))
+                    .ToListAsync();
+
+                // Filter hotels with sufficient available rooms
+                var availableHotels = new List<Hotel>();
+                foreach (var hotel in hotels)
+                {
+                    var availableRoomTypes = new List<HotelRoomType>();
+                    foreach (var roomType in hotel.RoomTypes)
+                    {
+                        // Count reserved rooms for this room type in the date range
+                        var reservedRooms = reservations
+                            .Where(r => r.HotelId == hotel.HotelId && r.RoomTypeId == roomType.RoomTypeId)
+                            .Sum(r => r.NumberOfRooms);
+
+                        var availableRooms = roomType.TotalRooms - reservedRooms;
+                        if (availableRooms >= numberOfRooms)
+                        {
+                            roomType.AvailableRooms = availableRooms;
+                            availableRoomTypes.Add(roomType);
+                        }
+                    }
+
+                    if (availableRoomTypes.Any())
+                    {
+                        hotel.RoomTypes = availableRoomTypes;
+                        availableHotels.Add(hotel);
+                    }
+                }
+
+                _logger.LogInformation("Found {Count} available hotels in {City}", availableHotels.Count, city);
+                return availableHotels;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error fetching available hotels for City: {City}", city);
+                throw;
+            }
+        }
+
+        public async Task<IEnumerable<Hotel>> GetHotelsByUserIdAsync(int userId)
+        {
+            return await _context.Hotels
+                .Where(h => h.UserId == userId && h.IsActive)
+                .Include(h => h.RoomTypes)
+                .Include(h => h.Medias)
+                .Include(h => h.Reviews)
+                .Include(h => h.Packages)
+                .Include(h => h.Commodities)
+                .Include(h => h.CustomCommodities)
+                .ToListAsync();
+        }
         public async Task<Hotel> GetByIdHotel(int Hotel)
         {
             try
@@ -290,5 +403,15 @@ namespace viaggia_server.Repositories.HotelRepository
                 throw new Exception(ex.Message);
             }
         }
+
+        public async Task<IEnumerable<Reserve>> GetReservationsByHotelIdAsync(int hotelId)
+        {
+            return await _context.Reserves
+                .Where(r => r.HotelId == hotelId && r.IsActive)
+                .Include(r => r.User)
+                .Include(r => r.Hotel)
+                .ToListAsync();
+        }
     }
+
 }

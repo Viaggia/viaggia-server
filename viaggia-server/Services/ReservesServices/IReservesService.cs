@@ -3,9 +3,9 @@ using viaggia_server.Models.Hotels;
 using viaggia_server.Models.Reserves;
 using viaggia_server.Models.Users;
 
-namespace viaggia_server.Services.Reservations
+namespace viaggia_server.Services.Reserves
 {
-    public interface IReservationService
+    public interface IReservesService
     {
         Task<List<Reserve>> GetAllAsync();
         Task<Reserve?> GetByIdAsync(int id);

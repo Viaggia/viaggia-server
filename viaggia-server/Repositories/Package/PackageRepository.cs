@@ -109,5 +109,13 @@ namespace viaggia_server.Repositories
                 .FirstOrDefaultAsync(h => h.Name.ToLower() == hotelName.ToLower() && h.IsActive);
             return hotel?.HotelId;
         }
+
+        public async Task<IEnumerable<Package>> GetByHotelIdAsync(int hotelId)
+        {
+            return await _context.Packages
+                .Where(p => p.HotelId == hotelId && p.IsActive)
+                .Include(p => p.Hotel)
+                .ToListAsync();
+        }
     }
 }

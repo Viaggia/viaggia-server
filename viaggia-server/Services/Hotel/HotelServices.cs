@@ -4,10 +4,12 @@ using viaggia_server.DTOs;
 using viaggia_server.DTOs.Commodity;
 using viaggia_server.DTOs.Hotel;
 using viaggia_server.DTOs.Packages;
+using viaggia_server.DTOs.Reserve;
 using viaggia_server.DTOs.Reviews;
 using viaggia_server.Models.Hotels;
 using viaggia_server.Models.Medias;
 using viaggia_server.Models.Reviews;
+using viaggia_server.Models.Users;
 using viaggia_server.Repositories;
 using viaggia_server.Repositories.HotelRepository;
 
@@ -305,7 +307,7 @@ namespace viaggia_server.Services.HotelServices
             }
         }
 
-        public async Task<ApiResponse<Hotel>> CreateHotelAsync(CreateHotelDTO createHotelDto, List<CreateHotelRoomTypeDTO> roomTypes)
+        public async Task<ApiResponse<Hotel>> CreateHotelAsync(CreateHotelDTO createHotelDto, List<CreateHotelRoomTypeDTO> roomTypes, int userId)
         {
             if (createHotelDto == null)
             {
@@ -345,7 +347,8 @@ namespace viaggia_server.Services.HotelServices
                     CheckOutTime = createHotelDto.CheckOutTime,
                     ContactPhone = createHotelDto.ContactPhone,
                     ContactEmail = createHotelDto.ContactEmail,
-                    IsActive = createHotelDto.IsActive
+                    IsActive = createHotelDto.IsActive,
+                    UserId = userId
                 };
 
                 var createdHotel = await _genericRepository.AddAsync(hotel);
@@ -1256,6 +1259,336 @@ namespace viaggia_server.Services.HotelServices
         public Task<bool> SoftDeleteHotelAsync(int id)
         {
             throw new NotImplementedException();
+        }
+
+        public async Task<ApiResponse<List<HotelDTO>>> SearchHotelsByDestinationAsync(HotelSearchDTO searchDto)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(searchDto.City))
+                {
+                    _logger.LogWarning("City is null or empty.");
+                    return new ApiResponse<List<HotelDTO>>(false, "City is required.");
+                }
+
+                if (searchDto.CheckInDate >= searchDto.CheckOutDate)
+                {
+                    _logger.LogWarning("Invalid date range: CheckInDate {CheckInDate} must be before CheckOutDate {CheckOutDate}",
+                        searchDto.CheckInDate, searchDto.CheckOutDate);
+                    return new ApiResponse<List<HotelDTO>>(false, "Check-in date must be before check-out date.");
+                }
+
+                if (searchDto.NumberOfPeople <= 0)
+                {
+                    _logger.LogWarning("Invalid number of people: {NumberOfPeople}", searchDto.NumberOfPeople);
+                    return new ApiResponse<List<HotelDTO>>(false, "Number of people must be greater than 0.");
+                }
+
+                if (searchDto.NumberOfRooms <= 0)
+                {
+                    _logger.LogWarning("Invalid number of rooms: {NumberOfRooms}", searchDto.NumberOfRooms);
+                    return new ApiResponse<List<HotelDTO>>(false, "Number of rooms must be greater than 0.");
+                }
+
+                var hotels = await _hotelRepository.GetAvailableHotelsByDestinationAsync(
+                    searchDto.City,
+                    searchDto.NumberOfPeople,
+                    searchDto.NumberOfRooms,
+                    searchDto.CheckInDate,
+                    searchDto.CheckOutDate);
+
+                var hotelDTOs = hotels.Select(hotel => new HotelDTO
+                {
+                    HotelId = hotel.HotelId,
+                    Name = hotel.Name,
+                    Cnpj = hotel.Cnpj,
+                    Street = hotel.Street,
+                    City = hotel.City,
+                    State = hotel.State,
+                    ZipCode = hotel.ZipCode,
+                    Description = hotel.Description,
+                    StarRating = hotel.StarRating,
+                    CheckInTime = hotel.CheckInTime,
+                    CheckOutTime = hotel.CheckOutTime,
+                    ContactPhone = hotel.ContactPhone,
+                    ContactEmail = hotel.ContactEmail,
+                    IsActive = hotel.IsActive,
+                    AverageRating = hotel.AverageRating,
+                    RoomTypes = hotel.RoomTypes.Select(rt => new HotelRoomTypeDTO
+                    {
+                        RoomTypeId = rt.RoomTypeId,
+                        Name = rt.Name,
+                        Description = rt.Description,
+                        Price = rt.Price,
+                        Capacity = rt.Capacity,
+                        BedType = rt.BedType,
+                        TotalRooms = rt.TotalRooms,
+                        AvailableRooms = rt.AvailableRooms,
+                        IsActive = rt.IsActive
+                    }).ToList(),
+                    Medias = hotel.Medias.Select(m => new MediaDTO
+                    {
+                        MediaId = m.MediaId,
+                        MediaUrl = m.MediaUrl,
+                        MediaType = m.MediaType
+                    }).ToList(),
+                    Reviews = hotel.Reviews.Select(r => new ReviewDTO
+                    {
+                        ReviewId = r.ReviewId,
+                        UserId = r.UserId,
+                        ReviewType = r.ReviewType,
+                        HotelId = r.HotelId,
+                        Rating = r.Rating,
+                        Comment = r.Comment,
+                        CreatedAt = r.CreatedAt,
+                        IsActive = r.IsActive
+                    }).ToList(),
+                    Packages = hotel.Packages.Select(p => new PackageDTO
+                    {
+                        PackageId = p.PackageId,
+                        Name = p.Name,
+                        Description = p.Description,
+                        BasePrice = p.BasePrice,
+                        IsActive = p.IsActive
+                    }).ToList(),
+                    Commodities = hotel.Commodities.Select(c => new CommodityDTO
+                    {
+                        HotelId = c.HotelId,
+                        HasParking = c.HasParking,
+                        IsParkingPaid = c.IsParkingPaid,
+                        ParkingPrice = c.ParkingPrice,
+                        HasBreakfast = c.HasBreakfast,
+                        IsBreakfastPaid = c.IsBreakfastPaid,
+                        BreakfastPrice = c.BreakfastPrice,
+                        HasLunch = c.HasLunch,
+                        IsLunchPaid = c.IsLunchPaid,
+                        LunchPrice = c.LunchPrice,
+                        HasDinner = c.HasDinner,
+                        IsDinnerPaid = c.IsDinnerPaid,
+                        DinnerPrice = c.DinnerPrice,
+                        HasSpa = c.HasSpa,
+                        IsSpaPaid = c.IsSpaPaid,
+                        SpaPrice = c.SpaPrice,
+                        HasPool = c.HasPool,
+                        IsPoolPaid = c.IsPoolPaid,
+                        PoolPrice = c.PoolPrice,
+                        HasGym = c.HasGym,
+                        IsGymPaid = c.IsGymPaid,
+                        GymPrice = c.GymPrice,
+                        HasWiFi = c.HasWiFi,
+                        IsWiFiPaid = c.IsWiFiPaid,
+                        WiFiPrice = c.WiFiPrice,
+                        HasAirConditioning = c.HasAirConditioning,
+                        IsAirConditioningPaid = c.IsAirConditioningPaid,
+                        AirConditioningPrice = c.AirConditioningPrice,
+                        HasAccessibilityFeatures = c.HasAccessibilityFeatures,
+                        IsAccessibilityFeaturesPaid = c.IsAccessibilityFeaturesPaid,
+                        AccessibilityFeaturesPrice = c.AccessibilityFeaturesPrice,
+                        IsPetFriendly = c.IsPetFriendly,
+                        IsPetFriendlyPaid = c.IsPetFriendlyPaid,
+                        PetFriendlyPrice = c.PetFriendlyPrice,
+                        IsActive = c.IsActive
+                    }).ToList(),
+                    CustomCommodities = hotel.CustomCommodities.Select(cs => new CustomCommodityDTO
+                    {
+                        CustomCommodityId = cs.CustomCommodityId,
+                        HotelId = cs.HotelId,
+                        Name = cs.Name,
+                        IsPaid = cs.IsPaid,
+                        Price = cs.Price,
+                        Description = cs.Description,
+                        IsActive = cs.IsActive
+                    }).ToList()
+                }).ToList();
+
+                if (!hotelDTOs.Any())
+                {
+                    _logger.LogInformation("No available hotels found for City: {City}, People: {NumberOfPeople}, Rooms: {NumberOfRooms}",
+                        searchDto.City, searchDto.NumberOfPeople, searchDto.NumberOfRooms);
+                    return new ApiResponse<List<HotelDTO>>(false, "No available hotels found.");
+                }
+
+                return new ApiResponse<List<HotelDTO>>(true, "Hotels retrieved successfully.", hotelDTOs);
+            }
+            catch (Exception ex)
+            {
+                var innerMessage = ex.InnerException != null ? ex.InnerException.Message : ex.Message;
+                _logger.LogError(ex, "Error searching hotels for City: {City}: {Message}", searchDto.City, innerMessage);
+                return new ApiResponse<List<HotelDTO>>(false, $"Error searching hotels: {innerMessage}");
+            }
+        }
+
+        public async Task<ApiResponse<List<HotelDTO>>> GetHotelsByUserIdAsync(int userId)
+        {
+            try
+            {
+                if (userId <= 0)
+                {
+                    _logger.LogWarning("Invalid user ID: {UserId}", userId);
+                    return new ApiResponse<List<HotelDTO>>(false, "Invalid user ID.");
+                }
+
+                var hotels = await _hotelRepository.GetHotelsByUserIdAsync(userId);
+                var hotelDTOs = hotels.Select(hotel => new HotelDTO
+                {
+                    HotelId = hotel.HotelId,
+                    Name = hotel.Name,
+                    Cnpj = hotel.Cnpj,
+                    Street = hotel.Street,
+                    City = hotel.City,
+                    State = hotel.State,
+                    ZipCode = hotel.ZipCode,
+                    Description = hotel.Description,
+                    StarRating = hotel.StarRating,
+                    CheckInTime = hotel.CheckInTime,
+                    CheckOutTime = hotel.CheckOutTime,
+                    ContactPhone = hotel.ContactPhone,
+                    ContactEmail = hotel.ContactEmail,
+                    IsActive = hotel.IsActive,
+                    AverageRating = hotel.AverageRating,
+                    RoomTypes = hotel.RoomTypes.Select(rt => new HotelRoomTypeDTO
+                    {
+                        RoomTypeId = rt.RoomTypeId,
+                        Name = rt.Name,
+                        Description = rt.Description,
+                        Price = rt.Price,
+                        Capacity = rt.Capacity,
+                        BedType = rt.BedType,
+                        TotalRooms = rt.TotalRooms,
+                        AvailableRooms = rt.AvailableRooms,
+                        IsActive = rt.IsActive
+                    }).ToList(),
+                    Medias = hotel.Medias.Select(m => new MediaDTO
+                    {
+                        MediaId = m.MediaId,
+                        MediaUrl = m.MediaUrl,
+                        MediaType = m.MediaType
+                    }).ToList(),
+                    Reviews = hotel.Reviews.Select(r => new ReviewDTO
+                    {
+                        ReviewId = r.ReviewId,
+                        UserId = r.UserId,
+                        ReviewType = r.ReviewType,
+                        HotelId = r.HotelId,
+                        Rating = r.Rating,
+                        Comment = r.Comment,
+                        CreatedAt = r.CreatedAt,
+                        IsActive = r.IsActive
+                    }).ToList(),
+                    Packages = hotel.Packages.Select(p => new PackageDTO
+                    {
+                        PackageId = p.PackageId,
+                        Name = p.Name,
+                        Description = p.Description,
+                        BasePrice = p.BasePrice,
+                        IsActive = p.IsActive
+                    }).ToList(),
+                    Commodities = hotel.Commodities.Select(c => new CommodityDTO
+                    {
+                        HotelId = c.HotelId,
+                        HasParking = c.HasParking,
+                        IsParkingPaid = c.IsParkingPaid,
+                        ParkingPrice = c.ParkingPrice,
+                        HasBreakfast = c.HasBreakfast,
+                        IsBreakfastPaid = c.IsBreakfastPaid,
+                        BreakfastPrice = c.BreakfastPrice,
+                        HasLunch = c.HasLunch,
+                        IsLunchPaid = c.IsLunchPaid,
+                        LunchPrice = c.LunchPrice,
+                        HasDinner = c.HasDinner,
+                        IsDinnerPaid = c.IsDinnerPaid,
+                        DinnerPrice = c.DinnerPrice,
+                        HasSpa = c.HasSpa,
+                        IsSpaPaid = c.IsSpaPaid,
+                        SpaPrice = c.SpaPrice,
+                        HasPool = c.HasPool,
+                        IsPoolPaid = c.IsPoolPaid,
+                        PoolPrice = c.PoolPrice,
+                        HasGym = c.HasGym,
+                        IsGymPaid = c.IsGymPaid,
+                        GymPrice = c.GymPrice,
+                        HasWiFi = c.HasWiFi,
+                        IsWiFiPaid = c.IsWiFiPaid,
+                        WiFiPrice = c.WiFiPrice,
+                        HasAirConditioning = c.HasAirConditioning,
+                        IsAirConditioningPaid = c.IsAirConditioningPaid,
+                        AirConditioningPrice = c.AirConditioningPrice,
+                        HasAccessibilityFeatures = c.HasAccessibilityFeatures,
+                        IsAccessibilityFeaturesPaid = c.IsAccessibilityFeaturesPaid,
+                        AccessibilityFeaturesPrice = c.AccessibilityFeaturesPrice,
+                        IsPetFriendly = c.IsPetFriendly,
+                        IsPetFriendlyPaid = c.IsPetFriendlyPaid,
+                        PetFriendlyPrice = c.PetFriendlyPrice,
+                        IsActive = c.IsActive
+                    }).ToList(),
+                    CustomCommodities = hotel.CustomCommodities.Select(cs => new CustomCommodityDTO
+                    {
+                        CustomCommodityId = cs.CustomCommodityId,
+                        HotelId = cs.HotelId,
+                        Name = cs.Name,
+                        IsPaid = cs.IsPaid,
+                        Price = cs.Price,
+                        Description = cs.Description,
+                        IsActive = cs.IsActive
+                    }).ToList()
+                }).ToList();
+
+                if (!hotelDTOs.Any())
+                {
+                    _logger.LogInformation("No hotels found for UserId: {UserId}", userId);
+                    return new ApiResponse<List<HotelDTO>>(false, "No hotels found for the specified user.");
+                }
+
+                return new ApiResponse<List<HotelDTO>>(true, "Hotels retrieved successfully.", hotelDTOs);
+            }
+            catch (Exception ex)
+            {
+                var innerMessage = ex.InnerException != null ? ex.InnerException.Message : ex.Message;
+                _logger.LogError(ex, "Error retrieving hotels for UserId {UserId}: {Message}", userId, innerMessage);
+                return new ApiResponse<List<HotelDTO>>(false, $"Error retrieving hotels: {innerMessage}");
+            }
+        }
+
+        public async Task<ApiResponse<List<ReserveDTO>>> GetReservationsByHotelIdAsync(int hotelId)
+        {
+            try
+            {
+                if (hotelId <= 0)
+                {
+                    _logger.LogWarning("Invalid hotel ID: {HotelId}", hotelId);
+                    return new ApiResponse<List<ReserveDTO>>(false, "Invalid hotel ID.");
+                }
+
+                var reservations = await _hotelRepository.GetReservationsByHotelIdAsync(hotelId);
+                var reserveDTOs = reservations.Select(r => new ReserveDTO
+                {
+                    ReserveId = r.ReserveId,
+                    UserId = r.UserId,
+                    HotelId = r.HotelId,
+                    RoomTypeId = r.RoomTypeId,
+                    CheckInDate = r.CheckInDate,
+                    CheckOutDate = r.CheckOutDate,
+                    NumberOfGuests= r.NumberOfGuests,
+                    TotalPrice = r.TotalPrice,
+                    Status = r.Status,
+                    CreatedAt = r.CreatedAt,
+                    IsActive = r.IsActive
+                }).ToList();
+
+                if (!reserveDTOs.Any())
+                {
+                    _logger.LogInformation("No reservations found for HotelId: {HotelId}", hotelId);
+                    return new ApiResponse<List<ReserveDTO>>(false, "No reservations found.");
+                }
+
+                return new ApiResponse<List<ReserveDTO>>(true, "Reservations retrieved successfully.", reserveDTOs);
+            }
+            catch (Exception ex)
+            {
+                var innerMessage = ex.InnerException != null ? ex.InnerException.Message : ex.Message;
+                _logger.LogError(ex, "Error retrieving reservations for HotelId {HotelId}: {Message}", hotelId, innerMessage);
+                return new ApiResponse<List<ReserveDTO>>(false, $"Error retrieving reservations: {innerMessage}");
+            }
         }
     }
 }

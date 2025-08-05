@@ -3,9 +3,9 @@ using viaggia_server.Data;
 using viaggia_server.DTOs.Reserves;
 using viaggia_server.Models.Reserves;
 
-namespace viaggia_server.Repositories.ReservationRepository
+namespace viaggia_server.Repositories.ReservesRepository
 {
-    public class ReservationRepository : Repository<Reserve>, IReservationRepository
+    public class ReservationRepository : Repository<Reserve>, IReservesRepository
     {
         public ReservationRepository(AppDbContext context) : base(context) {}
 

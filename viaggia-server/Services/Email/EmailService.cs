@@ -1,5 +1,6 @@
 ﻿using System.Net.Mail;
 using System.Net;
+using viaggia_server.Models.Reserves;
 
 namespace viaggia_server.Services.Email
 {
@@ -139,7 +140,7 @@ namespace viaggia_server.Services.Email
             return htmlContent;
         }
 
-        public async Task SendApprovedReserve(string email, string userName, int ReservationId, string Hotel, DateTime checkIn, DateTime checkOut, string hotelEmail, string hotelPhone)
+        public async Task SendApprovedReserve(Reserve reserve)
         {
             var smtpClient = new SmtpClient(_configuration["Smtp:Host"], int.Parse(_configuration["Smtp:Port"]))
             {
@@ -152,11 +153,11 @@ namespace viaggia_server.Services.Email
             var from = new MailAddress(
                 _configuration["Smtp:FromEmail"],
                 _configuration["Smtp:FromName"]);
-            var to = new MailAddress(email);
+            var to = new MailAddress(reserve.User.Email);
             var subject = "Reserva Aprovado - Viaggia";
 
             //Obter o conteúdo HTML do template
-            var htmlContent = await GetApprovedReserve(userName, ReservationId, Hotel, checkIn, checkOut, hotelEmail, hotelPhone);
+            var htmlContent = await GetApprovedReserve(reserve);
 
             var mailMessage = new MailMessage(from, to)
             {
@@ -168,16 +169,16 @@ namespace viaggia_server.Services.Email
             try
             {
                 await smtpClient.SendMailAsync(mailMessage);
-                _logger.LogInformation("Email de aprovação de reserva enviado para {Email} (usuário: {UserName})", email, userName);
+                _logger.LogInformation("Email de aprovação de reserva enviado para {Email} (usuário: {UserName})", reserve.User.Email, reserve.User.Name);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Falha ao enviar de aprovação para {Email}", email);
+                _logger.LogError(ex, "Falha ao enviar de aprovação para {Email}", reserve.User.Email);
                 throw new Exception("Falha ao enviar o e-mail de aprovação.");
             }
         }
 
-        public async Task<string> GetApprovedReserve(string userName, int reservationId, string hotel, DateTime checkIn, DateTime checkOut, string hotelEmail, string hotelPhone)
+        public async Task<string> GetApprovedReserve(Reserve reserve)
         {
             var templatePath = Path.Combine(_environment.ContentRootPath, "templates", "ApprovedReserve.html");
             if (!File.Exists(templatePath))
@@ -188,13 +189,13 @@ namespace viaggia_server.Services.Email
             var templateContent = await File.ReadAllTextAsync(templatePath);
 
             var htmlContent = templateContent
-                .Replace("{{UserName}}", userName)
-                .Replace("{{NomeHotel}}", hotel)
-                .Replace("{{ReservaId}}", reservationId.ToString())
-                .Replace("{{CheckIn}}", checkIn.ToString())
-                .Replace("{{CheckOut}}", checkOut.ToString())
-                .Replace("{{HotelEmail}}", hotelEmail)
-                .Replace("{{HotelPhone}}", hotelPhone);
+                .Replace("{{UserName}}", reserve.User.Name)
+                .Replace("{{NomeHotel}}", reserve.Hotel.Name)
+                .Replace("{{ReservaId}}", reserve.ReserveId.ToString())
+                .Replace("{{CheckIn}}", reserve.CheckInDate.ToString())
+                .Replace("{{CheckOut}}", reserve.CheckOutDate.ToString())
+                .Replace("{{HotelEmail}}", reserve.Hotel.ContactEmail)
+                .Replace("{{HotelPhone}}", reserve.Hotel.ContactPhone);
 
 
             return htmlContent;

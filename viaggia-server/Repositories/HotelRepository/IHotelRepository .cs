@@ -1,9 +1,9 @@
-﻿
-using viaggia_server.Models.Commodities;
+﻿using viaggia_server.Models.Commodities;
 using viaggia_server.Models.CustomCommodities;
 using viaggia_server.Models.Hotels;
 using viaggia_server.Models.Medias;
 using viaggia_server.Models.Packages;
+using viaggia_server.Models.Reserves;
 using viaggia_server.Models.Reviews;
 
 
@@ -11,6 +11,8 @@ namespace viaggia_server.Repositories.HotelRepository
 {
     public interface IHotelRepository
     {
+        Task UpdateAsync(Hotel hotel);
+        Task<Hotel?> GetByIdAsync(int id); // Add this method
         Task<bool> NameExistsAsync(string name);
         Task<bool> CnpjExistsAsync(string? cnpj);
         Task<HotelRoomType> AddRoomTypeAsync(HotelRoomType roomType);
@@ -24,6 +26,15 @@ namespace viaggia_server.Repositories.HotelRepository
         Task<IEnumerable<CustomCommodity>> GetCustomCommodityByHotelIdAsync(int hotelId);
         Task<IEnumerable<Hotel>> GetHotelsWithRelatedDataAsync();
         Task<IEnumerable<HotelRoomType>> GetAvailableRoomTypesAsync(int hotelId, int numberOfPeople, DateTime checkInDate, DateTime checkOutDate);
+        Task<IEnumerable<Hotel>> GetHotelsByUserIdAsync(int userId);
+        Task<IEnumerable<Reserve>> GetReservationsByHotelIdAsync(int hotelId);
+        Task<IEnumerable<Hotel>> GetAvailableHotelsByDestinationAsync(
+              string city,
+              int numberOfPeople,
+              int numberOfRooms,
+              DateTime checkInDate,
+              DateTime checkOutDate);
+
         Task<Hotel> GetByIdHotel(int  hotelId);
     }
 }

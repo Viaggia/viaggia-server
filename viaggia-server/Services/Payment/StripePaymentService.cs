@@ -167,17 +167,6 @@ namespace viaggia_server.Services.Payment
                         var hotel = await _reservations.GetByIdAsync<Hotel>(Convert.ToInt32(reservation.HotelId));
 
                         string userName = session.Metadata["userNameReservation"];
-
-                        await _emailService.SendApprovedReserve(
-                            user.Email,
-                            userName,
-                            reservation.ReserveId,
-                            hotel.Name,
-                            reservation.CheckInDate,
-                            reservation.CheckOutDate,
-                            hotel.ContactEmail,
-                            hotel.ContactPhone
-                        );
                     }
                     catch (Exception ex)
                     {

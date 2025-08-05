@@ -5,26 +5,26 @@ using viaggia_server.Models.Reserves;
 using viaggia_server.Models.Users;
 using viaggia_server.Repositories;
 using viaggia_server.Repositories.HotelRepository;
-using viaggia_server.Repositories.ReservationRepository;
+using viaggia_server.Repositories.ReservesRepository;
 using viaggia_server.Repositories.Users;
 using viaggia_server.Services.Email;
 
-namespace viaggia_server.Services.Reservations
+namespace viaggia_server.Services.Reserves
 {
-    public class ReservationService : IReservationService
+    public class ReservesService : IReservesService
     {
-        private readonly IReservationRepository _reservationRepository;
+        private readonly IReservesRepository _reservesRepository;
         private readonly IUserRepository _userRepository;
         private readonly IHotelRepository _hotelRepository;
         private readonly IEmailService _emailService;
 
-        public ReservationService(
-            IReservationRepository reservationRepo,
+        public ReservesService(
+            IReservesRepository reservationRepo,
             IUserRepository userRepository,
             IHotelRepository hotelRepository,
             IEmailService emailService)
         {
-            _reservationRepository = reservationRepo;
+            _reservesRepository = reservationRepo;
             _userRepository = userRepository;
             _hotelRepository = hotelRepository;
             _emailService = emailService;
@@ -34,7 +34,7 @@ namespace viaggia_server.Services.Reservations
         {
             try
             {
-                var reservations = await _reservationRepository.GetAllAsync();
+                var reservations = await _reservesRepository.GetAllAsync();
                 return reservations.Select(r => new Reserve
                 {
                     ReserveId = r.ReserveId,
@@ -45,7 +45,6 @@ namespace viaggia_server.Services.Reservations
                     CheckInDate = r.CheckInDate,
                     CheckOutDate = r.CheckOutDate,
                     TotalPrice = r.TotalPrice,
-                    NumberOfGuests = r.NumberOfGuests,
                     Status = r.Status,
                     IsActive = r.IsActive
                 }).ToList();
@@ -60,7 +59,7 @@ namespace viaggia_server.Services.Reservations
         {
             try
             {
-                var r = await _reservationRepository.GetReservationByIdAsync(id);
+                var r = await _reservesRepository.GetReservationByIdAsync(id);
                 if (r == null || r.ReserveId != id) throw new Exception("Reserve Don't Found");
 
                 return new Reserve
@@ -72,7 +71,6 @@ namespace viaggia_server.Services.Reservations
                     CheckInDate = r.CheckInDate,
                     CheckOutDate = r.CheckOutDate,
                     TotalPrice = r.TotalPrice,
-                    NumberOfGuests = r.NumberOfGuests,
                     Status = r.Status,
                     IsActive = r.IsActive
                 };
@@ -101,14 +99,13 @@ namespace viaggia_server.Services.Reservations
                 if (hotel == null)
                     throw new Exception("Hotel não encontrado.");
 
-                var reservation = new Reserve
+                var reserve = new Reserve
                 {
                     UserId = dto.UserId,
                     PackageId = dto.PackageId, // pode ser null
                     RoomTypeId = dto.RoomTypeId,
                     HotelId = dto.HotelId,
                     TotalPrice = dto.TotalPrice,
-                    NumberOfGuests = dto.NumberOfGuests,
                     Status = dto.Status ?? "Pendente", // fallback se quiser
                     CheckInDate = dto.CheckInDate,
                     CheckOutDate = dto.CheckOutDate,
@@ -116,10 +113,10 @@ namespace viaggia_server.Services.Reservations
                     IsActive = true
                 };
 
-                await _reservationRepository.AddAsync(reservation);
-                await _reservationRepository.SaveChangesAsync();
-
-                return await GetByIdAsync(reservation.ReserveId);
+                await _reservesRepository.AddAsync(reserve);
+                await _reservesRepository.SaveChangesAsync();
+                await _emailService.SendApprovedReserve(reserve);
+                return await GetByIdAsync(reserve.ReserveId);
             }
             catch (Exception ex)
             {
@@ -133,7 +130,7 @@ namespace viaggia_server.Services.Reservations
         {
             try
             {
-                var reservation = await _reservationRepository.GetByIdAsync(id);
+                var reservation = await _reservesRepository.GetByIdAsync(id);
                 if (reservation == null) throw new ArgumentException("Reserva não encontrada.");
 
                 reservation.UserId = dto.UserId;
@@ -143,12 +140,11 @@ namespace viaggia_server.Services.Reservations
                 reservation.CheckInDate = dto.CheckInDate;
                 reservation.CheckOutDate = dto.CheckOutDate;
                 reservation.TotalPrice = dto.TotalPrice;
-                reservation.NumberOfGuests = dto.NumberOfGuests;
                 reservation.Status = dto.Status;
                 reservation.IsActive = dto.IsActive;
 
-                await _reservationRepository.UpdateAsync(reservation);
-                await _reservationRepository.SaveChangesAsync();
+                await _reservesRepository.UpdateAsync(reservation);
+                await _reservesRepository.SaveChangesAsync();
 
                 return await GetByIdAsync(id);
             }
@@ -162,9 +158,9 @@ namespace viaggia_server.Services.Reservations
         {
             try
             {
-                var deleted = await _reservationRepository.SoftDeleteAsync(id);
+                var deleted = await _reservesRepository.SoftDeleteAsync(id);
                 if (deleted)
-                    await _reservationRepository.SaveChangesAsync();
+                    await _reservesRepository.SaveChangesAsync();
                 return deleted;
             }
             catch (Exception ex)

@@ -1,6 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using viaggia_server.Repositories;
 using viaggia_server.Models.Reserves;
+using viaggia_server.Models.Hotels;
+using viaggia_server.Repositories;
 
 namespace viaggia_server.Models.Users
 {
@@ -51,6 +52,9 @@ namespace viaggia_server.Models.Users
         // Stripe Integration
         [StringLength(100, ErrorMessage = "Stripe Customer ID cannot exceed 100 characters.")]
         public string? StripeCustomerId { get; set; }
+
+        public int? HotelId { get; set; }
+        public virtual Hotel? Hotel { get; set; }
 
         // Relationships
         public virtual ICollection<UserRole> UserRoles { get; set; } = new List<UserRole>();
