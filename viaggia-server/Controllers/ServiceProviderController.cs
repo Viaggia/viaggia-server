@@ -4,7 +4,7 @@ using viaggia_server.DTOs;
 using viaggia_server.DTOs.Commodity;
 using viaggia_server.DTOs.Hotel;
 using viaggia_server.DTOs.Packages;
-using viaggia_server.DTOs.Reserve;
+using viaggia_server.DTOs.Reserves;
 using viaggia_server.Models.Commodities;
 using viaggia_server.Models.CustomCommodities;
 using viaggia_server.Models.Hotels;
@@ -12,7 +12,7 @@ using viaggia_server.Models.Packages;
 using viaggia_server.Models.Reserves;
 using viaggia_server.Repositories;
 using viaggia_server.Repositories.HotelRepository;
-using viaggia_server.Repositories.Reserves;
+using viaggia_server.Repositories.ReserveRepository;
 
 namespace viaggia_server.Controllers
 {
@@ -133,7 +133,6 @@ namespace viaggia_server.Controllers
                     RoomTypeId = r.RoomTypeId,
                     CheckInDate = r.CheckInDate,
                     CheckOutDate = r.CheckOutDate,
-                    NumberOfRooms = r.NumberOfRooms,
                     NumberOfPeople = r.NumberOfGuests,
                     TotalPrice = r.TotalPrice,
                     Status = r.Status,
@@ -206,7 +205,7 @@ namespace viaggia_server.Controllers
 
         [HttpPut("reservations/{id}")]
         [Authorize(Policy = "HotelAccess")]
-        public async Task<IActionResult> UpdateReservation(int id, [FromBody] UpdateReserveDTO dto)
+        public async Task<IActionResult> UpdateReservation(int id, [FromBody] ReserveUpdateDTO dto)
         {
             var hotelId = int.Parse(User.FindFirst("HotelId")?.Value ?? "0");
             if (hotelId == 0)

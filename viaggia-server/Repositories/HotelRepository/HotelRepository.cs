@@ -402,6 +402,19 @@ namespace viaggia_server.Repositories.HotelRepository
                 .Include(h => h.CustomCommodities)
                 .ToListAsync();
         }
+        public async Task<Hotel> GetByIdHotel(int Hotel)
+        {
+            try
+            {
+                var hotelId = await _context.Hotels.FindAsync(Hotel);
+                _logger.LogInformation($"Hotel: {Hotel}");
+                return hotelId;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message);
+            }
+        }
 
         public async Task<IEnumerable<Reserve>> GetReservationsByHotelIdAsync(int hotelId)
         {

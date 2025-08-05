@@ -5,7 +5,6 @@ using viaggia_server.Models.CustomCommodities;
 using viaggia_server.Models.Hotels;
 using viaggia_server.Models.Medias;
 using viaggia_server.Models.Packages;
-using viaggia_server.Models.Payments;
 using viaggia_server.Models.Reserves;
 using viaggia_server.Models.Reviews;
 using viaggia_server.Models.Users;
@@ -26,7 +25,6 @@ namespace viaggia_server.Data
         public DbSet<Commodity> Commodities { get; set; } = null!;
         public DbSet<CustomCommodity> CustomCommodities { get; set; } = null!;
         public DbSet<Reserve> Reserves { get; set; } = null!;
-        public DbSet<Payment> Payments { get; set; } = null!;
         public DbSet<Media> Medias { get; set; } = null!;
         public DbSet<Review> Reviews { get; set; } = null!;
         public DbSet<RevokedToken> RevokedTokens { get; set; } = null!;
@@ -199,7 +197,6 @@ namespace viaggia_server.Data
             modelBuilder.Entity<Hotel>().HasQueryFilter(h => h.IsActive);
             modelBuilder.Entity<HotelRoomType>().HasQueryFilter(rt => rt.IsActive);
             modelBuilder.Entity<Reserve>().HasQueryFilter(r => r.IsActive);
-            modelBuilder.Entity<Payment>().HasQueryFilter(p => p.IsActive);
             modelBuilder.Entity<Media>().HasQueryFilter(m => m.IsActive);
             modelBuilder.Entity<Review>().HasQueryFilter(r => r.IsActive);
             modelBuilder.Entity<Commodity>().HasQueryFilter(c => c.IsActive);
