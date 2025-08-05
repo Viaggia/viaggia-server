@@ -17,5 +17,7 @@ namespace viaggia_server.DTOs.Reserves
         public DateTime CreatedAt { get; set; }
         public string Status { get; set; } = string.Empty;
         public bool IsActive { get; set; }
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
     }
 }
