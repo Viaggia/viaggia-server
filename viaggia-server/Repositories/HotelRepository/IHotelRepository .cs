@@ -3,6 +3,7 @@ using viaggia_server.Models.CustomCommodities;
 using viaggia_server.Models.Hotels;
 using viaggia_server.Models.Medias;
 using viaggia_server.Models.Packages;
+using viaggia_server.Models.Reserves;
 using viaggia_server.Models.Reviews;
 
 
@@ -25,6 +26,8 @@ namespace viaggia_server.Repositories.HotelRepository
         Task<IEnumerable<CustomCommodity>> GetCustomCommodityByHotelIdAsync(int hotelId);
         Task<IEnumerable<Hotel>> GetHotelsWithRelatedDataAsync();
         Task<IEnumerable<HotelRoomType>> GetAvailableRoomTypesAsync(int hotelId, int numberOfPeople, DateTime checkInDate, DateTime checkOutDate);
+        Task<IEnumerable<Hotel>> GetHotelsByUserIdAsync(int userId);
+        Task<IEnumerable<Reserve>> GetReservationsByHotelIdAsync(int hotelId);
         Task<IEnumerable<Hotel>> GetAvailableHotelsByDestinationAsync(
               string city,
               int numberOfPeople,
