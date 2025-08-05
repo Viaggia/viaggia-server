@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using viaggia_server.DTOs;
-using viaggia_server.DTOs.Reservation;
+using viaggia_server.DTOs.Reserves;
 using viaggia_server.Services.Reservations;
 
 namespace viaggia_server.Controllers
@@ -63,7 +63,7 @@ namespace viaggia_server.Controllers
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> CreateReservation([FromBody] ReservationCreateDTO dto)
+        public async Task<IActionResult> CreateReservation([FromBody] ReservesCreateDTO dto)
         {
             if (dto == null || !ModelState.IsValid)
                 return BadRequest(new ApiResponse<string>(false, "Invalid reservation data."));

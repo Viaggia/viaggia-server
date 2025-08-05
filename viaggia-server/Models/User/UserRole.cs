@@ -1,6 +1,5 @@
-﻿using viaggia_server.Models.Users;
-
-namespace viaggia_server.Models.UserRoles
+﻿
+namespace viaggia_server.Models.Users
 {
     public class UserRole
     {

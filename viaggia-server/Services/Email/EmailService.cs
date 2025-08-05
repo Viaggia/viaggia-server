@@ -1,9 +1,5 @@
-﻿
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
+﻿using System.Net.Mail;
 using System.Net;
-using System.Net.Mail;
-using viaggia_server.Models.Reservations;
 
 namespace viaggia_server.Services.Email
 {

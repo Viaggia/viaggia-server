@@ -1,15 +1,11 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using viaggia_server.Models.Commodities;
-using viaggia_server.Models.Companions;
-using viaggia_server.Models.HotelDates;
-using viaggia_server.Models.HotelRoomTypes;
+using viaggia_server.Models.CustomCommodities;
 using viaggia_server.Models.Hotels;
 using viaggia_server.Models.Medias;
 using viaggia_server.Models.Packages;
-using viaggia_server.Models.Reservations;
+using viaggia_server.Models.Reserves;
 using viaggia_server.Models.Reviews;
-using viaggia_server.Models.RevokedToken;
-using viaggia_server.Models.UserRoles;
 using viaggia_server.Models.Users;
 
 namespace viaggia_server.Data
@@ -18,7 +14,6 @@ namespace viaggia_server.Data
     {
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
-        // DbSets for all entities
         public DbSet<User> Users { get; set; } = null!;
         public DbSet<Role> Roles { get; set; } = null!;
         public DbSet<UserRole> UserRoles { get; set; } = null!;
@@ -26,13 +21,11 @@ namespace viaggia_server.Data
         public DbSet<PackageDate> PackageDates { get; set; } = null!;
         public DbSet<Hotel> Hotels { get; set; } = null!;
         public DbSet<HotelRoomType> RoomTypes { get; set; } = null!;
-        public DbSet<HotelDate> HotelDates { get; set; } = null!;
-        public DbSet<Reservation> Reservations { get; set; } = null!;
+        public DbSet<Commodity> Commodities { get; set; } = null!;
+        public DbSet<CustomCommodity> CustomCommodities { get; set; } = null!;
+        public DbSet<Reserve> Reserves { get; set; } = null!;
         public DbSet<Media> Medias { get; set; } = null!;
         public DbSet<Review> Reviews { get; set; } = null!;
-        public DbSet<Companion> Companions { get; set; } = null!;
-        public DbSet<Commoditie> Commodities { get; set; } = null!;
-        public DbSet<CommoditieServices> CommoditieServices { get; set; } = null!;
         public DbSet<RevokedToken> RevokedTokens { get; set; } = null!;
         public DbSet<PasswordResetToken> PasswordResetTokens { get; set; } = null!;
 
@@ -40,7 +33,7 @@ namespace viaggia_server.Data
         {
             base.OnModelCreating(modelBuilder);
 
-            // Configuration for UserRole (composite key)
+            // UserRole
             modelBuilder.Entity<UserRole>()
                 .HasKey(ur => new { ur.UserId, ur.RoleId });
 
@@ -56,12 +49,12 @@ namespace viaggia_server.Data
                 .HasForeignKey(ur => ur.RoleId)
                 .OnDelete(DeleteBehavior.NoAction);
 
-            // Configuration for Package
+            // Package
             modelBuilder.Entity<Package>()
                 .HasMany(p => p.PackageDates)
                 .WithOne(pd => pd.Package)
                 .HasForeignKey(pd => pd.PackageId)
-                .OnDelete(DeleteBehavior.Cascade); // Enable cascade delete
+                .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<Package>()
                 .HasMany(p => p.Medias)
@@ -70,7 +63,7 @@ namespace viaggia_server.Data
                 .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<Package>()
-                .HasMany(p => p.Reservations)
+                .HasMany(p => p.Reserves)
                 .WithOne(r => r.Package)
                 .HasForeignKey(r => r.PackageId)
                 .IsRequired(false)
@@ -82,6 +75,7 @@ namespace viaggia_server.Data
                 .HasForeignKey(p => p.HotelId)
                 .OnDelete(DeleteBehavior.NoAction);
 
+            // Hotel
             modelBuilder.Entity<Hotel>()
                 .HasMany(h => h.RoomTypes)
                 .WithOne(rt => rt.Hotel)
@@ -89,13 +83,7 @@ namespace viaggia_server.Data
                 .OnDelete(DeleteBehavior.NoAction);
 
             modelBuilder.Entity<Hotel>()
-                .HasMany(h => h.HotelDates)
-                .WithOne(hd => hd.Hotel)
-                .HasForeignKey(hd => hd.HotelId)
-                .OnDelete(DeleteBehavior.NoAction);
-
-            modelBuilder.Entity<Hotel>()
-                .HasMany(h => h.Reservations)
+                .HasMany(h => h.Reserves)
                 .WithOne(r => r.Hotel)
                 .HasForeignKey(r => r.HotelId)
                 .IsRequired(false)
@@ -115,63 +103,54 @@ namespace viaggia_server.Data
                 .IsRequired(false)
                 .OnDelete(DeleteBehavior.NoAction);
 
-            // Configuration for HotelDate -> HotelRoomType
-            modelBuilder.Entity<HotelDate>()
-                .HasOne(hd => hd.HotelRoomType)
-                .WithMany()
-                .HasForeignKey(hd => hd.RoomTypeId)
+            modelBuilder.Entity<Hotel>()
+                .HasMany(h => h.Commodities)
+                .WithOne(c => c.Hotel)
+                .HasForeignKey(c => c.HotelId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Hotel>()
+                .HasMany(h => h.CustomCommodities)
+                .WithOne(cs => cs.Hotel)
+                .HasForeignKey(cs => cs.HotelId)
                 .OnDelete(DeleteBehavior.NoAction);
 
-            // Configuration for Reservation
-            modelBuilder.Entity<Reservation>()
+            // Configure RoomTypeEnum
+            modelBuilder.Entity<HotelRoomType>()
+                .Property(rt => rt.Name)
+                .HasConversion(
+                    v => v.ToString(),
+                    v => (RoomTypeEnum)Enum.Parse(typeof(RoomTypeEnum), v));
+
+
+            modelBuilder.Entity<Commodity>()
+                .HasMany(c => c.CustomCommodities)
+                .WithOne(cs => cs.Commodity)
+                .HasForeignKey(cs => cs.CommodityId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            // Reservation
+            modelBuilder.Entity<Reserve>()
                 .HasOne(r => r.User)
-                .WithMany(u => u.Reservations)
+                .WithMany(u => u.Reserves)
                 .HasForeignKey(r => r.UserId)
                 .OnDelete(DeleteBehavior.NoAction);
 
-            modelBuilder.Entity<Reservation>()
+            modelBuilder.Entity<Reserve>()
                 .HasOne(r => r.HotelRoomType)
                 .WithMany()
                 .HasForeignKey(r => r.RoomTypeId)
                 .IsRequired(false)
                 .OnDelete(DeleteBehavior.NoAction);
 
-            // Configuration for Review
+            // Review
             modelBuilder.Entity<Review>()
                 .HasOne(r => r.User)
                 .WithMany()
                 .HasForeignKey(r => r.UserId)
                 .OnDelete(DeleteBehavior.NoAction);
 
-            // Configuration for Companion
-            modelBuilder.Entity<Companion>()
-                .HasOne(c => c.Reservation)
-                .WithMany(r => r.Companions)
-                .HasForeignKey(c => c.ReservationId)
-                .OnDelete(DeleteBehavior.NoAction);
-
-            // Hotel 1:N Commoditie
-            modelBuilder.Entity<Hotel>()
-                .HasMany(h => h.Commodities) // Assuming Hotel has a collection of Commodities
-                .WithOne(c => c.Hotel) // Assuming Commoditie has a Hotel property
-                .HasForeignKey(c => c.HotelId) // Foreign key in Commoditie
-                .OnDelete(DeleteBehavior.Cascade); // Cascade delete if Hotel is deleted
-
-            // Commodity 1:N CommoditiesServices
-            modelBuilder.Entity<Commoditie>()
-              .HasMany(c => c.CommoditieServices)
-              .WithOne(cs => cs.Commoditie)
-              .HasForeignKey(cs => cs.CommoditieId)
-              .OnDelete(DeleteBehavior.NoAction); // Evita ciclos de deleção 
-
-            // CommoditieServices 1:N Hotel
-            modelBuilder.Entity<CommoditieServices>()
-                .HasOne(cs => cs.Hotel)
-                .WithMany(h => h.CommoditieServices)
-                .HasForeignKey(cs => cs.HotelId)
-                .OnDelete(DeleteBehavior.NoAction); // Evita ciclos de deleção
-
-            //  PasswordResetToken
+            // PasswordResetToken
             modelBuilder.Entity<PasswordResetToken>()
                 .HasOne(prt => prt.User)
                 .WithMany()
@@ -185,11 +164,10 @@ namespace viaggia_server.Data
                 entity.Property(rt => rt.Id).ValueGeneratedOnAdd();
                 entity.Property(rt => rt.Token).HasColumnType("nvarchar(max)").IsRequired();
                 entity.Property(rt => rt.RevokedAt).IsRequired();
-                entity.Property(rt => rt.ExpiryDate).IsRequired(false); 
+                entity.Property(rt => rt.ExpiryDate).IsRequired(false);
             });
 
-
-            // Configuration for Media
+            // Media
             modelBuilder.Entity<Media>()
                 .ToTable(t => t.HasCheckConstraint("CK_Media_OneEntity",
                     "([PackageId] IS NOT NULL AND [HotelId] IS NULL) OR ([PackageId] IS NULL AND [HotelId] IS NOT NULL)"));
@@ -202,20 +180,17 @@ namespace viaggia_server.Data
                 new Role { Id = 4, Name = "ADMIN", IsActive = true }
             );
 
-            // Global query filters for ISoftDeletable entities
+            // Global query filters
             modelBuilder.Entity<User>().HasQueryFilter(u => u.IsActive);
             modelBuilder.Entity<Package>().HasQueryFilter(p => p.IsActive);
             modelBuilder.Entity<PackageDate>().HasQueryFilter(pd => pd.IsActive);
             modelBuilder.Entity<Hotel>().HasQueryFilter(h => h.IsActive);
             modelBuilder.Entity<HotelRoomType>().HasQueryFilter(rt => rt.IsActive);
-            modelBuilder.Entity<HotelDate>().HasQueryFilter(hd => hd.IsActive);
-            modelBuilder.Entity<Reservation>().HasQueryFilter(r => r.IsActive);
+            modelBuilder.Entity<Reserve>().HasQueryFilter(r => r.IsActive);
             modelBuilder.Entity<Media>().HasQueryFilter(m => m.IsActive);
             modelBuilder.Entity<Review>().HasQueryFilter(r => r.IsActive);
-            modelBuilder.Entity<Companion>().HasQueryFilter(c => c.IsActive);
-            modelBuilder.Entity<Commoditie>().HasQueryFilter(c => c.IsActive);
-            modelBuilder.Entity<CommoditieServices>().HasQueryFilter(cs => cs.IsActive);
-            //modelBuilder.Entity<Role>().HasQueryFilter(r => r.IsActive);
+            modelBuilder.Entity<Commodity>().HasQueryFilter(c => c.IsActive);
+            modelBuilder.Entity<CustomCommodity>().HasQueryFilter(cs => cs.IsActive);
         }
     }
 }

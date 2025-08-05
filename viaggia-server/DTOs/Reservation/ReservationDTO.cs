@@ -1,4 +1,4 @@
-﻿namespace viaggia_server.DTOs.Reservation
+﻿namespace viaggia_server.DTOs.Reserves
 {
     public class ReservationDTO
     {
