@@ -74,11 +74,6 @@ namespace viaggia_server.Services.Payment
                 var price = await priceService.CreateAsync(priceOptions);
                 _logger.LogInformation("Pre�o criado: {PriceId}", price.Id);
 
-                if (createReserve.PackageId == null)
-                {
-                    var quantity = createReserve.NumberOfGuests;
-                }
-
                 var sessionOptions = new SessionCreateOptions
                 {
                     LineItems = new List<SessionLineItemOptions>

@@ -6,6 +6,7 @@ namespace viaggia_server.DTOs.Commodity
 {
     public class CommodityDTO
     {
+        public int CommodityId { get; set; }
         [Required]
         public string? HotelName { get; set; }
         public int HotelId { get; set; }
@@ -44,7 +45,7 @@ namespace viaggia_server.DTOs.Commodity
         public decimal PetFriendlyPrice { get; set; } // Added
         public bool IsActive { get; set; }
 
-        public int CommodityId { get; set; }
+        
         // Lista de serviços personalizados
         public List<CustomCommodityDTO> CustomCommodities { get; set; } = new List<CustomCommodityDTO>();
     }
