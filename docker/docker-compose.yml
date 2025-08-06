@@ -1,37 +1,25 @@
-version: '3.8'
-
 services:
-  viaggia-api:
+  viaggia-backend:
     build:
       context: ../
-      dockerfile: docker/${DOCKERFILE:-Dockerfile.dev}
-    container_name: viaggia-api-${ENVIRONMENT:-development}
+      dockerfile: docker/Dockerfile.dev
+    container_name: viaggia-backend
     env_file:
-      - .env.${ENVIRONMENT:-development}
+      - ../.env
     environment:
-      - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT:-Development}
+      - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:8080
     ports:
-      - "${API_PORT:-5001}:8080"
+      - "7164:8080"
     volumes:
-      # Only mount volumes in development
-      - ${VOLUME_MOUNT:-../:/app}
-      - ${BIN_VOLUME:-/app/bin}
-      - ${OBJ_VOLUME:-/app/obj}
-      # Always persist uploads
-      - ../uploads:/app/wwwroot/Uploads
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/health || exit 1"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
+      - ../:/app
+      - uploads:/app/wwwroot/Uploads
+    networks:
+      - viaggia-network
 
 networks:
-  default:
-    driver: bridge
+  viaggia-network:
+    external: true
 
 volumes:
   uploads:
-    driver: local
