@@ -40,7 +40,7 @@ namespace viaggia_server.Models.Reserves
         [Range(1,int.MaxValue, ErrorMessage = "Number of guests must be at least 1.")]
         public int NumberOfGuests { get; set; }
 
-        public string Status { get; set; } = "Pending"; // Default status
+        public string Status { get; set; } = "Pending";
 
         [Required]
         [Column(TypeName = "decimal(10,2)")]
