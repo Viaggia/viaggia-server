@@ -7,10 +7,8 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Stripe;
 using Viaggia.Swagger;
@@ -22,8 +20,6 @@ using viaggia_server.Repositories.Users;
 using viaggia_server.Repositories.Auth;
 using viaggia_server.Repositories.CommodityRepository;
 using viaggia_server.Repositories.HotelRepository;
-using viaggia_server.Services;
-using viaggia_server.Services.Payment;
 using viaggia_server.Services.HotelServices;
 using viaggia_server.Services.ImageService;
 using viaggia_server.Swagger;
@@ -121,7 +117,6 @@ builder.Services.AddLogging(logging =>
 // Add IHttpContextAccessor for authorization handlers
 builder.Services.AddHttpContextAccessor();
 
-// Configure authentication (JWT and Google OAuth)
 // Configure authentication (JWT and Google OAuth)
 builder.Services.AddAuthentication(options =>
 {

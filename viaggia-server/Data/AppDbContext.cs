@@ -128,14 +128,7 @@ namespace viaggia_server.Data
                     v => v.ToString(),
                     v => (RoomTypeEnum)Enum.Parse(typeof(RoomTypeEnum), v));
 
-            // Commoditie
-            modelBuilder.Entity<Hotel>()
-                .HasMany(h => h.Commodities)
-                .WithOne(c => c.Hotel)
-                .HasForeignKey(c => c.HotelId)
-                .OnDelete(DeleteBehavior.Cascade);
 
-            // Commodity 1:N CommoditiesServices
             modelBuilder.Entity<Commodity>()
               .HasMany(c => c.CustomCommodities)
               .WithOne(cs => cs.Commodity)
@@ -155,7 +148,8 @@ namespace viaggia_server.Data
                 .HasForeignKey(cs => cs.CommodityId)
                 .OnDelete(DeleteBehavior.NoAction);
 
-            // Reservations
+
+            // Reservation
             modelBuilder.Entity<Reserve>()
                 .HasOne(r => r.User)
                 .WithMany(u => u.Reserves)
