@@ -7,6 +7,7 @@ using viaggia_server.Models.Hotels;
 using viaggia_server.Repositories;
 using viaggia_server.Repositories.CommodityRepository;
 using viaggia_server.Repositories.HotelRepository;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace viaggia_server.Controllers
 {
@@ -17,15 +18,19 @@ namespace viaggia_server.Controllers
         private readonly ICommodityRepository _commodityRepository;
         private readonly IHotelRepository _hotelRepository;
         private readonly IRepository<Hotel> _genericRepository;
+        private readonly ILogger<CommodityController> _logger; // Adicione esta linha
+
 
         public CommodityController(
             ICommodityRepository commodityRepository,
             IHotelRepository hotelRepository,
-            IRepository<Hotel> genericRepository)
+            IRepository<Hotel> genericRepository,
+            ILogger<CommodityController> logger)
         {
             _commodityRepository = commodityRepository;
             _hotelRepository = hotelRepository;
             _genericRepository = genericRepository;
+            _logger = logger;
         }
 
         // GET: api/Commodity
@@ -364,9 +369,18 @@ namespace viaggia_server.Controllers
         [Consumes("multipart/form-data")]
         public async Task<IActionResult> Update(int id, [FromForm] UpdateCommodityDTO dto)
         {
+            _logger.LogWarning("parking price: {price}", dto.ParkingPrice);
             if (!ModelState.IsValid)
-                return BadRequest(new ApiResponse<UpdateCommodityDTO>(false, "Dados inválidos.", null, ModelState));
+            {
+                var errors = ModelState
+                    .Where(kvp => kvp.Value?.Errors.Count > 0)
+                    .Select(kvp => $"{kvp.Key}: {string.Join(", ", kvp.Value.Errors.Select(e => e.ErrorMessage))}")
+                    .ToList();
 
+                _logger.LogWarning("ModelState inválido: {Errors}", string.Join(" | ", errors));
+
+                return BadRequest(new ApiResponse<UpdateCommodityDTO>(false, "Dados inválidos.", null, ModelState));
+            }
             var existing = await _commodityRepository.GetByIdAsync(id);
             if (existing == null)
                 return NotFound(new ApiResponse<Commodity>(false, "Commodity não encontrada."));

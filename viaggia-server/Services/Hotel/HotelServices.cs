@@ -251,6 +251,7 @@ namespace viaggia_server.Services.HotelServices
                     Commodities = commodities.Select(c => new CommodityDTO
                     {
                         HotelId = c.HotelId,
+                        CommodityId = c.CommodityId,
                         HasParking = c.HasParking,
                         IsParkingPaid = c.IsParkingPaid,
                         ParkingPrice = c.ParkingPrice,
