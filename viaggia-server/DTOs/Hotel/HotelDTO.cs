@@ -1,7 +1,7 @@
-using viaggia_server.DTOs.Commodity;
+﻿using viaggia_server.DTOs.Commodity;
 using System.ComponentModel.DataAnnotations;
 using viaggia_server.DTOs.Packages;
-using viaggia_server.DTOs.Reserve;
+using viaggia_server.DTOs.Reserves;
 using viaggia_server.DTOs.Reviews;
 using viaggia_server.DTOs.Hotel;
 
