@@ -82,7 +82,6 @@ namespace viaggia_server.Repositories.HotelRepository
                 return false;
             return await _context.Hotels.AnyAsync(h => h.Cnpj.ToLower() == cnpj.ToLower() && h.IsActive);
         }
-
         public async Task<Hotel?> GetHotelByNameAsync(string name)
         {
             return await _context.Hotels
@@ -377,6 +376,19 @@ namespace viaggia_server.Repositories.HotelRepository
                 throw;
             }
         }
+        public async Task<Hotel?> GetHotelByIdWithDetailsAsync(int hotelId)
+        {
+            return await _context.Hotels
+                .Include(h => h.RoomTypes)
+                .Include(h => h.HotelDates)
+                .Include(h => h.Medias)
+                .Include(h => h.Reviews)
+                .Include(h => h.Packages)
+                .Include(h => h.Commodities)
+                .Include(h => h.CustomCommodities)
+                .FirstOrDefaultAsync(h => h.HotelId == hotelId);
+        }
+
 
         public async Task<IEnumerable<Hotel>> GetHotelsByUserIdAsync(int userId)
         {

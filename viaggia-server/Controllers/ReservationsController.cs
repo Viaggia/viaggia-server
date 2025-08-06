@@ -33,8 +33,19 @@ namespace viaggia_server.Controllers
             return Ok(result);
         }
 
+        [HttpGet("user/{userId}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> GetReservationsByUserId(int userId)
+        {
+            var result = await _reservationService.GetByUserIdAsync(userId);
+            if (result == null || !result.Any()) return NotFound();
+            return Ok(result);
+        }
+
+
         [HttpPost]
-        public async Task<IActionResult> CreateReservation([FromBody] ReservesCreateDTO dto)
+        public async Task<IActionResult> CreateReservation([FromBody] ReserveCreateDTO dto)
         {
             if(!ModelState.IsValid) return BadRequest(ModelState);
             var result = await _reservationService.CreateAsync(dto);
@@ -42,7 +53,7 @@ namespace viaggia_server.Controllers
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateReservation(int id, [FromBody] ReservationUpdateDTO dto)
+        public async Task<IActionResult> UpdateReservation(int id, [FromBody] ReserveUpdateDTO dto)
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
             var result = await _reservationService.UpdateAsync(id, dto);

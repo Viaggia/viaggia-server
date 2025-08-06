@@ -1,14 +1,15 @@
-using System.Text.Json;
+﻿using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using viaggia_server.DTOs;
 using viaggia_server.DTOs.Commodity;
 using viaggia_server.DTOs.Hotel;
 using viaggia_server.DTOs.Packages;
-using viaggia_server.DTOs.Reserve;
+using viaggia_server.DTOs.Reserves;
 using viaggia_server.DTOs.Reviews;
 using viaggia_server.Models.Hotels;
 using viaggia_server.Models.Medias;
 using viaggia_server.Models.Reviews;
+using viaggia_server.Models.Users;
 using viaggia_server.Repositories;
 using viaggia_server.Repositories.HotelRepository;
 
@@ -1567,7 +1568,7 @@ namespace viaggia_server.Services.HotelServices
                     RoomTypeId = r.RoomTypeId,
                     CheckInDate = r.CheckInDate,
                     CheckOutDate = r.CheckOutDate,
-                    NumberOfGuests= r.NumberOfGuests,
+                    NumberOfPeople= r.NumberOfGuests,
                     TotalPrice = r.TotalPrice,
                     Status = r.Status,
                     CreatedAt = r.CreatedAt,

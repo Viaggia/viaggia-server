@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Stripe;
@@ -29,7 +29,7 @@ namespace viaggia_server.Controllers
         }
 
         [HttpPost("create-payment-intent")]
-        public async Task<IActionResult> CreatePaymentIntent([FromBody] ReservesCreateDTO createReservation)
+        public async Task<IActionResult> CreatePaymentIntent([FromBody] ReserveCreateDTO createReservation)
         {
             try
             {
@@ -51,7 +51,7 @@ namespace viaggia_server.Controllers
 
         [AllowAnonymous]
         [HttpPost("/webhook")]
-
+        
         public async Task<IActionResult> Post()
         {
             await _stripePaymentService.HandleStripeWebhookAsync(Request);

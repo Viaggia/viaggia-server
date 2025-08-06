@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using viaggia_server.Models.Commodities;
 using viaggia_server.Models.CustomCommodities;
@@ -158,29 +159,7 @@ namespace viaggia_server.Data
                 .HasForeignKey(r => r.UserId)
                 .OnDelete(DeleteBehavior.NoAction);
 
-
-            // Hotel 1:N Commoditie
-            modelBuilder.Entity<Hotel>()
-                .HasMany(h => h.Commodities) // Assuming Hotel has a collection of Commodities
-                .WithOne(c => c.Hotel) // Assuming Commoditie has a Hotel property
-                .HasForeignKey(c => c.HotelId) // Foreign key in Commoditie
-                .OnDelete(DeleteBehavior.Cascade); // Cascade delete if Hotel is deleted
-
-            // Commodity 1:N CustomCommodities
-            modelBuilder.Entity<Commodity>()
-              .HasMany(c => c.CustomCommodities)
-              .WithOne(cs => cs.Commodity)
-              .HasForeignKey(cs => cs.CommodityId)
-              .OnDelete(DeleteBehavior.NoAction); // Evita ciclos de dele��o
-
-            // CustomCommodities 1:N Hotel
-            modelBuilder.Entity<CustomCommodity>()
-                .HasOne(cs => cs.Hotel)
-                .WithMany(h => h.CustomCommodities)
-                .HasForeignKey(cs => cs.HotelId)
-                .OnDelete(DeleteBehavior.NoAction); // Evita ciclos de dele��o
-
-            //  PasswordResetToken
+            // PasswordResetToken
             modelBuilder.Entity<PasswordResetToken>()
                 .HasOne(prt => prt.User)
                 .WithMany()

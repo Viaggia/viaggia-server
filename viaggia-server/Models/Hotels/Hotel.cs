@@ -70,6 +70,7 @@ namespace viaggia_server.Models.Hotels
 
         // Relationships
         public virtual ICollection<HotelRoomType> RoomTypes { get; set; } = new List<HotelRoomType>();
+        public virtual ICollection<HotelDate> HotelDates { get; set; } = new List<HotelDate>();
         public virtual ICollection<Reserve> Reserves { get; set; } = new List<Reserve>();
         public virtual ICollection<Media> Medias { get; set; } = new List<Media>();
         public virtual ICollection<Review> Reviews { get; set; } = new List<Review>();

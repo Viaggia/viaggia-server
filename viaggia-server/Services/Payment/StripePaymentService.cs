@@ -2,10 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Stripe;
 using Stripe.Checkout;
 using System.Globalization;
-using viaggia_server.DTOs.Commodity;
-using viaggia_server.DTOs.Payments;
 using viaggia_server.DTOs.Reserves;
-using viaggia_server.Models.Commodities;
 using viaggia_server.Models.Hotels;
 using viaggia_server.Models.Reserves;
 using viaggia_server.Models.Users;
@@ -18,8 +15,7 @@ namespace viaggia_server.Services.Payment
     public class StripePaymentService : IStripePaymentService
     {
         private readonly IConfiguration _configuration;
-        private readonly IEmailService _emailService;
-        private readonly IUserRepository _IuserRepository;
+        private readonly IUserRepository _userRepository;
         private readonly IRepository<Reserve> _reservations;
         private readonly ILogger<StripePaymentService> _logger;
         private readonly string _stripeSecretKey;
@@ -27,29 +23,29 @@ namespace viaggia_server.Services.Payment
 
         public StripePaymentService(
             IConfiguration configuration,
-            IRepository<Reserve> reservations,
             IUserRepository userRepository,
+            IRepository<Reserve> reservations,
             ILogger<StripePaymentService> logger
         )
         {
             _configuration = configuration;
             _reservations = reservations;
-            _IuserRepository = userRepository;
+            _userRepository = userRepository;
             _logger = logger;
             _stripeSecretKey = _configuration["Stripe:SecretKey"];
             _stripeWebhookSecret = _configuration["Stripe:WebhookSecret"];
         }
 
-        public async Task<Session> CreatePaymentIntentAsync(ReservesCreateDTO createReservation)
+        public async Task<Session> CreatePaymentIntentAsync(ReserveCreateDTO createReserve)
         {
-            decimal total = createReservation.TotalPrice;
+            decimal total = createReserve.TotalPrice;
             try
             {
                 StripeConfiguration.ApiKey = _stripeSecretKey;
 
                 _logger.LogInformation("Iniciando cria��o de pagamento no Stripe");
                 _logger.LogInformation("Stripe Secret Key: {Key}", _stripeSecretKey);
-                _logger.LogInformation("DTO recebido: {@DTO}", createReservation);
+                _logger.LogInformation("DTO recebido: {@DTO}", createReserve);
                 _logger.LogInformation("Valor total: {Total}", total);
 
                 if (total <= 0)
@@ -58,7 +54,7 @@ namespace viaggia_server.Services.Payment
                     throw new ArgumentException("TotalPrice deve ser maior que zero.");
                 }
 
-                var productName = $"Reserva para o id {createReservation.UserId}";
+                var productName = $"Reserva para o id {createReserve.UserId}";
                 _logger.LogInformation("Nome do produto: {ProductName}", productName);
 
                 var amount = (long)(total * 100);
@@ -78,9 +74,9 @@ namespace viaggia_server.Services.Payment
                 var price = await priceService.CreateAsync(priceOptions);
                 _logger.LogInformation("Pre�o criado: {PriceId}", price.Id);
 
-                if(createReservation.PackageId == null)
+                if (createReserve.PackageId == null)
                 {
-                    var quantity = createReservation.NumberOfGuests;
+                    var quantity = createReserve.NumberOfGuests;
                 }
 
                 var sessionOptions = new SessionCreateOptions
@@ -90,26 +86,24 @@ namespace viaggia_server.Services.Payment
                 new SessionLineItemOptions
                 {
                     Price = price.Id,
-                    Quantity = createReservation.PackageId ?? createReservation.NumberOfGuests ,
+                    Quantity = 1,
                 }
             },
-
                     Mode = "payment",
-                    SuccessUrl = $"http://localhost:5173/api/Reservation/{createReservation.UserId}",
-                    CancelUrl = "http://localhost:5173/cancelado",
+                    SuccessUrl = $"http://localhost:5173/paymentconfirmed",
+                    CancelUrl = "http://localhost:5173/paymentcanceled",
                     Metadata = new Dictionary<string, string>
             {
-                { "userId", createReservation.UserId.ToString() },
-                { "packageId", createReservation.PackageId.ToString() ?? "" },
-                { "roomTypeId", createReservation.RoomTypeId.ToString() },
-                { "hotelId", createReservation.HotelId.ToString() },
-                { "checkInDate", createReservation.CheckInDate.ToString("o") },
-                { "checkOutDate", createReservation.CheckOutDate.ToString( "o") },
-                { "numberOfGuests", createReservation.NumberOfGuests.ToString() },
-                { "status", createReservation.Status.ToString() },
+                { "userId", createReserve.UserId.ToString() },
+                { "packageId", createReserve.PackageId.ToString() ?? "" },
+                { "roomTypeId", createReserve.RoomTypeId.ToString() },
+                { "hotelId", createReserve.HotelId.ToString() },
+                { "checkInDate", createReserve.CheckInDate.ToString("o") },
+                { "checkOutDate", createReserve.CheckOutDate.ToString( "o") },
+                { "numberOfGuests", createReserve.NumberOfGuests.ToString() },
+                { "status", createReserve.Status.ToString() },
                 { "TotalPrice", total.ToString(CultureInfo.InvariantCulture) },
             }
-
                 };
 
                 var sessionService = new SessionService();
@@ -157,16 +151,16 @@ namespace viaggia_server.Services.Payment
                             CheckOutDate = DateTime.Parse(session.Metadata["checkOutDate"], null, DateTimeStyles.RoundtripKind),
                             NumberOfGuests = int.Parse(session.Metadata["numberOfGuests"]),
                             Status = session.Metadata.ContainsKey("status") ? session.Metadata["status"] : "Pendente",
-                            CreatedAt = DateTime.UtcNow
+                            CreatedAt = DateTime.UtcNow,
+                            TotalPrice = decimal.Parse(session.Metadata["TotalPrice"]),
                         };
-
 
                         await _reservations.AddAsync(reservation);
                         await _reservations.SaveChangesAsync();
 
                         _logger.LogInformation($"Reserva criada com sucesso para o usuário {reservation.UserId}");
 
-                        var user = await _IuserRepository.GetByIdAsync(reservation.UserId);
+                        var user = await _userRepository.GetByIdAsync(reservation.UserId);
                         var hotel = await _reservations.GetByIdAsync<Hotel>(Convert.ToInt32(reservation.HotelId));
 
                         string userName = session.Metadata["userNameReservation"];

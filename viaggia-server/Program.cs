@@ -17,11 +17,12 @@ using Viaggia.Swagger;
 using viaggia_server.Config;
 using viaggia_server.Data;
 using viaggia_server.Repositories;
-using viaggia_server.Repositories.ReservesRepository;
+using viaggia_server.Repositories.ReserveRepository;
 using viaggia_server.Repositories.Users;
 using viaggia_server.Repositories.Auth;
 using viaggia_server.Repositories.CommodityRepository;
 using viaggia_server.Repositories.HotelRepository;
+using viaggia_server.Services.Email;
 using viaggia_server.Services.HotelServices;
 using viaggia_server.Services.ImageService;
 using viaggia_server.Swagger;
@@ -29,9 +30,7 @@ using viaggia_server.Services;
 using viaggia_server.Services.Payment;
 using viaggia_server.Services.ReservationServices;
 using viaggia_server.Validators;
-using viaggia_server.Services;
-using viaggia_server.Services.Email;
-using viaggia_server.Repositories.Reserves;
+using viaggia_server.Services.Reserves;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -93,12 +92,15 @@ builder.Services.AddScoped<IImageService, ImageService>();
 builder.Services.AddScoped<IPackageRepository, PackageRepository>();
 builder.Services.AddScoped<IHotelServices, HotelServices>();
 builder.Services.AddScoped<IHotelRepository, HotelRepository>();
+builder.Services.AddScoped<IReserveRepository, ReserveRepository>();
+
+builder.Services.AddScoped<IReservesService, ReservesService>();
+builder.Services.AddScoped<IStripePaymentService, StripePaymentService>();
 builder.Services.AddScoped<ICommodityRepository, CommodityRepository>();
 builder.Services.AddScoped<ICustomCommodityRepository, CustomCommodityRepository>();
 builder.Services.AddScoped<IAuthRepository, AuthRepository>();
 builder.Services.AddScoped<IGoogleAccountRepository, GoogleAccountRepository>();
 builder.Services.AddScoped<IReviewRepository, ReviewRepository>();
-builder.Services.AddScoped<IReserveRepository, ReserveRepository>();
 //Services
 builder.Services.AddScoped<IHotelServices, HotelServices>();
 builder.Services.AddScoped<IEmailService, EmailService>();

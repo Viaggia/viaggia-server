@@ -1,11 +1,9 @@
 ﻿using Stripe;
 using viaggia_server.DTOs.Reserves;
-using viaggia_server.Models.Hotels;
 using viaggia_server.Models.Reserves;
-using viaggia_server.Models.Users;
 using viaggia_server.Repositories;
 using viaggia_server.Repositories.HotelRepository;
-using viaggia_server.Repositories.ReservesRepository;
+using viaggia_server.Repositories.ReserveRepository;
 using viaggia_server.Repositories.Users;
 using viaggia_server.Services.Email;
 
@@ -13,29 +11,32 @@ namespace viaggia_server.Services.Reserves
 {
     public class ReservesService : IReservesService
     {
-        private readonly IReservesRepository _reservesRepository;
+        private readonly IReserveRepository _reserveRepository;
+        private readonly IRepository<Reserve> _repository;
         private readonly IUserRepository _userRepository;
         private readonly IHotelRepository _hotelRepository;
         private readonly IEmailService _emailService;
 
         public ReservesService(
-            IReservesRepository reservationRepo,
+            IReserveRepository reservationRepo,
+            IRepository<Reserve> repository,
             IUserRepository userRepository,
             IHotelRepository hotelRepository,
             IEmailService emailService)
         {
-            _reservesRepository = reservationRepo;
+            _reserveRepository = reservationRepo;
+            _repository = repository;
             _userRepository = userRepository;
             _hotelRepository = hotelRepository;
             _emailService = emailService;
         }
 
-        public async Task<List<Reserve>> GetAllAsync()
+        public async Task<List<ReserveDTO>> GetAllAsync()
         {
             try
             {
-                var reservations = await _reservesRepository.GetAllAsync();
-                return reservations.Select(r => new Reserve
+                var reservations = await _repository.GetAllAsync();
+                return reservations.Select(r => new ReserveDTO
                 {
                     ReserveId = r.ReserveId,
                     UserId = r.UserId,
@@ -45,24 +46,25 @@ namespace viaggia_server.Services.Reserves
                     CheckInDate = r.CheckInDate,
                     CheckOutDate = r.CheckOutDate,
                     TotalPrice = r.TotalPrice,
+                    NumberOfPeople = r.NumberOfGuests,
                     Status = r.Status,
                     IsActive = r.IsActive
                 }).ToList();
-
-            } catch (Exception ex)
+            }
+            catch (Exception ex)
             {
                 throw new Exception(ex.Message);
             }
         }
 
-        public async Task<Reserve> GetByIdAsync(int id)
+        public async Task<ReserveDTO?> GetByIdAsync(int id)
         {
             try
             {
-                var r = await _reservesRepository.GetReservationByIdAsync(id);
-                if (r == null || r.ReserveId != id) throw new Exception("Reserve Don't Found");
+                var r = await _reserveRepository.GetByIdAsync(id);
+                if (r == null) return null;
 
-                return new Reserve
+                return new ReserveDTO
                 {
                     UserId = r.UserId,
                     PackageId = r.PackageId,
@@ -71,6 +73,7 @@ namespace viaggia_server.Services.Reserves
                     CheckInDate = r.CheckInDate,
                     CheckOutDate = r.CheckOutDate,
                     TotalPrice = r.TotalPrice,
+                    NumberOfPeople = r.NumberOfGuests,
                     Status = r.Status,
                     IsActive = r.IsActive
                 };
@@ -81,72 +84,25 @@ namespace viaggia_server.Services.Reserves
             }
         }
 
-        public async Task<Reserve> CreateAsync(ReservesCreateDTO dto)
+        public async Task<IEnumerable<ReserveDTO>> GetByUserIdAsync(int userId)
         {
             try
             {
-                // Validação de datas
-                if (dto.CheckInDate >= dto.CheckOutDate)
-                    throw new ArgumentException("A data de check-out deve ser posterior à data de check-in.");
-
-                // Validação do usuário
-                var user = await _userRepository.GetByIdAsync(dto.UserId);
-                if (user == null)
-                    throw new Exception("Cliente não encontrado.");
-
-                // Validação do hotel
-                var hotel = await _hotelRepository.GetByIdHotel(dto.HotelId);
-                if (hotel == null)
-                    throw new Exception("Hotel não encontrado.");
-
-                var reserve = new Reserve
+                var reservations = await _reserveRepository.GetByUserIdAsync(userId);
+                return reservations.Select(r => new ReserveDTO
                 {
-                    UserId = dto.UserId,
-                    PackageId = dto.PackageId, // pode ser null
-                    RoomTypeId = dto.RoomTypeId,
-                    HotelId = dto.HotelId,
-                    TotalPrice = dto.TotalPrice,
-                    Status = dto.Status ?? "Pendente", // fallback se quiser
-                    CheckInDate = dto.CheckInDate,
-                    CheckOutDate = dto.CheckOutDate,
-                    CreatedAt = DateTime.UtcNow,
-                    IsActive = true
-                };
-
-                await _reservesRepository.AddAsync(reserve);
-                await _reservesRepository.SaveChangesAsync();
-                await _emailService.SendApprovedReserve(reserve);
-                return await GetByIdAsync(reserve.ReserveId);
-            }
-            catch (Exception ex)
-            {
-                // Aqui você pode logar o erro com mais detalhes se quiser
-                throw new Exception($"Erro ao criar reserva: {ex.Message}");
-            }
-        }
-
-
-        public async Task<Reserve> UpdateAsync(int id, ReservationUpdateDTO dto)
-        {
-            try
-            {
-                var reservation = await _reservesRepository.GetByIdAsync(id);
-                if (reservation == null) throw new ArgumentException("Reserva não encontrada.");
-
-                reservation.UserId = dto.UserId;
-                reservation.PackageId = dto.PackageId;
-                reservation.RoomTypeId = dto.RoomTypeId;
-                reservation.HotelId = dto.HotelId;
-                reservation.CheckInDate = dto.CheckInDate;
-                reservation.CheckOutDate = dto.CheckOutDate;
-                reservation.TotalPrice = dto.TotalPrice;
-                reservation.Status = dto.Status;
-                reservation.IsActive = dto.IsActive;
-
-                await _reservesRepository.UpdateAsync(reservation);
-                await _reservesRepository.SaveChangesAsync();
-
-                return await GetByIdAsync(id);
+                    ReserveId = r.ReserveId,
+                    UserId = r.UserId,
+                    PackageId = r.PackageId,
+                    RoomTypeId = r.RoomTypeId,
+                    HotelId = r.HotelId,
+                    CheckInDate = r.CheckInDate,
+                    CheckOutDate = r.CheckOutDate,
+                    TotalPrice = r.TotalPrice,
+                    NumberOfPeople = r.NumberOfGuests,
+                    Status = r.Status,
+                    IsActive = r.IsActive
+                });
             }
             catch (Exception ex)
             {
@@ -154,13 +110,77 @@ namespace viaggia_server.Services.Reserves
             }
         }
 
+
+
+
+        public async Task<ReserveDTO> CreateAsync(ReserveCreateDTO dto)
+        {
+            try
+            {
+                var userId = _userRepository.GetByIdAsync(dto.UserId);
+                if (userId == null) throw new Exception("Cliente não encontrado");
+
+                var CheckIn = dto.CheckInDate;
+                var CheckOut = dto.CheckOutDate;
+
+                int tempo = (CheckOut - CheckIn).Days;
+                var totalPrice = dto.TotalPrice * tempo;
+
+
+                var reservation = new Reserve
+                {
+                    UserId = dto.UserId,
+                    PackageId = dto.PackageId,
+                    RoomTypeId = dto.RoomTypeId,
+                    HotelId = dto.HotelId,
+                    TotalPrice = totalPrice,
+                    NumberOfGuests = dto.NumberOfGuests,
+                    Status = dto.Status
+                };
+
+                await _repository.AddAsync(reservation);
+                await _repository.SaveChangesAsync();
+
+                return await GetByIdAsync(reservation.ReserveId) ?? throw new Exception("Erro ao criar reserva.");
+
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message);
+            }
+
+        }
+
+        public async Task<ReserveDTO> UpdateAsync(int id, ReserveUpdateDTO dto)
+        {
+            var reservation = await _reserveRepository.GetByIdAsync(id);
+            if (reservation == null) throw new ArgumentException("Reserva não encontrada.");
+
+            reservation.UserId = dto.UserId;
+            reservation.PackageId = dto.PackageId;
+            reservation.RoomTypeId = dto.RoomTypeId;
+            reservation.HotelId = dto.HotelId;
+            reservation.CheckInDate = dto.CheckInDate;
+            reservation.CheckOutDate = dto.CheckOutDate;
+            reservation.TotalPrice = dto.TotalPrice;
+            reservation.NumberOfGuests = dto.NumberOfPeople;
+            reservation.Status = dto.Status;
+            reservation.IsActive = dto.IsActive;
+
+            await _repository.UpdateAsync(reservation);
+            await _repository.SaveChangesAsync();
+
+            return await GetByIdAsync(id) ?? throw new Exception("Erro ao atualizar reserva.");
+        }
+
         public async Task<bool> SoftDeleteAsync(int id)
         {
             try
             {
-                var deleted = await _reservesRepository.SoftDeleteAsync(id);
+                var deleted = await _repository.SoftDeleteAsync(id);
                 if (deleted)
-                    await _reservesRepository.SaveChangesAsync();
+                    await _repository.SaveChangesAsync();
+
                 return deleted;
             }
             catch (Exception ex)
@@ -168,5 +188,6 @@ namespace viaggia_server.Services.Reserves
                 throw new Exception(ex.Message);
             }
         }
+
     }
 }
