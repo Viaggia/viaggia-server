@@ -28,8 +28,11 @@ namespace viaggia_server.Controllers
 
         // GET: api/Hotel
         [HttpGet]
+        [Authorize(Roles = "ADMIN")] // Restrict to ADMIN
         [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)] // Changed from BadRequest to NotFound for consistency
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> GetAllHotels()
         {
@@ -39,7 +42,7 @@ namespace viaggia_server.Controllers
                 if (!response.Success)
                 {
                     _logger.LogWarning("Failed to retrieve hotels: {Message}", response.Message);
-                    return BadRequest(new ApiResponse<List<HotelDTO>>(false, response.Message));
+                    return NotFound(new ApiResponse<List<HotelDTO>>(false, response.Message));
                 }
 
                 if (!response.Data.Any())
@@ -48,11 +51,12 @@ namespace viaggia_server.Controllers
                     return NotFound(new ApiResponse<List<HotelDTO>>(false, "No hotels found."));
                 }
 
+                _logger.LogInformation("Retrieved {Count} hotels by Admin", response.Data.Count);
                 return Ok(response);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error retrieving hotels");
+                _logger.LogError(ex, "Error retrieving hotels for Admin");
                 return StatusCode(StatusCodes.Status500InternalServerError,
                     new ApiResponse<List<HotelDTO>>(false, $"Error retrieving hotels: {ex.Message}"));
             }
@@ -60,13 +64,22 @@ namespace viaggia_server.Controllers
 
         // GET: api/Hotel/{id}
         [HttpGet("{id}")]
+        [Authorize(Roles = "ADMIN,SERVICE_PROVIDER")] // Restrict to ADMIN and SERVICE_PROVIDER
         [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> GetHotelById(int id)
         {
             try
             {
+                if (id <= 0)
+                {
+                    _logger.LogWarning("Invalid hotel ID: {HotelId}", id);
+                    return BadRequest(new ApiResponse<HotelDTO>(false, "Invalid hotel ID."));
+                }
+
                 var response = await _hotelServices.GetHotelByIdAsync(id);
                 if (!response.Success)
                 {
@@ -74,6 +87,7 @@ namespace viaggia_server.Controllers
                     return NotFound(new ApiResponse<HotelDTO>(false, response.Message));
                 }
 
+                _logger.LogInformation("Hotel ID {HotelId} retrieved by {Role}", id, User.IsInRole("ADMIN") ? "Admin" : "Service Provider");
                 return Ok(response);
             }
             catch (Exception ex)
@@ -84,63 +98,8 @@ namespace viaggia_server.Controllers
             }
         }
 
-        // POST: api/Hotel
-        //[HttpPost]
-        //[Consumes("multipart/form-data")]
-        //[ProducesResponseType(StatusCodes.Status201Created)]
-        //[ProducesResponseType(StatusCodes.Status400BadRequest)]
-        //[ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        //public async Task<IActionResult> CreateHotel([FromForm] CreateHotelDTO createHotelDto)
-        //{
-        //    try
-        //    {
-        //        if (!ModelState.IsValid)
-        //        {
-        //            _logger.LogError("ModelState is invalid: {Errors}", ModelState);
-        //            return BadRequest(ModelState);
-        //        }
-
-        //        List<CreateHotelRoomTypeDTO> roomTypes;
-        //        try
-        //        {
-        //            var options = new JsonSerializerOptions
-        //            {
-        //                PropertyNameCaseInsensitive = true,
-        //                Converters = { new JsonStringEnumConverter() }
-        //            };
-
-        //            roomTypes = JsonSerializer.Deserialize<List<CreateHotelRoomTypeDTO>>(createHotelDto.RoomTypesJson, options)!;
-
-        //            if (roomTypes == null || !roomTypes.Any())
-        //            {
-        //                _logger.LogWarning("No room types provided in JSON.");
-        //                return BadRequest(new ApiResponse<HotelDTO>(false, "At least one room type must be provided."));
-        //            }
-        //        }
-        //        catch (Exception ex)
-        //        {
-        //            _logger.LogError(ex, "Invalid RoomTypesJson");
-        //            return BadRequest(new ApiResponse<HotelDTO>(false, "RoomTypesJson is invalid or malformed."));
-        //        }
-
-        //        var response = await _hotelServices.CreateHotelAsync(createHotelDto, roomTypes);
-        //        if (!response.Success)
-        //        {
-        //            _logger.LogError("Failed to create hotel: {Message}", response.Message);
-        //            return BadRequest(new ApiResponse<HotelDTO>(false, response.Message));
-        //        }
-
-        //        return CreatedAtAction(nameof(GetHotelById), new { id = response.Data.HotelId }, response);
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        _logger.LogError(ex, "Error creating hotel");
-        //        return StatusCode(StatusCodes.Status500InternalServerError,
-        //            new ApiResponse<HotelDTO>(false, $"Error creating hotel: {ex.Message}"));
-        //    }
-        //}
         [HttpPost]
-        [Authorize(Roles = "SERVICE_PROVIDER")]
+        [Authorize(Roles = "SERVICE_PROVIDER, ADMIN")]
         [Consumes("multipart/form-data")]
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -206,9 +165,12 @@ namespace viaggia_server.Controllers
 
         // PUT: api/Hotel/{id}
         [HttpPut("{id}")]
+        [Authorize(Roles = "ADMIN,SERVICE_PROVIDER,ATTENDANT")] // Allow ADMIN, SERVICE_PROVIDER, ATTENDANT
         [Consumes("multipart/form-data")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> UpdateHotel(int id, [FromForm] UpdateHotelDto updateHotelDto)
@@ -227,6 +189,31 @@ namespace viaggia_server.Controllers
                     return BadRequest(new ApiResponse<HotelDTO>(false, "HotelId in URL must match HotelId in request body."));
                 }
 
+                // Authorization check for SERVICE_PROVIDER and ATTENDANT
+                if (!User.IsInRole("ADMIN"))
+                {
+                    var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                    if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
+                    {
+                        _logger.LogWarning("Invalid or missing UserId in claims for updating HotelId {HotelId}", id);
+                        return Unauthorized(new ApiResponse<HotelDTO>(false, "User not authenticated."));
+                    }
+
+                    var hotel = await _hotelServices.GetHotelByIdAsync(id);
+                    if (!hotel.Success || hotel.Data == null)
+                    {
+                        _logger.LogWarning("Hotel not found for ID {HotelId}", id);
+                        return NotFound(new ApiResponse<HotelDTO>(false, "Hotel not found."));
+                    }
+
+                    if (hotel.Data.UserId != userId)
+                    {
+                        _logger.LogWarning("User {UserId} attempted to update hotel {HotelId} they do not own", userId, id);
+                        return StatusCode(StatusCodes.Status403Forbidden,
+                            new ApiResponse<HotelDTO>(false, "You can only update hotels you own."));
+                    }
+                }
+
                 List<CreateHotelRoomTypeDTO>? roomTypes = null;
                 if (!string.IsNullOrEmpty(updateHotelDto.RoomTypesJson))
                 {
@@ -240,7 +227,7 @@ namespace viaggia_server.Controllers
                         roomTypes = JsonSerializer.Deserialize<List<CreateHotelRoomTypeDTO>>(updateHotelDto.RoomTypesJson, options);
                         if (roomTypes == null || !roomTypes.Any())
                         {
-                            _logger.LogWarning("RoomTypesJson provided but empty or invalid.");
+                            _logger.LogWarning("RoomTypesJson provided but empty or invalid for HotelId {HotelId}", id);
                             return BadRequest(new ApiResponse<HotelDTO>(false, "RoomTypesJson is empty or invalid."));
                         }
                     }
@@ -258,6 +245,7 @@ namespace viaggia_server.Controllers
                     return BadRequest(new ApiResponse<HotelDTO>(false, response.Message));
                 }
 
+                _logger.LogInformation("Hotel ID {HotelId} updated by {Role}", id, User.IsInRole("ADMIN") ? "Admin" : User.IsInRole("SERVICE_PROVIDER") ? "Service Provider" : "Attendant");
                 return Ok(response);
             }
             catch (Exception ex)
@@ -270,13 +258,48 @@ namespace viaggia_server.Controllers
 
         // DELETE: api/Hotel/{id}
         [HttpDelete("{id}")]
+        [Authorize(Roles = "ADMIN,SERVICE_PROVIDER,ATTENDANT")] 
         [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> DeleteHotel(int id)
         {
             try
             {
+                if (id <= 0)
+                {
+                    _logger.LogWarning("Invalid hotel ID: {HotelId}", id);
+                    return BadRequest(new ApiResponse<bool>(false, "Invalid hotel ID."));
+                }
+
+                // Authorization check for SERVICE_PROVIDER and ATTENDANT
+                if (!User.IsInRole("ADMIN"))
+                {
+                    var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                    if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
+                    {
+                        _logger.LogWarning("Invalid or missing UserId in claims for deleting HotelId {HotelId}", id);
+                        return Unauthorized(new ApiResponse<bool>(false, "User not authenticated."));
+                    }
+
+                    var hotel = await _hotelServices.GetHotelByIdAsync(id);
+                    if (!hotel.Success || hotel.Data == null)
+                    {
+                        _logger.LogWarning("Hotel not found for ID {HotelId}", id);
+                        return NotFound(new ApiResponse<bool>(false, "Hotel not found."));
+                    }
+
+                    if (hotel.Data.UserId != userId)
+                    {
+                        _logger.LogWarning("User {UserId} attempted to delete hotel {HotelId} they do not own", userId, id);
+                        return StatusCode(StatusCodes.Status403Forbidden,
+                            new ApiResponse<bool>(false, "You can only delete hotels you own."));
+                    }
+                }
+
                 var result = await _hotelServices.SoftDeleteHotelAsync(id);
                 if (!result)
                 {
@@ -284,6 +307,7 @@ namespace viaggia_server.Controllers
                     return NotFound(new ApiResponse<bool>(false, "Hotel not found."));
                 }
 
+                _logger.LogInformation("Hotel ID {HotelId} deleted by {Role}", id, User.IsInRole("ADMIN") ? "Admin" : User.IsInRole("SERVICE_PROVIDER") ? "Service Provider" : "Attendant");
                 return NoContent();
             }
             catch (Exception ex)
@@ -329,8 +353,11 @@ namespace viaggia_server.Controllers
 
         // POST: api/Hotel/{hotelId}/reviews
         [HttpPost("{hotelId}/reviews")]
+        [Authorize(Roles = "CLIENT")] // Restrict to CLIENT
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> CreateReview(int hotelId, [FromBody] CreateReviewDTO reviewDto)
         {
@@ -348,13 +375,23 @@ namespace viaggia_server.Controllers
                     return BadRequest(new ApiResponse<ReviewDTO>(false, "HotelId in URL must match HotelId in request body."));
                 }
 
+                // Set UserId from authenticated client
+                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
+                {
+                    _logger.LogWarning("Invalid or missing UserId in claims for creating review for HotelId {HotelId}", hotelId);
+                    return Unauthorized(new ApiResponse<ReviewDTO>(false, "User not authenticated."));
+                }
+                reviewDto.UserId = userId;
+
                 var response = await _hotelServices.AddHotelReviewAsync(reviewDto);
                 if (!response.Success)
                 {
-                    _logger.LogError("Failed to create review: {Message}", response.Message);
+                    _logger.LogError("Failed to create review for HotelId {HotelId}: {Message}", hotelId, response.Message);
                     return BadRequest(new ApiResponse<ReviewDTO>(false, response.Message));
                 }
 
+                _logger.LogInformation("Review created for HotelId {HotelId} by Client UserId {UserId}", hotelId, userId);
                 return CreatedAtAction(nameof(GetReviewsByHotelId), new { hotelId = response.Data.HotelId }, response);
             }
             catch (Exception ex)

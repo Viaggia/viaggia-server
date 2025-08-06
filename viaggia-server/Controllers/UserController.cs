@@ -89,8 +89,11 @@ namespace viaggia_server.Controllers
         }
 
         [HttpPost("service-provider")]
+        [Authorize(Roles = "ADMIN")] // Restrict to ADMIN role
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)] // Add for unauthorized access
+        [ProducesResponseType(StatusCodes.Status403Forbidden)] // Add for forbidden access
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> CreateServiceProvider([FromBody] CreateServiceProviderDTO request)
         {
@@ -104,7 +107,7 @@ namespace viaggia_server.Controllers
                 }
 
                 var result = await _userRepository.CreateServiceProviderAsync(request);
-                _logger.LogInformation("Provedor de serviços criado com sucesso: UserId {Id}", result.Id);
+                _logger.LogInformation("Provedor de serviços criado com sucesso por Admin: UserId {Id}", result.Id);
                 return CreatedAtAction(nameof(GetById), new { id = result.Id },
                     new ApiResponse<UserDTO>(true, "Service provider created successfully.", result));
             }
@@ -126,8 +129,11 @@ namespace viaggia_server.Controllers
         }
 
         [HttpPost("attendant")]
+        [Authorize(Roles = "ADMIN")] // Restrict to ADMIN role
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)] // Add for unauthorized access
+        [ProducesResponseType(StatusCodes.Status403Forbidden)] // Add for forbidden access
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> CreateAttendant([FromBody] CreateAttendantDTO request)
         {
@@ -141,7 +147,7 @@ namespace viaggia_server.Controllers
                 }
 
                 var result = await _userRepository.CreateAttendantAsync(request);
-                _logger.LogInformation("Atendente criado com sucesso: UserId {Id}", result.Id);
+                _logger.LogInformation("Atendente criado com sucesso por Admin: UserId {Id}", result.Id);
                 return CreatedAtAction(nameof(GetById), new { id = result.Id },
                     new ApiResponse<UserDTO>(true, "Attendant created successfully.", result));
             }
@@ -163,15 +169,18 @@ namespace viaggia_server.Controllers
         }
 
         [HttpPost("admin")]
+        [Authorize(Roles = "ADMIN")] 
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)] 
+        [ProducesResponseType(StatusCodes.Status403Forbidden)] 
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> CreateAdmin([FromBody] CreateAdminDTO request)
         {
             try
             {
                 var result = await _userRepository.CreateAdminAsync(request);
-                _logger.LogInformation("Administrador criado com sucesso: UserId {Id}", result.Id);
+                _logger.LogInformation("Administrador criado com sucesso por Admin: UserId {Id}", result.Id);
                 return CreatedAtAction(nameof(GetById), new { id = result.Id },
                     new ApiResponse<UserDTO>(true, "Admin user created successfully.", result));
             }
@@ -194,7 +203,7 @@ namespace viaggia_server.Controllers
         }
 
         [HttpGet]
-        //[Authorize(Roles = "ADMIN")]
+        [Authorize(Roles = "ADMIN")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
