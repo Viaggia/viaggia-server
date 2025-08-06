@@ -1,4 +1,3 @@
-using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using viaggia_server.Models.Commodities;
 using viaggia_server.Models.CustomCommodities;
@@ -154,6 +153,21 @@ namespace viaggia_server.Data
                 .IsRequired(false)
                 .OnDelete(DeleteBehavior.NoAction);
 
+
+            // Payment
+            modelBuilder.Entity<Payment>()
+                .HasOne(p => p.User)
+                .WithMany(u => u.Payments)
+                .HasForeignKey(p => p.UserId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            modelBuilder.Entity<Payment>()
+                .HasOne(p => p.Reserve)
+                .WithMany(r => r.Payments)
+                .HasForeignKey(p => p.ReservationId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+
             // Review
             modelBuilder.Entity<Review>()
                 .HasOne(r => r.User)
@@ -161,7 +175,29 @@ namespace viaggia_server.Data
                 .HasForeignKey(r => r.UserId)
                 .OnDelete(DeleteBehavior.NoAction);
 
-            // PasswordResetToken
+
+            // Hotel 1:N Commoditie
+            modelBuilder.Entity<Hotel>()
+                .HasMany(h => h.Commodities) // Assuming Hotel has a collection of Commodities
+                .WithOne(c => c.Hotel) // Assuming Commoditie has a Hotel property
+                .HasForeignKey(c => c.HotelId) // Foreign key in Commoditie
+                .OnDelete(DeleteBehavior.Cascade); // Cascade delete if Hotel is deleted
+
+            // Commodity 1:N CommoditiesServices
+            modelBuilder.Entity<Commodity>()
+              .HasMany(c => c.CustomCommodities)
+              .WithOne(cs => cs.Commodity)
+              .HasForeignKey(cs => cs.CommodityId)
+              .OnDelete(DeleteBehavior.NoAction); // Evita ciclos de deleção 
+
+            // CommoditieServices 1:N Hotel
+            modelBuilder.Entity<CustomCommodity>()
+                .HasOne(cs => cs.Hotel)
+                .WithMany(h => h.CustomCommodities)
+                .HasForeignKey(cs => cs.HotelId)
+                .OnDelete(DeleteBehavior.NoAction); // Evita ciclos de deleção
+
+            //  PasswordResetToken
             modelBuilder.Entity<PasswordResetToken>()
                 .HasOne(prt => prt.User)
                 .WithMany()
