@@ -14,10 +14,9 @@ namespace viaggia_server.DTOs.Reserves
         public int NumberOfPeople { get; set; }
 
         public int NumberOfRooms { get; set; }
-        public DateTime CreatedAt { get; set; }
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public string Status { get; set; } = string.Empty;
         public bool IsActive { get; set; }
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     }
 }

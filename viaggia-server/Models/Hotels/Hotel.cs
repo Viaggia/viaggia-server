@@ -67,11 +67,6 @@ namespace viaggia_server.Models.Hotels
         public int? UserId { get; set; } 
         public virtual User? User { get; set; } 
 
-
-        [ForeignKey("UserId")]
-        public int? UserId { get; set; }
-        public virtual User? User { get; set; }
-
         // Relationships
         public virtual ICollection<HotelRoomType> RoomTypes { get; set; } = new List<HotelRoomType>();
         public virtual ICollection<Reserve> Reserves { get; set; } = new List<Reserve>();
