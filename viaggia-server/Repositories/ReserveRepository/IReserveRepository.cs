@@ -9,7 +9,6 @@ namespace viaggia_server.Repositories.ReserveRepository
         Task<IEnumerable<Reserve>> GetByHotelIdAsync(int hotelId);
         Task<Reserve> CreateReserveAsync(Reserve reserve);
         Task<Reserve> UpdateAsync(Reserve reserve);
-
-
+        Task<IEnumerable<Reserve>> GetReserveByUser(int userId);
     }
 }

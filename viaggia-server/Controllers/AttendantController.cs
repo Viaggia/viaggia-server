@@ -2,7 +2,6 @@
 using Microsoft.AspNetCore.Mvc;
 using viaggia_server.DTOs;
 using viaggia_server.DTOs.Reserves;
-using viaggia_server.DTOs.Reserves;
 using viaggia_server.Repositories.ReserveRepository;
 
 namespace viaggia_server.Controllers

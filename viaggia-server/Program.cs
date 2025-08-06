@@ -24,14 +24,11 @@ using viaggia_server.Repositories.CommodityRepository;
 using viaggia_server.Repositories.HotelRepository;
 using viaggia_server.Services;
 using viaggia_server.Services.Payment;
-using viaggia_server.Repositories.Users;
 using viaggia_server.Services.HotelServices;
 using viaggia_server.Services.ImageService;
 using viaggia_server.Swagger;
 using viaggia_server.Validators;
-using viaggia_server.Services;
 using viaggia_server.Services.Email;
-using viaggia_server.Repositories.ReserveRepository;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -124,6 +121,7 @@ builder.Services.AddLogging(logging =>
 // Add IHttpContextAccessor for authorization handlers
 builder.Services.AddHttpContextAccessor();
 
+// Configure authentication (JWT and Google OAuth)
 // Configure authentication (JWT and Google OAuth)
 builder.Services.AddAuthentication(options =>
 {

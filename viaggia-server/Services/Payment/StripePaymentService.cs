@@ -7,6 +7,7 @@ using viaggia_server.Models.Hotels;
 using viaggia_server.Models.Reserves;
 using viaggia_server.Models.Users;
 using viaggia_server.Repositories;
+using viaggia_server.Repositories.HotelRepository;
 using viaggia_server.Repositories.Users;
 using viaggia_server.Services.Email;
 
@@ -16,6 +17,7 @@ namespace viaggia_server.Services.Payment
     {
         private readonly IConfiguration _configuration;
         private readonly IUserRepository _userRepository;
+        private readonly IHotelRepository _hotelRepository;
         private readonly IRepository<Reserve> _reservations;
         private readonly ILogger<StripePaymentService> _logger;
         private readonly string _stripeSecretKey;
@@ -54,7 +56,10 @@ namespace viaggia_server.Services.Payment
                     throw new ArgumentException("TotalPrice deve ser maior que zero.");
                 }
 
-                var productName = $"Reserva para o id {createReserve.UserId}";
+                var hotelName = _hotelRepository.GetByIdAsync(createReserve.HotelId);
+
+                var productName = $"Reserva para o hotel: {hotelName?.Result?.Name}\n{createReserve.CheckInDate} - {createReserve.CheckOutDate}";
+
                 _logger.LogInformation("Nome do produto: {ProductName}", productName);
 
                 var amount = (long)(total * 100);
@@ -118,8 +123,6 @@ namespace viaggia_server.Services.Payment
             }
         }
 
-
-
         public async Task HandleStripeWebhookAsync(HttpRequest request)
         {
             var json = await new StreamReader(request.Body).ReadToEndAsync();
@@ -138,7 +141,7 @@ namespace viaggia_server.Services.Payment
                         _logger.LogError("Falha ao converter stripeEvent.Data.Object em Session");
                         return;
                     }
-
+                    
                     try
                     {
                         var reservation = new Reserve
@@ -150,6 +153,7 @@ namespace viaggia_server.Services.Payment
                             CheckInDate = DateTime.Parse(session.Metadata["checkInDate"], null, DateTimeStyles.RoundtripKind),
                             CheckOutDate = DateTime.Parse(session.Metadata["checkOutDate"], null, DateTimeStyles.RoundtripKind),
                             NumberOfPeople = int.Parse(session.Metadata["numberOfGuests"]),
+                            TotalPrice = decimal.Parse(session.Metadata["TotalPrice"]),
                             Status = session.Metadata.ContainsKey("status") ? session.Metadata["status"] : "Pendente",
                             CreatedAt = DateTime.UtcNow
                         };
@@ -163,6 +167,8 @@ namespace viaggia_server.Services.Payment
                         var hotel = await _reservations.GetByIdAsync<Hotel>(Convert.ToInt32(reservation.HotelId));
 
                         string userName = session.Metadata["userNameReservation"];
+
+                        
                     }
                     catch (Exception ex)
                     {

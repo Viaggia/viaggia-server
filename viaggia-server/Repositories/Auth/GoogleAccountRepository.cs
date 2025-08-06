@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿
+using Microsoft.EntityFrameworkCore;
 using viaggia_server.Data;
 using viaggia_server.DTOs.Auth;
 using viaggia_server.Models.Users;
@@ -22,6 +23,11 @@ namespace viaggia_server.Repositories.Auth
                     .ThenInclude(ur => ur.Role)
                 .FirstOrDefaultAsync(u => u.GoogleId == dto.GoogleUid);
 
+            var clientRole = await _context.Roles
+                .FirstOrDefaultAsync(r => r.Name == "CLIENT")
+                ??
+                throw new InvalidOperationException("CLIENT role not found in database."); ;
+
             if (user == null)
             {
                 // Cria um novo usuário
@@ -34,7 +40,14 @@ namespace viaggia_server.Repositories.Auth
                     PhoneNumber = dto.PhoneNumber, // Nullable, no default value
                     Password = null, // No password for OAuth users
                     IsActive = true,
-                    CreateDate = DateTime.UtcNow
+                    CreateDate = DateTime.UtcNow,
+                    UserRoles = new List<UserRole>
+                        {
+                            new UserRole
+                            {
+                                Role = clientRole
+                            }
+                        }
                 };
                 await _context.Users.AddAsync(user);
             }
@@ -44,10 +57,22 @@ namespace viaggia_server.Repositories.Auth
                 user.Email = dto.Email;
                 user.Name = dto.Name;
                 user.AvatarUrl = dto.Picture ?? string.Empty;
-            }
 
+                // Verifica se já tem a role CLIENT
+                var hasClientRole = user.UserRoles.Any(ur => ur.RoleId == clientRole.Id);
+
+                if (!hasClientRole)
+                {
+                    user.UserRoles.Add(new UserRole
+                    {
+                        RoleId = clientRole.Id,
+                        UserId = user.Id
+                    });
+                }
+            }
             await _context.SaveChangesAsync();
             return user;
+
         }
     }
 }

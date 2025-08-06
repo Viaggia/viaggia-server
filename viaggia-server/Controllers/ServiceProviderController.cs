@@ -205,7 +205,7 @@ namespace viaggia_server.Controllers
 
         [HttpPut("reservations/{id}")]
         [Authorize(Policy = "HotelAccess")]
-        public async Task<IActionResult> UpdateReservation(int id, [FromBody] UpdateReserveDTO dto)
+        public async Task<IActionResult> UpdateReservation(int id, [FromBody] ReserveUpdateDTO dto)
         {
             var hotelId = int.Parse(User.FindFirst("HotelId")?.Value ?? "0");
             if (hotelId == 0)

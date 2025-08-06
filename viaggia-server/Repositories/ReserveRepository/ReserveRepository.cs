@@ -88,5 +88,22 @@ namespace viaggia_server.Repositories.ReserveRepository
                 throw;
             }
         }
+
+        public async Task<IEnumerable<Reserve>> GetReserveByUser(int userId)
+        {
+            try
+            {
+                var result = await _context.Reserves
+                    .Where(r => r.UserId == userId && r.IsActive)
+                    .Include(r => r.User)
+                    .ToListAsync();
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message);
+            }
+        }
     }
 }
