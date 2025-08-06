@@ -1,12 +1,24 @@
-﻿
+
 # Pastas da IDE
 .vs/
 .idea/
 *.suo
 *.user
 *.userosscache
-*.sln.docstates
+*.s# Uploads e arquivos gerados
+uploads/
+wwwroot/Uploads/
+**/wwwroot/Uploads/**
+**/Uploads/**
 
+# Migrations (geradas automaticamente)
+**/Migrations/
+*.Designer.cs
+*ModelSnapshot.cs
+
+# Arquivos de teste duplicados
+viaggia-server.tests/bin/
+viaggia-server.tests/obj/
 # Pastas de build
 bin/
 obj/
@@ -29,6 +41,15 @@ Release/
 appsettings.json
 appsettings.*.json
 
+# Arquivos de ambiente e configuração sensível
+.env
+.env.*
+*.env
+docker/.env
+docker/.env.*
+docker/.env.development
+docker/.env.production
+
 # Sistema operacional
 .DS_Store
 Thumbs.db
@@ -48,6 +69,25 @@ Thumbs.db
 /viaggia-server/appsettings.*.json
 /viaggia-server/appsettings.Development.json
 /viaggia-server/Migrations/
+/viaggia-server/*.csproj.user
+*.csproj.user
+
+# Logs e arquivos temporários
+logs/
+*.log
+*.tmp
+
+# Uploads e arquivos gerados
+uploads/
+wwwroot/Uploads/
+**/Migrations/
+*.Designer.cs
+*ModelSnapshot.cs
+
+/viaggia-server/wwwroot/Uploads/Packages/
+/viaggia-server/appsettings.Development.json
+viaggia-server.tests/bin/
+viaggia-server.tests/obj/
 /viaggia-server/wwwroot/Uploads/Packages/
 /viaggia-server/wwwroot/Uploads/Hotel/
 /viaggia-server/wwwroot/Uploads/User/

@@ -1,9 +1,10 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using viaggia_server.DTOs.Commodity;
 
 
 namespace viaggia_server.DTOs.Hotel
 {
+   
     public class CreateHotelDTO
     {
         [Required(ErrorMessage = "Name is required.")]

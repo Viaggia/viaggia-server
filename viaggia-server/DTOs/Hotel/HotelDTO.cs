@@ -1,12 +1,15 @@
 ﻿using viaggia_server.DTOs.Commodity;
+using System.ComponentModel.DataAnnotations;
 using viaggia_server.DTOs.Packages;
 using viaggia_server.DTOs.Reserves;
 using viaggia_server.DTOs.Reviews;
+using viaggia_server.DTOs.Hotel;
 
 namespace viaggia_server.DTOs.Hotel
 {
     public class HotelDTO
     {
+        [Required]
         public int HotelId { get; set; }
         public string Name { get; set; } = null!;
         public string Cnpj { get; set; } = null!;

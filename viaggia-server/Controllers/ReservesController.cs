@@ -1,4 +1,3 @@
-﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using viaggia_server.DTOs;
 using viaggia_server.DTOs.Reserves;
@@ -33,6 +32,17 @@ namespace viaggia_server.Controllers
             if (result == null) return NotFound();
             return Ok(result);
         }
+
+        [HttpGet("user/{userId}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> GetReservationsByUserId(int userId)
+        {
+            var result = await _reservesService.GetByUserIdAsync(userId);
+            if (result == null || !result.Any()) return NotFound();
+            return Ok(result);
+        }
+
 
         [HttpPost]
         public async Task<IActionResult> CreateReservation([FromBody] ReserveCreateDTO dto)

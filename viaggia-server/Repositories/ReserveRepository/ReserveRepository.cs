@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using viaggia_server.Data;
 using viaggia_server.DTOs.Reserves;
+using viaggia_server.Models.Users;
 using viaggia_server.Models.Hotels;
 using viaggia_server.Models.Reserves;
 
@@ -103,6 +104,26 @@ namespace viaggia_server.Repositories.ReserveRepository
             catch (Exception ex)
             {
                 throw new Exception(ex.Message);
+            }
+        }
+        public async Task<IEnumerable<Reserve>> GetByUserIdAsync(int userId)
+        {
+            try
+            {
+                _logger.LogInformation("Buscando reservas para o usuário com ID: {UserId}", userId);
+                var reservations = await _context.Reserves
+                    .Where(r => r.UserId == userId && r.IsActive)
+                    .Include(r => r.Hotel)
+                    .Include(r => r.User)
+                    .ToListAsync();
+
+                _logger.LogInformation("Encontradas {Count} reservas para o usuário com ID: {UserId}", reservations.Count, userId);
+                return reservations;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Erro ao buscar reservas para o usuário com ID: {UserId}", userId);
+                throw;
             }
         }
     }

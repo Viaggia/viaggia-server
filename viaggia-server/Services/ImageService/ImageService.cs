@@ -1,5 +1,3 @@
-﻿
-
 namespace viaggia_server.Services.ImageService
 {
     public class ImageService : IImageService

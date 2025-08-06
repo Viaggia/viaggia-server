@@ -82,7 +82,6 @@ namespace viaggia_server.Repositories.HotelRepository
                 return false;
             return await _context.Hotels.AnyAsync(h => h.Cnpj.ToLower() == cnpj.ToLower() && h.IsActive);
         }
-
         public async Task<Hotel?> GetHotelByNameAsync(string name)
         {
             return await _context.Hotels
@@ -95,11 +94,15 @@ namespace viaggia_server.Repositories.HotelRepository
                 .Where(rt => rt.HotelId == hotelId && rt.IsActive)
                 .ToListAsync();
         }
-
         public async Task<HotelRoomType?> GetRoomTypeByIdAsync(int roomTypeId)
         {
             return await _context.RoomTypes
                 .FirstOrDefaultAsync(rt => rt.RoomTypeId == roomTypeId && rt.IsActive);
+        }
+        public async Task UpdateRoomTypeAsync(HotelRoomType roomType)
+        {
+            _context.RoomTypes.Update(roomType);
+            await _context.SaveChangesAsync();
         }
 
         public async Task<bool> UpdateRoomAvailabilityAsync(int roomTypeId, int roomsToReserve)
@@ -267,18 +270,20 @@ namespace viaggia_server.Repositories.HotelRepository
                 var availableRoomTypes = new List<HotelRoomType>();
                 foreach (var roomType in roomTypes)
                 {
-                    // Count reserved rooms for this room type in the date range
                     var reservedRooms = reservations
-                        .Where(r => r.RoomTypeId == roomType.RoomTypeId)
-                        .Sum(r => r.NumberOfRooms);
+                        .SelectMany(r => r.ReserveRooms)
+                        .Where(rr => rr.RoomTypeId == roomType.RoomTypeId)
+                        .Sum(rr => rr.Quantity);
 
                     var availableRooms = roomType.TotalRooms - reservedRooms;
+
                     if (availableRooms > 0)
                     {
                         roomType.AvailableRooms = availableRooms;
                         availableRoomTypes.Add(roomType);
                     }
                 }
+
 
                 _logger.LogInformation("Found {Count} available room types for HotelId: {HotelId}", availableRoomTypes.Count, hotelId);
                 return availableRoomTypes;
@@ -350,8 +355,10 @@ namespace viaggia_server.Repositories.HotelRepository
                     {
                         // Count reserved rooms for this room type in the date range
                         var reservedRooms = reservations
-                            .Where(r => r.HotelId == hotel.HotelId && r.RoomTypeId == roomType.RoomTypeId)
-                            .Sum(r => r.NumberOfRooms);
+                            .SelectMany(r => r.ReserveRooms)
+                            .Where(rr => rr.RoomTypeId == roomType.RoomTypeId)
+                            .Sum(rr => rr.Quantity);
+
 
                         var availableRooms = roomType.TotalRooms - reservedRooms;
                         if (availableRooms >= numberOfRooms)
@@ -377,6 +384,19 @@ namespace viaggia_server.Repositories.HotelRepository
                 throw;
             }
         }
+        public async Task<Hotel?> GetHotelByIdWithDetailsAsync(int hotelId)
+        {
+            return await _context.Hotels
+                .Include(h => h.RoomTypes)
+                .Include(h => h.HotelDates)
+                .Include(h => h.Medias)
+                .Include(h => h.Reviews)
+                .Include(h => h.Packages)
+                .Include(h => h.Commodities)
+                .Include(h => h.CustomCommodities)
+                .FirstOrDefaultAsync(h => h.HotelId == hotelId);
+        }
+
 
         public async Task<IEnumerable<Hotel>> GetHotelsByUserIdAsync(int userId)
         {

@@ -1,5 +1,3 @@
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
 using System.Text;
 using FluentValidation;
 using FluentValidation.AspNetCore;
@@ -13,6 +11,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Stripe;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 using Viaggia.Swagger;
 using viaggia_server.Config;
 using viaggia_server.Data;
@@ -22,11 +22,15 @@ using viaggia_server.Repositories.Users;
 using viaggia_server.Repositories.Auth;
 using viaggia_server.Repositories.CommodityRepository;
 using viaggia_server.Repositories.HotelRepository;
+using viaggia_server.Services.Email;
 using viaggia_server.Services.HotelServices;
 using viaggia_server.Services.ImageService;
 using viaggia_server.Swagger;
+using viaggia_server.Services;
+using viaggia_server.Services.Payment;
+using viaggia_server.Services.ReservationServices;
 using viaggia_server.Validators;
-using viaggia_server.Services.Email;
+using viaggia_server.Services.Reserves;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -86,13 +90,17 @@ builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IImageService, ImageService>();
 builder.Services.AddScoped<IPackageRepository, PackageRepository>();
+builder.Services.AddScoped<IHotelServices, HotelServices>();
 builder.Services.AddScoped<IHotelRepository, HotelRepository>();
+builder.Services.AddScoped<IReserveRepository, ReserveRepository>();
+
+builder.Services.AddScoped<IReservesService, ReservesService>();
+builder.Services.AddScoped<IStripePaymentService, StripePaymentService>();
 builder.Services.AddScoped<ICommodityRepository, CommodityRepository>();
 builder.Services.AddScoped<ICustomCommodityRepository, CustomCommodityRepository>();
 builder.Services.AddScoped<IAuthRepository, AuthRepository>();
 builder.Services.AddScoped<IGoogleAccountRepository, GoogleAccountRepository>();
 builder.Services.AddScoped<IReviewRepository, ReviewRepository>();
-builder.Services.AddScoped<IReserveRepository, ReserveRepository>();
 //Services
 builder.Services.AddScoped<IHotelServices, HotelServices>();
 builder.Services.AddScoped<IEmailService, EmailService>();
@@ -101,6 +109,8 @@ builder.Services.AddScoped<Stripe.CustomerService>();
 builder.Services.AddScoped<Stripe.ChargeService>();
 builder.Services.AddScoped<Stripe.PaymentIntentService>();
 builder.Services.AddScoped<Stripe.ProductService>();
+
+
 
 // Configure Stripe
 StripeConfiguration.ApiKey = builder.Configuration["Stripe:SecretKey"];
@@ -120,10 +130,10 @@ builder.Services.AddLogging(logging =>
 builder.Services.AddHttpContextAccessor();
 
 // Configure authentication (JWT and Google OAuth)
-builder.Services.AddAuthentication(options =>
+ builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-    options.DefaultChallengeScheme = GoogleDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
 })
 .AddJwtBearer(options =>
 {
@@ -181,12 +191,14 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
-        policy.WithOrigins(
-                "http://localhost:5173",
-                "https://your-production-frontend.com"
-            ).AllowAnyOrigin()
-                .AllowAnyHeader()
-                .AllowAnyMethod();
+        //policy.WithOrigins(
+        //        "http://localhost:5173",
+        //        "https://your-production-frontend.com"
+        //    )
+        policy.AllowAnyOrigin()
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+
     });
 });
 
@@ -200,6 +212,7 @@ builder.Services.Configure<KestrelServerOptions>(options =>
     options.Limits.MaxRequestBodySize = 5 * 1024 * 1024; // 5MB
 });
 
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -209,7 +222,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "Viaggia Server API v1"));
 }
 
-app.UseStaticFiles();
+
+
 app.UseHttpsRedirection();
 app.UseStaticFiles(); // For serving images in wwwroot
 app.UseCors("AllowFrontend");

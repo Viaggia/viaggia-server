@@ -1,18 +1,20 @@
-﻿
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using viaggia_server.Data;
 using viaggia_server.DTOs.Auth;
 using viaggia_server.Models.Users;
+using viaggia_server.Repositories.Users;
 
 namespace viaggia_server.Repositories.Auth
 {
     public class GoogleAccountRepository : IGoogleAccountRepository
     {
         private readonly AppDbContext _context;
+        private readonly IUserRepository _userRepository;
 
-        public GoogleAccountRepository(AppDbContext context)
+        public GoogleAccountRepository(AppDbContext context, IUserRepository userRepository)
         {
             _context = context ?? throw new ArgumentNullException(nameof(context));
+            _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
         }
 
         public async Task<User> CreateOrLoginOAuth(OAuthRequest dto)
@@ -22,11 +24,6 @@ namespace viaggia_server.Repositories.Auth
                 .Include(u => u.UserRoles)
                     .ThenInclude(ur => ur.Role)
                 .FirstOrDefaultAsync(u => u.GoogleId == dto.GoogleUid);
-
-            var clientRole = await _context.Roles
-                .FirstOrDefaultAsync(r => r.Name == "CLIENT")
-                ??
-                throw new InvalidOperationException("CLIENT role not found in database."); ;
 
             if (user == null)
             {
@@ -40,16 +37,9 @@ namespace viaggia_server.Repositories.Auth
                     PhoneNumber = dto.PhoneNumber, // Nullable, no default value
                     Password = null, // No password for OAuth users
                     IsActive = true,
-                    CreateDate = DateTime.UtcNow,
-                    UserRoles = new List<UserRole>
-                        {
-                            new UserRole
-                            {
-                                Role = clientRole
-                            }
-                        }
+                    CreateDate = DateTime.UtcNow
                 };
-                await _context.Users.AddAsync(user);
+                user = await _userRepository.CreateWithRoleAsync(user, "CLIENT");
             }
             else
             {
@@ -58,21 +48,23 @@ namespace viaggia_server.Repositories.Auth
                 user.Name = dto.Name;
                 user.AvatarUrl = dto.Picture ?? string.Empty;
 
-                // Verifica se já tem a role CLIENT
-                var hasClientRole = user.UserRoles.Any(ur => ur.RoleId == clientRole.Id);
-
-                if (!hasClientRole)
+                if (!user.UserRoles.Any(ur => ur.Role.Name == "CLIENT"))
                 {
-                    user.UserRoles.Add(new UserRole
+                    var clientRole = await _context.Roles.FirstOrDefaultAsync(r => r.Name == "CLIENT");
+                    if (clientRole != null)
                     {
-                        RoleId = clientRole.Id,
-                        UserId = user.Id
-                    });
+                        await _context.UserRoles.AddAsync(new UserRole
+                        {
+                            UserId = user.Id,
+                            RoleId = clientRole.Id
+                        });
+                        await _context.SaveChangesAsync();
+                    }
                 }
             }
+
             await _context.SaveChangesAsync();
             return user;
-
         }
     }
 }

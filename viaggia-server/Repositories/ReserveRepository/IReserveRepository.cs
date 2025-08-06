@@ -1,5 +1,6 @@
 ﻿using viaggia_server.DTOs.Reserves;
 using viaggia_server.Models.Reserves;
+using viaggia_server.Models.Users;
 
 namespace viaggia_server.Repositories.ReserveRepository
 {
@@ -10,5 +11,6 @@ namespace viaggia_server.Repositories.ReserveRepository
         Task<Reserve> CreateReserveAsync(Reserve reserve);
         Task<Reserve> UpdateAsync(Reserve reserve);
         Task<IEnumerable<Reserve>> GetReserveByUser(int userId);
+        Task<IEnumerable<Reserve>> GetByUserIdAsync(int userId);
     }
 }

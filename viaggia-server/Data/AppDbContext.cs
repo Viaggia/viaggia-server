@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
 using viaggia_server.Models.Commodities;
 using viaggia_server.Models.CustomCommodities;
 using viaggia_server.Models.Hotels;
@@ -61,7 +62,7 @@ namespace viaggia_server.Data
                 .HasMany(p => p.PackageDates)
                 .WithOne(pd => pd.Package)
                 .HasForeignKey(pd => pd.PackageId)
-                .OnDelete(DeleteBehavior.Cascade);
+                .OnDelete(DeleteBehavior.Cascade); // Enable cascade delete
 
             modelBuilder.Entity<Package>()
                 .HasMany(p => p.Medias)
@@ -148,19 +149,15 @@ namespace viaggia_server.Data
                 .HasForeignKey(cs => cs.CommodityId)
                 .OnDelete(DeleteBehavior.NoAction);
 
-            // Reservation
-            modelBuilder.Entity<Reserve>()
-                .HasOne(r => r.User)
-                .WithMany(u => u.Reserves)
-                .HasForeignKey(r => r.UserId)
-                .OnDelete(DeleteBehavior.NoAction);
+            modelBuilder.Entity<ReserveRoom>()
+                .HasOne(rr => rr.Reserve)
+                .WithMany(r => r.ReserveRooms)
+                .HasForeignKey(rr => rr.ReserveId);
 
-            modelBuilder.Entity<Reserve>()
-                .HasOne(r => r.HotelRoomType)
+            modelBuilder.Entity<ReserveRoom>()
+                .HasOne(rr => rr.RoomType)
                 .WithMany()
-                .HasForeignKey(r => r.RoomTypeId)
-                .IsRequired(false)
-                .OnDelete(DeleteBehavior.NoAction);
+                .HasForeignKey(rr => rr.RoomTypeId);
 
             // Review
             modelBuilder.Entity<Review>()
@@ -183,10 +180,11 @@ namespace viaggia_server.Data
                 entity.Property(rt => rt.Id).ValueGeneratedOnAdd();
                 entity.Property(rt => rt.Token).HasColumnType("nvarchar(max)").IsRequired();
                 entity.Property(rt => rt.RevokedAt).IsRequired();
-                entity.Property(rt => rt.ExpiryDate).IsRequired(false);
+                entity.Property(rt => rt.ExpiryDate).IsRequired(false); 
             });
 
-            // Media
+
+            // Configuration for Media
             modelBuilder.Entity<Media>()
                 .ToTable(t => t.HasCheckConstraint("CK_Media_OneEntity",
                     "([PackageId] IS NOT NULL AND [HotelId] IS NULL) OR ([PackageId] IS NULL AND [HotelId] IS NOT NULL)"));

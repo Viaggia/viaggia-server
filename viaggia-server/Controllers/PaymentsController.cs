@@ -29,11 +29,11 @@ namespace viaggia_server.Controllers
         }
 
         [HttpPost("create-payment-intent")]
-        public async Task<IActionResult> CreatePaymentIntent([FromBody] ReserveCreateDTO createReserve)
+        public async Task<IActionResult> CreatePaymentIntent([FromBody] ReserveCreateDTO createReservation)
         {
             try
             {
-                var session = await _stripePaymentService.CreatePaymentIntentAsync(createReserve);
+                var session = await _stripePaymentService.CreatePaymentIntentAsync(createReservation);
 
                 if (session == null)
                 {
