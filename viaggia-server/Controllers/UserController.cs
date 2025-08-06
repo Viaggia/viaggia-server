@@ -169,7 +169,7 @@ namespace viaggia_server.Controllers
         }
 
         [HttpPost("admin")]
-        [Authorize(Roles = "ADMIN")] 
+        //[Authorize(Roles = "ADMIN")] 
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)] 
