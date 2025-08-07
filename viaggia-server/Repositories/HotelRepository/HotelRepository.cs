@@ -1,5 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Stripe;
 using viaggia_server.Data;
+using viaggia_server.DTOs.Hotel;
 using viaggia_server.Models.Commodities;
 using viaggia_server.Models.CustomCommodities;
 using viaggia_server.Models.Hotels;
@@ -95,11 +97,15 @@ namespace viaggia_server.Repositories.HotelRepository
                 .Where(rt => rt.HotelId == hotelId && rt.IsActive)
                 .ToListAsync();
         }
-
         public async Task<HotelRoomType?> GetRoomTypeByIdAsync(int roomTypeId)
         {
             return await _context.RoomTypes
                 .FirstOrDefaultAsync(rt => rt.RoomTypeId == roomTypeId && rt.IsActive);
+        }
+        public async Task UpdateRoomTypeAsync(HotelRoomType roomType)
+        {
+            _context.RoomTypes.Update(roomType);
+            await _context.SaveChangesAsync();
         }
 
         public async Task<bool> UpdateRoomAvailabilityAsync(int roomTypeId, int roomsToReserve)
@@ -146,21 +152,21 @@ namespace viaggia_server.Repositories.HotelRepository
             return false;
         }
 
-        public async Task<Review> AddReviewAsync(Review review)
+        public async Task<Models.Reviews.Review> AddReviewAsync(Models.Reviews.Review review)
         {
             await _context.Reviews.AddAsync(review);
             await _context.SaveChangesAsync();
             return review;
         }
 
-        public async Task<IEnumerable<Review>> GetReviewsByHotelIdAsync(int hotelId)
+        public async Task<IEnumerable<Models.Reviews.Review>> GetReviewsByHotelIdAsync(int hotelId)
         {
             return await _context.Reviews
                 .Where(r => r.HotelId == hotelId && r.IsActive)
                 .ToListAsync();
         }
 
-        public async Task<Review?> GetReviewByIdAsync(int reviewId)
+        public async Task<Models.Reviews.Review?> GetReviewByIdAsync(int reviewId)
         {
             return await _context.Reviews
                 .FirstOrDefaultAsync(r => r.ReviewId == reviewId && r.IsActive);
@@ -267,18 +273,20 @@ namespace viaggia_server.Repositories.HotelRepository
                 var availableRoomTypes = new List<HotelRoomType>();
                 foreach (var roomType in roomTypes)
                 {
-                    // Count reserved rooms for this room type in the date range
                     var reservedRooms = reservations
-                        .Where(r => r.RoomTypeId == roomType.RoomTypeId)
-                        .Sum(r => r.NumberOfRooms);
+                        .SelectMany(r => r.ReserveRooms)
+                        .Where(rr => rr.RoomTypeId == roomType.RoomTypeId)
+                        .Sum(rr => rr.Quantity);
 
                     var availableRooms = roomType.TotalRooms - reservedRooms;
+
                     if (availableRooms > 0)
                     {
                         roomType.AvailableRooms = availableRooms;
                         availableRoomTypes.Add(roomType);
                     }
                 }
+
 
                 _logger.LogInformation("Found {Count} available room types for HotelId: {HotelId}", availableRoomTypes.Count, hotelId);
                 return availableRoomTypes;
@@ -350,8 +358,10 @@ namespace viaggia_server.Repositories.HotelRepository
                     {
                         // Count reserved rooms for this room type in the date range
                         var reservedRooms = reservations
-                            .Where(r => r.HotelId == hotel.HotelId && r.RoomTypeId == roomType.RoomTypeId)
-                            .Sum(r => r.NumberOfRooms);
+                            .SelectMany(r => r.ReserveRooms)
+                            .Where(rr => rr.RoomTypeId == roomType.RoomTypeId)
+                            .Sum(rr => rr.Quantity);
+
 
                         var availableRooms = roomType.TotalRooms - reservedRooms;
                         if (availableRooms >= numberOfRooms)
@@ -381,7 +391,6 @@ namespace viaggia_server.Repositories.HotelRepository
         {
             return await _context.Hotels
                 .Include(h => h.RoomTypes)
-                .Include(h => h.HotelDates)
                 .Include(h => h.Medias)
                 .Include(h => h.Reviews)
                 .Include(h => h.Packages)
@@ -425,6 +434,56 @@ namespace viaggia_server.Repositories.HotelRepository
                 .Include(r => r.Hotel)
                 .ToListAsync();
         }
-    }
 
+            public async Task<List<HotelBalanceDTO>> GetBalancesHotelsAsync()
+            {
+                try
+                {
+                    var chargeService = new ChargeService();
+                    var options = new ChargeListOptions
+                    {
+                        Limit = 100,
+                    };
+
+                    // Auto-paging to retrieve all charges
+                    var allCharges = chargeService.ListAutoPagingAsync(options);
+
+                    var hotelPayments = new Dictionary<int, long>();
+
+                    await foreach (var charge in allCharges)
+                    {
+                        if (!charge.Paid || !charge.Metadata.ContainsKey("hotelId"))
+                            continue;
+
+                        if (int.TryParse(charge.Metadata["hotelId"], out var hotelId))
+                        {
+                            if (!hotelPayments.ContainsKey(hotelId))
+                                hotelPayments[hotelId] = 0;
+
+                            hotelPayments[hotelId] += charge.Amount;
+                        }
+                    }
+
+                    var hotelIds = hotelPayments.Keys.ToList();
+
+                    var hoteis = await _context.Hotels
+                        .Where(h => hotelIds.Contains(h.HotelId))
+                        .ToListAsync();
+
+                    var resultado = hoteis.Select(h => new HotelBalanceDTO
+                    {
+                        HotelName = h.Name,
+                        TotalBalance = hotelPayments.ContainsKey(h.HotelId) ? hotelPayments[h.HotelId] / 100.0 : 0
+                    }).ToList();
+                _logger.LogInformation("resultado: {resultado}", resultado);
+                    return resultado;
+                }
+                catch (Exception ex)
+                {
+                    throw new Exception("Erro ao buscar os saldos dos hotéis: " + ex.Message, ex);
+                }
+            }
+
+
+    }
 }

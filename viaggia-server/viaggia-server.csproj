@@ -28,6 +28,8 @@
 
   <ItemGroup>
 
+    <Folder Include="Migrations\" />
+
     <Folder Include="wwwroot\Uploads\Avatars\" />
     <Folder Include="wwwroot\Uploads\Hotels\" />
 

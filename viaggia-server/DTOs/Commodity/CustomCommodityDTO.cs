@@ -1,11 +1,9 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace viaggia_server.DTOs.Commodity
 {
-
     public class CustomCommodityDTO
     {
-
         public int CustomCommodityId { get; set; }
         // Nome do hotel associado ao serviço
         [Required(ErrorMessage = "HotelName is required.")]
@@ -19,7 +17,9 @@ namespace viaggia_server.DTOs.Commodity
         // Indica se o serviço é gratuito ou pago
         public bool IsPaid { get; set; }
 
-        public decimal? Price { get; set; }
+        // Preço do serviço
+        [Range(0, double.MaxValue, ErrorMessage = "Price must be greater than or equal to 0.")]
+        public decimal Price { get; set; }
 
         // Descrição do serviço (opcional)
         [StringLength(250, ErrorMessage = "Description cannot exceed 250 characters.")]
@@ -28,8 +28,8 @@ namespace viaggia_server.DTOs.Commodity
         // Indica se o serviço está ativo
         public bool IsActive { get; set; } = true;
 
-        public int CommoditieId { get; set; }
 
+        public int CommodityId { get; set; }
         public int HotelId { get; set; }
 
         public int CommoditieServicesId { get; set; }

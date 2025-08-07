@@ -1,4 +1,5 @@
-﻿using viaggia_server.Models.Commodities;
+﻿using viaggia_server.DTOs.Hotel;
+using viaggia_server.Models.Commodities;
 using viaggia_server.Models.CustomCommodities;
 using viaggia_server.Models.Hotels;
 using viaggia_server.Models.Medias;
@@ -34,11 +35,14 @@ namespace viaggia_server.Repositories.HotelRepository
         //Task<Review?> GetReviewByIdAsync(int reviewId);
         //Task<Package> AddPackageAsync(Package package);
         //Task<HotelRoomType?> GetRoomTypeByIdAsync(int roomTypeId);
-        //Task<bool> UpdateRoomAvailabilityAsync(int roomTypeId, int roomsToReserve);
+        Task<bool> UpdateRoomAvailabilityAsync(int roomTypeId, int roomsToReserve);
         //Task<Media?> GetMediaByIdAsync(int mediaId);
         //Task<bool> SoftDeleteMediaAsync(int mediaId);
-        //Task<Review> AddReviewAsync(Review review);
+        Task<Review> AddReviewAsync(Review review);
+        Task<List<HotelBalanceDTO>> GetBalancesHotelsAsync();
 
+        Task UpdateRoomTypeAsync(HotelRoomType roomType);
+        Task<HotelRoomType?> GetRoomTypeByIdAsync(int roomTypeId);
         Task<Hotel?> GetHotelByIdWithDetailsAsync(int hotelId);
         Task<IEnumerable<HotelRoomType>> GetAvailableRoomTypesAsync(int hotelId, int numberOfPeople, DateTime checkInDate, DateTime checkOutDate);
         Task<IEnumerable<Hotel>> GetHotelsByUserIdAsync(int userId);

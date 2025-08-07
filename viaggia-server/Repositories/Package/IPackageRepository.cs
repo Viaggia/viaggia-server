@@ -1,4 +1,5 @@
-﻿using viaggia_server.Models.Medias;
+﻿using viaggia_server.DTOs.Packages;
+using viaggia_server.Models.Medias;
 using viaggia_server.Models.Packages;
 
 namespace viaggia_server.Repositories
