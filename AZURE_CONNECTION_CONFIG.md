@@ -23,7 +23,22 @@ DB_AUTH_PARAM=MultipleActiveResultSets=False;Persist Security Info=False
 
 Also available in `.env` file:
 ```env
-AZURE_CONNECTION_STRING=Server=tcp:viaggiasqlserver.database.windows.net,1433;Initial Catalog=viaggia-db;Persist Security Info=False;User ID=viaggiaadmin;Password=Viaggia@123password;MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;
+# Azure SQL Database Configuration
+# REPLACE ALL VALUES BELOW WITH YOUR ACTUAL CREDENTIALS
+
+# Individual connection parameters
+DB_HOST=tcp:YOUR_SQL_SERVER.database.windows.net,1433
+DB_NAME=YOUR_DATABASE_NAME  
+DB_USER=YOUR_USERNAME
+DB_PASSWORD=YOUR_PASSWORD
+
+# Full connection string format (for direct use in Azure App Service)
+# Application Settings → Connection Strings → Add new connection string
+# Name: DefaultConnection
+# Value: (use the string below with YOUR actual values)
+# Type: SQLServer
+
+AZURE_CONNECTION_STRING=Server=tcp:YOUR_SQL_SERVER.database.windows.net,1433;Initial Catalog=YOUR_DATABASE_NAME;Persist Security Info=False;User ID=YOUR_USERNAME;Password=YOUR_PASSWORD;MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;
 ```
 
 ### Connection String Resolution

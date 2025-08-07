@@ -40,6 +40,19 @@ docker/.env.*
 docker/.env.development
 docker/.env.production
 
+# Configuration files with sensitive data
+appsettings.*.json
+appsettings.Production.json
+appsettings.Development.json
+*connection*.json
+*secrets*.json
+*credentials*.json
+
+# Any file with actual production values
+*ACTUAL*.md
+*PRODUCTION*.md
+*SECRETS*.md
+
 # Docker files adicionais
 docker-compose.override.yml
 docker-compose.override.*.yml

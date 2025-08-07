@@ -10,7 +10,7 @@ cd ../viaggia-server
 export PATH="$PATH:/home/victorhpmelo/.dotnet/tools"
 
 echo "📋 Connection details:"
-echo "Server: tcp:viaggiasqlserver.database.windows.net,1433"
+echo "Server: tcp:YOUR_SQL_SERVER.database.windows.net,1433"
 echo "Database: viaggia-db"
 echo "User: viaggia_admin"
 echo "Password: ViaggiaAzure123!"
