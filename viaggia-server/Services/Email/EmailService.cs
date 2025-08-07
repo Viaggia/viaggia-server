@@ -4,18 +4,23 @@ using System.Net.Mail;
 using System.Net;
 using System.Net;
 using viaggia_server.Models.Reserves;
+using viaggia_server.Repositories.HotelRepository;
+using viaggia_server.Repositories;
+using viaggia_server.Models.Hotels;
 
 namespace viaggia_server.Services.Email
 {
     public class EmailService : IEmailService
     {
         private readonly IConfiguration _configuration;
+        private readonly IRepository<Hotel> repository;
         private readonly ILogger<EmailService> _logger;
         private readonly IWebHostEnvironment _environment;
 
-        public EmailService(IConfiguration configuration, ILogger<EmailService> logger, IWebHostEnvironment environment)
+        public EmailService(IConfiguration configuration, ILogger<EmailService> logger, IWebHostEnvironment environment, IRepository<Hotel> hotelRepository)
         {
             _environment = environment;
+            repository = hotelRepository;
             _configuration = configuration;
             _logger = logger;
         }
@@ -189,14 +194,18 @@ namespace viaggia_server.Services.Email
                 throw new FileNotFoundException();
             }
 
+            var hotel = await repository.GetByIdAsync(Convert.ToInt32(reserve.HotelId));
+
             var templateContent = await File.ReadAllTextAsync(templatePath);
 
             var htmlContent = templateContent
                 .Replace("{{UserName}}", reserve.User.Name)
                 .Replace("{{NomeHotel}}", reserve.Hotel.Name)
                 .Replace("{{ReservaId}}", reserve.ReserveId.ToString())
-                .Replace("{{CheckIn}}", reserve.CheckInDate.ToString())
-                .Replace("{{CheckOut}}", reserve.CheckOutDate.ToString())
+                .Replace("{{CheckInDate}}", reserve.CheckInDate.ToString())
+                .Replace("{{CheckOutDate}}", reserve.CheckOutDate.ToString())
+                .Replace("{{CheckInDate}}", hotel.CheckInTime.ToString())
+                .Replace("{{CheckOut}}", hotel.CheckOutTime.ToString())
                 .Replace("{{HotelEmail}}", reserve.Hotel.ContactEmail)
                 .Replace("{{HotelPhone}}", reserve.Hotel.ContactPhone);
 

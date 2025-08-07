@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.Tokens;
 using Stripe;
 using Stripe.Checkout;
 using System.Globalization;
@@ -6,6 +7,7 @@ using System.Text.Json;
 using viaggia_server.DTOs.Hotel;
 using viaggia_server.DTOs.Reserves;
 using viaggia_server.Models.Hotels;
+using viaggia_server.Models.Packages;
 using viaggia_server.Models.Reserves;
 using viaggia_server.Models.Users;
 using viaggia_server.Repositories;
@@ -20,7 +22,9 @@ namespace viaggia_server.Services.Payment
         private readonly IConfiguration _configuration;
         private readonly IHotelRepository _hotelRepository;
         private readonly IUserRepository _userRepository;
+        private readonly IEmailService _emailService;
         private readonly IRepository<Reserve> _reservations;
+        private readonly IRepository<Package> _package;
         private readonly ILogger<StripePaymentService> _logger;
         private readonly string _stripeSecretKey;
         private readonly string _stripeWebhookSecret;
@@ -29,12 +33,16 @@ namespace viaggia_server.Services.Payment
             IConfiguration configuration,
             IUserRepository userRepository,
             IHotelRepository hotelRepository,
+            IEmailService emailService,
             IRepository<Reserve> reservations,
+            IRepository<Package> package,
             ILogger<StripePaymentService> logger
         )
         {
             _configuration = configuration;
             _reservations = reservations;
+            _package = package;
+            _emailService = emailService;
             _hotelRepository = hotelRepository;
             _userRepository = userRepository;
             _logger = logger;
@@ -60,9 +68,12 @@ namespace viaggia_server.Services.Payment
                     throw new ArgumentException("TotalPrice deve ser maior que zero.");
                 }
 
-                var productName = $"Reserva para o id {createReserve.UserId}";
-                _logger.LogInformation("Nome do produto: {ProductName}", productName);
+                var name = await _userRepository.GetByIdAsync(createReserve.UserId);
+                var package = await _package.GetByIdAsync(Convert.ToInt32(createReserve.PackageId));
+                var description = package?.Description ?? "Descrição não disponível";
 
+                var productName = $"Reserva para o cliente: {name}";
+                _logger.LogInformation("Nome do produto: {ProductName}", productName);
                 var amount = (long)(total * 100);
                 _logger.LogInformation("Valor que vai para priceOptions {Amount}", amount);
 
@@ -73,6 +84,7 @@ namespace viaggia_server.Services.Payment
                     ProductData = new PriceProductDataOptions
                     {
                         Name = productName,
+                        StatementDescriptor = description,
                     }
                 };
 
@@ -185,6 +197,8 @@ namespace viaggia_server.Services.Payment
                             TotalPrice = decimal.Parse(session.Metadata["TotalPrice"]),
                             ReserveRooms = reserveRooms
                         };
+
+                        await _emailService.SendApprovedReserve(reservation);
 
                         await _reservations.AddAsync(reservation);
                         await _reservations.SaveChangesAsync();

@@ -1,4 +1,5 @@
-﻿using viaggia_server.Models.Medias;
+﻿using viaggia_server.DTOs.Packages;
+using viaggia_server.Models.Medias;
 using viaggia_server.Models.Packages;
 
 namespace viaggia_server.Repositories
@@ -14,7 +15,6 @@ namespace viaggia_server.Repositories
         Task<IEnumerable<Package>> SearchPackagesByDestinationAndDateAsync(string destination, DateTime startDate, DateTime endDate);
         Task<bool> ReactivateAsync(int packageId);
         Task<int?> GetHotelIdByNameAsync(string hotelName);
-
         Task<IEnumerable<Package>> GetByHotelIdAsync(int hotelId);
 
     }

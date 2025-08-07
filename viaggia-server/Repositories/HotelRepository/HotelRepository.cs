@@ -434,48 +434,55 @@ namespace viaggia_server.Repositories.HotelRepository
                 .ToListAsync();
         }
 
-        public async Task<List<HotelBalanceDTO>> GetBalancesHotelsAsync()
-        {
-            try
+            public async Task<List<HotelBalanceDTO>> GetBalancesHotelsAsync()
             {
-                var chargeService = new ChargeService();
-                var options = new ChargeListOptions
+                try
                 {
-                    Limit = 100
-                };
-
-                var charges = await chargeService.ListAsync(options);
-
-                var hotelPayments = charges.Data
-                    .Where(c => c.Paid && c.Metadata.ContainsKey("hotelId"))
-                    .Select(c =>
+                    var chargeService = new ChargeService();
+                    var options = new ChargeListOptions
                     {
-                        var success = int.TryParse(c.Metadata["hotelId"], out var id);
-                        return new { Success = success, Id = id, Amount = c.Amount };
-                    })
-                    .Where(x => x.Success)
-                    .GroupBy(x => x.Id)
-                    .ToDictionary(g => g.Key, g => g.Sum(x => x.Amount));
+                        Limit = 100,
+                    };
 
-                var hotelIds = hotelPayments.Keys.ToList();
+                    // Auto-paging to retrieve all charges
+                    var allCharges = chargeService.ListAutoPagingAsync(options);
 
-                var hoteis = await _context.Hotels
-                    .Where(h => hotelIds.Contains(h.HotelId))
-                    .ToListAsync();
+                    var hotelPayments = new Dictionary<int, long>();
 
-                var resultado = hoteis.Select(h => new HotelBalanceDTO
+                    await foreach (var charge in allCharges)
+                    {
+                        if (!charge.Paid || !charge.Metadata.ContainsKey("hotelId"))
+                            continue;
+
+                        if (int.TryParse(charge.Metadata["hotelId"], out var hotelId))
+                        {
+                            if (!hotelPayments.ContainsKey(hotelId))
+                                hotelPayments[hotelId] = 0;
+
+                            hotelPayments[hotelId] += charge.Amount;
+                        }
+                    }
+
+                    var hotelIds = hotelPayments.Keys.ToList();
+
+                    var hoteis = await _context.Hotels
+                        .Where(h => hotelIds.Contains(h.HotelId))
+                        .ToListAsync();
+
+                    var resultado = hoteis.Select(h => new HotelBalanceDTO
+                    {
+                        HotelName = h.Name,
+                        TotalBalance = hotelPayments.ContainsKey(h.HotelId) ? hotelPayments[h.HotelId] / 100.0 : 0
+                    }).ToList();
+                _logger.LogInformation("resultado: {resultado}", resultado);
+                    return resultado;
+                }
+                catch (Exception ex)
                 {
-                    HotelName = h.Name,
-                    TotalBalance = hotelPayments[h.HotelId] / 100.0
-                }).ToList();
+                    throw new Exception("Erro ao buscar os saldos dos hotéis: " + ex.Message, ex);
+                }
+            }
 
-                return resultado;
-            }
-            catch (Exception ex)
-            {
-                throw new Exception(ex.Message);
-            }
-        }
 
     }
 }
