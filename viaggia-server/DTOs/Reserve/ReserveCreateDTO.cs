@@ -1,4 +1,6 @@
-﻿namespace viaggia_server.DTOs.Reserves
+﻿using viaggia_server.Models.Users;
+
+namespace viaggia_server.DTOs.Reserves
 {
     public class ReserveCreateDTO
     {
@@ -12,5 +14,6 @@
         public int NumberOfGuests { get; set; }
         public string Status { get; set; } = string.Empty;
         public bool IsActive { get; set; } = true;
+
     }
 }

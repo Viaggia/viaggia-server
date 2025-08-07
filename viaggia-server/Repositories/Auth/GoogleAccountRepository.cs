@@ -9,17 +9,17 @@ namespace viaggia_server.Repositories.Auth
     public class GoogleAccountRepository : IGoogleAccountRepository
     {
         private readonly AppDbContext _context;
-        private readonly IUserRepository _userRepository;
+        private readonly ILogger<GoogleAccountRepository> _logger; // Add logger
 
-        public GoogleAccountRepository(AppDbContext context, IUserRepository userRepository)
+        public GoogleAccountRepository(AppDbContext context, ILogger<GoogleAccountRepository> logger)
         {
             _context = context ?? throw new ArgumentNullException(nameof(context));
-            _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
-
         public async Task<User> CreateOrLoginOAuth(OAuthRequest dto)
         {
-            // Tenta encontrar o usuário pelo GoogleId
+            _logger.LogInformation("Processing OAuth request for GoogleUid: {GoogleUid}, Email: {Email}", dto.GoogleUid, dto.Email);
+
             var user = await _context.Users
                 .Include(u => u.UserRoles)
                     .ThenInclude(ur => ur.Role)
@@ -27,43 +27,49 @@ namespace viaggia_server.Repositories.Auth
 
             if (user == null)
             {
-                // Cria um novo usuário
+                var clientRole = await _context.Roles.FirstOrDefaultAsync(r => r.Name == "CLIENT");
+                if (clientRole == null)
+                {
+                    _logger.LogError("CLIENT role not found in database.");
+                    throw new InvalidOperationException("CLIENT role not found in database.");
+                }
+
                 user = new User
                 {
                     GoogleId = dto.GoogleUid,
                     Email = dto.Email,
                     Name = dto.Name,
                     AvatarUrl = dto.Picture ?? string.Empty,
-                    PhoneNumber = dto.PhoneNumber, // Nullable, no default value
-                    Password = null, // No password for OAuth users
+                    PhoneNumber = dto.PhoneNumber,
+                    Password = null,
                     IsActive = true,
-                    CreateDate = DateTime.UtcNow
+                    CreateDate = DateTime.UtcNow,
+                    UserRoles = new List<UserRole>
+                    {
+                        new UserRole
+                        {
+                            RoleId = clientRole.Id,
+                            Role = clientRole
+                        }
+                    }
                 };
-                user = await _userRepository.CreateWithRoleAsync(user, "CLIENT");
+                await _context.Users.AddAsync(user);
+                _logger.LogInformation("Created new user with ID: {UserId}, Role: CLIENT", user.Id);
             }
             else
             {
-                // Atualiza os dados do usuário existente
                 user.Email = dto.Email;
                 user.Name = dto.Name;
                 user.AvatarUrl = dto.Picture ?? string.Empty;
-
-                if (!user.UserRoles.Any(ur => ur.Role.Name == "CLIENT"))
-                {
-                    var clientRole = await _context.Roles.FirstOrDefaultAsync(r => r.Name == "CLIENT");
-                    if (clientRole != null)
-                    {
-                        await _context.UserRoles.AddAsync(new UserRole
-                        {
-                            UserId = user.Id,
-                            RoleId = clientRole.Id
-                        });
-                        await _context.SaveChangesAsync();
-                    }
-                }
+                _logger.LogInformation("Updated existing user with ID: {UserId}", user.Id);
             }
 
             await _context.SaveChangesAsync();
+
+            // Log roles for debugging
+            var roles = user.UserRoles.Select(ur => ur.Role.Name).ToList();
+            _logger.LogInformation("User {UserId} has roles: {Roles}", user.Id, string.Join(", ", roles));
+
             return user;
         }
     }

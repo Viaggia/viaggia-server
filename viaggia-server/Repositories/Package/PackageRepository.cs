@@ -117,5 +117,15 @@ namespace viaggia_server.Repositories
                 .Include(p => p.Hotel)
                 .ToListAsync();
         }
+
+        public async Task<IEnumerable<Package>> GetByUserIdAsync(int userId)
+        {
+            return await _context.Packages
+                .Where(p => p.UserId == userId && p.IsActive)
+                .Include(p => p.Hotel)
+                .Include(p => p.Medias)
+                .Include(p => p.PackageDates)
+                .ToListAsync();
+        }
     }
 }

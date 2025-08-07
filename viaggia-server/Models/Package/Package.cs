@@ -3,6 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 using viaggia_server.Models.Hotels;
 using viaggia_server.Models.Medias;
 using viaggia_server.Models.Reserves;
+using viaggia_server.Models.Users;
 using viaggia_server.Repositories;
 
 namespace viaggia_server.Models.Packages
@@ -28,7 +29,12 @@ namespace viaggia_server.Models.Packages
         public int HotelId { get; set; } // New foreign key
 
         [ForeignKey("HotelId")]
-        public virtual Hotel Hotel { get; set; } = null!; // New navigation property
+        public virtual Hotel Hotel { get; set; } = null!;
+
+        public int UserId { get; set; }
+        // Foreign key for User
+        [ForeignKey("UserId")]
+        public virtual User User { get; set; } = null!;
 
         public bool IsActive { get; set; }
 

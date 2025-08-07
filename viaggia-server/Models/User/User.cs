@@ -1,6 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using viaggia_server.Models.Reserves;
 using viaggia_server.Models.Hotels;
+using viaggia_server.Models.Packages;
+using viaggia_server.Models.Reserves;
 using viaggia_server.Repositories;
 
 namespace viaggia_server.Models.Users
@@ -59,5 +60,8 @@ namespace viaggia_server.Models.Users
         // Relationships
         public virtual ICollection<UserRole> UserRoles { get; set; } = new List<UserRole>();
         public virtual ICollection<Reserve> Reserves { get; set; } = new List<Reserve>();
+        public virtual ICollection<Hotel> Hotels { get; set; } = new List<Hotel>();
+        public virtual ICollection<Package> Packages { get; set; } = new List<Package>();
+
     }
 }

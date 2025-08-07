@@ -83,6 +83,12 @@ namespace viaggia_server.Data
                 .HasForeignKey(p => p.HotelId)
                 .OnDelete(DeleteBehavior.NoAction);
 
+            modelBuilder.Entity<Package>()
+                .HasOne(p => p.User)
+                .WithMany(u => u.Packages) // Assuming you add a Packages collection to User
+                .HasForeignKey(p => p.UserId)
+                .OnDelete(DeleteBehavior.NoAction);
+
             // Hotel
             modelBuilder.Entity<Hotel>()
                 .HasMany(h => h.RoomTypes)

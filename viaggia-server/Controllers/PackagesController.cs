@@ -1,12 +1,14 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System.Globalization;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using viaggia_server.DTOs;
 using viaggia_server.DTOs.Packages;
 using viaggia_server.Models.Hotels;
 using viaggia_server.Models.Medias;
 using viaggia_server.Models.Packages;
 using viaggia_server.Repositories;
-using Microsoft.Extensions.Logging;
-using System.Globalization;
 
 namespace viaggia_server.Controllers
 {
@@ -32,6 +34,7 @@ namespace viaggia_server.Controllers
         }
 
         [HttpGet]
+        [Authorize(Roles = "SERVICE_PROVIDER,ADMIN, ATTENDANT,CLIENT")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> GetPackages()
@@ -81,6 +84,7 @@ namespace viaggia_server.Controllers
         }
 
         [HttpGet("{id}")]
+        [Authorize(Roles = "SERVICE_PROVIDER,ADMIN, ATTENDANT")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -133,10 +137,72 @@ namespace viaggia_server.Controllers
             }
         }
 
+        [HttpGet("my-packages")]
+        [Authorize(Roles = "SERVICE_PROVIDER,ADMIN")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> GetMyPackages()
+        {
+            try
+            {
+                // Get authenticated user ID
+                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
+                {
+                    _logger.LogError("User not authenticated for retrieving packages.");
+                    return Unauthorized(new ApiResponse<List<PackageDTO>>(false, "User not authenticated."));
+                }
+
+                var packages = await _packageRepository.GetByUserIdAsync(userId);
+                var packageDTOs = new List<PackageDTO>();
+                foreach (var p in packages)
+                {
+                    var hotel = await _genericRepository.GetByIdAsync<Hotel>(p.HotelId);
+                    packageDTOs.Add(new PackageDTO
+                    {
+                        PackageId = p.PackageId,
+                        Name = p.Name,
+                        Destination = p.Destination,
+                        Description = p.Description,
+                        BasePrice = p.BasePrice,
+                        HotelId = p.HotelId,
+                        HotelName = hotel?.Name ?? string.Empty,
+                        IsActive = p.IsActive,
+                        Medias = p.Medias.Select(m => new MediaDTO
+                        {
+                            MediaId = m.MediaId,
+                            MediaUrl = m.MediaUrl,
+                            MediaType = m.MediaType
+                        }).Distinct().ToList(),
+                        PackageDates = p.PackageDates.Select(pd => new PackageDateDTO
+                        {
+                            PackageDateId = pd.PackageDateId,
+                            StartDate = pd.StartDate.ToString("dd/MM/yyyy"),
+                            EndDate = pd.EndDate.ToString("dd/MM/yyyy")
+                        }).Distinct().ToList()
+                    });
+                }
+
+                _logger.LogInformation("Retrieved {Count} packages for UserId {UserId}", packageDTOs.Count, userId);
+                return Ok(new ApiResponse<List<PackageDTO>>(true, "User packages retrieved successfully.", packageDTOs));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving packages for UserId {UserId}", User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    new ApiResponse<List<PackageDTO>>(false, $"Error retrieving packages: {ex.Message}"));
+            }
+        }
+
         [HttpPost]
+        [Authorize(Roles = "SERVICE_PROVIDER,ADMIN")]
         [Consumes("multipart/form-data")]
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> CreatePackage([FromForm] PackageCreateDTO packageDTO)
         {
@@ -155,6 +221,14 @@ namespace viaggia_server.Controllers
 
             try
             {
+                // Get authenticated user ID
+                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
+                {
+                    _logger.LogError("User not authenticated for package creation.");
+                    return Unauthorized(new ApiResponse<PackageDTO>(false, "User not authenticated."));
+                }
+
                 _logger.LogInformation("Received StartDate: {StartDate}, EndDate: {EndDate}", packageDTO.StartDate, packageDTO.EndDate);
 
                 // Validate file types and sizes
@@ -203,6 +277,7 @@ namespace viaggia_server.Controllers
                     Description = packageDTO.Description,
                     BasePrice = packageDTO.BasePrice,
                     HotelId = hotelId.Value,
+                    UserId = userId, // Set creator
                     IsActive = packageDTO.IsActive,
                     PackageDates = new List<PackageDate>(),
                     Medias = new List<Media>()
@@ -221,8 +296,6 @@ namespace viaggia_server.Controllers
                     IsActive = true
                 };
                 await _packageRepository.AddPackageDateAsync(packageDate);
-                //package.PackageDates.Add(packageDate);
-                _logger.LogInformation("Added PackageDate: PackageId={PackageId}, StartDate={StartDate}, EndDate={EndDate}", package.PackageId, startDate, endDate);
 
                 // Process file uploads
                 var uploadPath = Path.Combine(_environment.WebRootPath, "Uploads", "Packages");
@@ -247,8 +320,6 @@ namespace viaggia_server.Controllers
                             IsActive = true
                         };
                         await _packageRepository.AddMediaAsync(media);
-                        //package.Medias.Add(media);
-                        _logger.LogInformation("Added Media: PackageId={PackageId}, MediaUrl={MediaUrl}", package.PackageId, media.MediaUrl);
                     }
                 }
 
@@ -276,20 +347,24 @@ namespace viaggia_server.Controllers
                     }).Distinct().ToList()
                 };
 
+                _logger.LogInformation("Package created by UserId {UserId}: PackageId {PackageId}", userId, package.PackageId);
                 return CreatedAtAction(nameof(GetPackageById), new { id = package.PackageId },
                     new ApiResponse<PackageDTO>(true, "Package created successfully.", resultDTO));
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error creating package");
+                _logger.LogError(ex, "Error creating package for UserId {UserId}", User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
                 return StatusCode(StatusCodes.Status500InternalServerError,
                     new ApiResponse<PackageDTO>(false, $"Error creating package: {ex.Message}"));
             }
         }
 
         [HttpPut("{id}")]
+        [Authorize(Roles = "SERVICE_PROVIDER,ADMIN")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> UpdatePackage(int id, [FromForm] PackageUpdateDTO packageDTO)
@@ -309,11 +384,24 @@ namespace viaggia_server.Controllers
 
             try
             {
-                _logger.LogInformation("Received StartDate: {StartDate}, EndDate: {EndDate}", packageDTO.StartDate, packageDTO.EndDate);
+                // Get authenticated user ID
+                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
+                {
+                    _logger.LogError("User not authenticated for updating package ID {Id}", id);
+                    return Unauthorized(new ApiResponse<PackageDTO>(false, "User not authenticated."));
+                }
 
                 var package = await _genericRepository.GetByIdAsync(id);
                 if (package == null)
                     return NotFound(new ApiResponse<PackageDTO>(false, $"Package with ID {id} not found."));
+
+                // Check if user owns the package
+                if (package.UserId != userId)
+                {
+                    _logger.LogWarning("User {UserId} attempted to update package ID {Id} owned by UserId {OwnerId}", userId, id, package.UserId);
+                    return Forbid();
+                }
 
                 var hotelId = await _packageRepository.GetHotelIdByNameAsync(packageDTO.HotelName);
                 if (hotelId == null)
@@ -369,7 +457,7 @@ namespace viaggia_server.Controllers
                         IsActive = true
                     };
                     await _packageRepository.AddPackageDateAsync(packageDate);
-                    package.PackageDates.Clear(); // Clear after soft-deleting to avoid relationship issues
+                    package.PackageDates.Clear();
                     package.PackageDates.Add(packageDate);
                     _logger.LogInformation("Added PackageDate for update: PackageId={PackageId}, StartDate={StartDate}, EndDate={EndDate}", package.PackageId, startDate, endDate);
                 }
@@ -377,10 +465,6 @@ namespace viaggia_server.Controllers
                 {
                     _logger.LogWarning("Both StartDate and EndDate must be provided or both must be empty.");
                     return BadRequest(new ApiResponse<PackageDTO>(false, "Both StartDate and EndDate must be provided or both must be empty."));
-                }
-                else
-                {
-                    _logger.LogInformation("No StartDate or EndDate provided; preserving existing dates");
                 }
 
                 // Delete specified medias
@@ -445,19 +529,23 @@ namespace viaggia_server.Controllers
                     }).Distinct().ToList()
                 };
 
+                _logger.LogInformation("Package ID {Id} updated by UserId {UserId}", id, userId);
                 return Ok(new ApiResponse<PackageDTO>(true, "Package updated successfully.", resultDTO));
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error updating package with ID {Id}", id);
+                _logger.LogError(ex, "Error updating package ID {Id} for UserId {UserId}", id, User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
                 return StatusCode(StatusCodes.Status500InternalServerError,
                     new ApiResponse<PackageDTO>(false, $"Error updating package: {ex.Message}"));
             }
         }
 
         [HttpDelete("{id}")]
+        [Authorize(Roles = "SERVICE_PROVIDER,ADMIN")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> SoftDeletePackage(int id)
@@ -467,23 +555,43 @@ namespace viaggia_server.Controllers
 
             try
             {
+                // Get authenticated user ID
+                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
+                {
+                    _logger.LogError("User not authenticated for deleting package ID {Id}", id);
+                    return Unauthorized(new ApiResponse<object>(false, "User not authenticated."));
+                }
+
+                var package = await _genericRepository.GetByIdAsync(id);
+                if (package == null)
+                    return NotFound(new ApiResponse<object>(false, $"Package with ID {id} not found."));
+
+                // Check if user owns the package
+                if (package.UserId != userId)
+                {
+                    _logger.LogWarning("User {UserId} attempted to delete package ID {Id} owned by UserId {OwnerId}", userId, id, package.UserId);
+                    return Forbid();
+                }
+
                 var deleted = await _genericRepository.SoftDeleteAsync(id);
                 if (!deleted)
                     return NotFound(new ApiResponse<object>(false, $"Package with ID {id} not found."));
 
                 await _genericRepository.SaveChangesAsync();
-                _logger.LogInformation("Soft-deleted package with ID {Id}", id);
+                _logger.LogInformation("Soft-deleted package ID {Id} by UserId {UserId}", id, userId);
                 return Ok(new ApiResponse<object>(true, $"Package with ID {id} was deactivated successfully."));
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error deleting package with ID {Id}", id);
+                _logger.LogError(ex, "Error deleting package ID {Id} for UserId {UserId}", id, User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
                 return StatusCode(StatusCodes.Status500InternalServerError,
                     new ApiResponse<object>(false, $"Error deleting package: {ex.Message}"));
             }
         }
 
         [HttpPatch("{id}/reactivate")]
+        [Authorize(Roles = "SERVICE_PROVIDER,ADMIN")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
