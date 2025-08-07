@@ -1,0 +1,41 @@
+# Use the official ASP.NET Core runtime as base image
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
+WORKDIR /app
+EXPOSE 8080
+
+# Use the SDK image to build the application
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+WORKDIR /src
+
+# Copy csproj and restore dependencies
+COPY ["viaggia-server/viaggia-server.csproj", "viaggia-server/"]
+RUN dotnet restore "viaggia-server/viaggia-server.csproj"
+
+# Copy the rest of the source code
+COPY . .
+WORKDIR "/src/viaggia-server"
+
+# Build the application
+RUN dotnet build "viaggia-server.csproj" -c Release -o /app/build
+
+# Publish the application
+FROM build AS publish
+RUN dotnet publish "viaggia-server.csproj" -c Release -o /app/publish /p:UseAppHost=false
+
+# Final stage/image
+FROM base AS final
+WORKDIR /app
+
+# Copy published application
+COPY --from=publish /app/publish .
+
+# Create directory for local uploads (fallback)
+RUN mkdir -p /app/wwwroot/uploads && \
+    chmod 755 /app/wwwroot/uploads
+
+# Set environment variables
+ENV ASPNETCORE_ENVIRONMENT=Production
+ENV ASPNETCORE_URLS=http://+:8080
+
+# Set the entry point
+ENTRYPOINT ["dotnet", "viaggia-server.dll"]

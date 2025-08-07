@@ -39,5 +39,33 @@ namespace viaggia_server.Services.ImageService
             // Retorna a URL relativa para a imagem
             return $"/avatars/{fileName}";
         }
+
+        public async Task<bool> DeleteImageAsync(string imageUrl)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(imageUrl))
+                    return false;
+
+                // Extract filename from URL
+                var fileName = Path.GetFileName(imageUrl);
+                var uploadsFolder = Path.Combine(_environment.WebRootPath, "avatars");
+                var filePath = Path.Combine(uploadsFolder, fileName);
+
+                if (File.Exists(filePath))
+                {
+                    File.Delete(filePath);
+                    _logger.LogInformation("Deleted local file: {FilePath}", filePath);
+                    return true;
+                }
+
+                return false;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error deleting local image file: {ImageUrl}", imageUrl);
+                return false;
+            }
+        }
     }
 }

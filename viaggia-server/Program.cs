@@ -1,4 +1,5 @@
 using System.Text;
+using Azure.Storage.Blobs;
 using FluentValidation;
 using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Authentication;
@@ -85,10 +86,27 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"),
     sqlOptions => sqlOptions.CommandTimeout(60)));
 
+// Configure Azure Blob Storage
+builder.Services.AddSingleton(x =>
+{
+    var connectionString = builder.Configuration.GetConnectionString("AzureBlobStorage");
+    return new BlobServiceClient(connectionString);
+});
+
 // Repositories
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 builder.Services.AddScoped<IUserRepository, UserRepository>();
-builder.Services.AddScoped<IImageService, ImageService>();
+
+// Image Service - Use Azure Blob Storage in production, local storage in development
+if (builder.Environment.IsProduction())
+{
+    builder.Services.AddScoped<IImageService, AzureBlobImageService>();
+}
+else
+{
+    builder.Services.AddScoped<IImageService, ImageService>();
+}
+
 builder.Services.AddScoped<IPackageRepository, PackageRepository>();
 builder.Services.AddScoped<IHotelServices, HotelServices>();
 builder.Services.AddScoped<IHotelRepository, HotelRepository>();
@@ -191,13 +209,14 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
-        //policy.WithOrigins(
-        //        "http://localhost:5173",
-        //        "https://your-production-frontend.com"
-        //    )
-        policy.AllowAnyOrigin()
+        var allowedOrigins = builder.Configuration.GetValue<string>("CORS__AllowedOrigins")?
+            .Split(',', StringSplitOptions.RemoveEmptyEntries) ??
+            new[] { "http://localhost:5173", "http://localhost:3000" };
+            
+        policy.WithOrigins(allowedOrigins)
               .AllowAnyHeader()
-              .AllowAnyMethod();
+              .AllowAnyMethod()
+              .AllowCredentials();
 
     });
 });
