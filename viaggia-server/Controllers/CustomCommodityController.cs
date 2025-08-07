@@ -59,7 +59,7 @@ namespace viaggia_server.Controllers
                 IsActive = customCommodity.IsActive,
                 HotelName = customCommodity.Hotel?.Name ?? string.Empty,
                 HotelId = customCommodity.HotelId,
-                CommoditieId = customCommodity.CommodityId
+                CommodityId = customCommodity.CommodityId
             };
             return Ok(new ApiResponse<CustomCommodityDTO>(true, "Comodidade encontrada.", response));
         }
@@ -102,7 +102,7 @@ namespace viaggia_server.Controllers
                 IsActive = created.IsActive,
                 HotelName = hotel.Name,
                 HotelId = created.HotelId,
-                CommoditieId = created.CommodityId
+                CommodityId = created.CommodityId
             };
 
             return CreatedAtAction(nameof(GetById), new { id = created.CustomCommodityId },
@@ -148,7 +148,7 @@ namespace viaggia_server.Controllers
                 IsActive = updated.IsActive,
                 HotelName = hotel.Name,
                 HotelId = updated.HotelId,
-                CommoditieId = updated.CommodityId
+                CommodityId= updated.CommodityId
             };
 
             return Ok(new ApiResponse<CustomCommodityDTO>(true, "Comodidade atualizada com sucesso.", response));

@@ -52,7 +52,7 @@ namespace viaggia_server.DTOs.Hotel
         public bool IsActive { get; set; } = true;
 
         public List<IFormFile>? MediaFiles { get; set; }
-        
+
         [Required(ErrorMessage = "RoomTypesJson is required.")]
         public string RoomTypesJson { get; set; } = null!;
 

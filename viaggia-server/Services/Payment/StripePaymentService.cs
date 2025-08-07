@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Stripe;
 using Stripe.Checkout;
 using System.Globalization;
+using System.Text.Json;
 using viaggia_server.DTOs.Reserves;
 using viaggia_server.Models.Hotels;
 using viaggia_server.Models.Reserves;
@@ -58,7 +59,7 @@ namespace viaggia_server.Services.Payment
                 _logger.LogInformation("Nome do produto: {ProductName}", productName);
 
                 var amount = (long)(total * 100);
-                _logger.LogInformation("Valor que vai para priceOptions{amount}", amount);
+                _logger.LogInformation("Valor que vai para priceOptions {Amount}", amount);
 
                 var priceOptions = new PriceCreateOptions
                 {
@@ -72,34 +73,38 @@ namespace viaggia_server.Services.Payment
 
                 var priceService = new PriceService();
                 var price = await priceService.CreateAsync(priceOptions);
-                _logger.LogInformation("Pre�o criado: {PriceId}", price.Id);
+                _logger.LogInformation("Preço criado: {PriceId}", price.Id);
+
+                // Serializa a lista de quartos (ReserveRooms) para JSON
+                var reserveRoomsJson = JsonSerializer.Serialize(createReserve.ReserveRooms);
 
                 var sessionOptions = new SessionCreateOptions
                 {
                     LineItems = new List<SessionLineItemOptions>
-            {
-                new SessionLineItemOptions
-                {
-                    Price = price.Id,
-                    Quantity = 1,
-                }
-            },
+    {
+        new SessionLineItemOptions
+        {
+            Price = price.Id,
+            Quantity = 1,
+        }
+    },
                     Mode = "payment",
                     SuccessUrl = $"http://localhost:5173/paymentconfirmed",
                     CancelUrl = "http://localhost:5173/paymentcanceled",
                     Metadata = new Dictionary<string, string>
-            {
-                { "userId", createReserve.UserId.ToString() },
-                { "packageId", createReserve.PackageId.ToString() ?? "" },
-                { "roomTypeId", createReserve.RoomTypeId.ToString() },
-                { "hotelId", createReserve.HotelId.ToString() },
-                { "checkInDate", createReserve.CheckInDate.ToString("o") },
-                { "checkOutDate", createReserve.CheckOutDate.ToString( "o") },
-                { "numberOfGuests", createReserve.NumberOfGuests.ToString() },
-                { "status", createReserve.Status.ToString() },
-                { "TotalPrice", total.ToString(CultureInfo.InvariantCulture) },
-            }
+    {
+        { "userId", createReserve.UserId.ToString() },
+        { "packageId", createReserve.PackageId?.ToString() ?? "" },
+        { "hotelId", createReserve.HotelId.ToString() },
+        { "checkInDate", createReserve.CheckInDate.ToString("o") },
+        { "checkOutDate", createReserve.CheckOutDate.ToString("o") },
+        { "numberOfGuests", createReserve.NumberOfGuests.ToString() },
+        { "status", createReserve.Status.ToString() },
+        { "TotalPrice", total.ToString(CultureInfo.InvariantCulture) },
+        { "reserveRooms", reserveRoomsJson }
+    }
                 };
+
 
                 var sessionService = new SessionService();
                 var session = await sessionService.CreateAsync(sessionOptions);
@@ -136,11 +141,19 @@ namespace viaggia_server.Services.Payment
 
                     try
                     {
+                        var reserveRoomsJson = session.Metadata["reserveRooms"];
+                        var reserveRooms = JsonSerializer.Deserialize<List<ReserveRoom>>(reserveRoomsJson);
+
+                        if (reserveRooms == null || !reserveRooms.Any())
+                        {
+                            _logger.LogError("Nenhum quarto informado na reserva.");
+                            return;
+                        }
+
                         var reservation = new Reserve
                         {
                             UserId = int.Parse(session.Metadata["userId"]),
-                            PackageId = int.Parse(session.Metadata["packageId"]),
-                            RoomTypeId = int.Parse(session.Metadata["roomTypeId"]),
+                            PackageId = int.TryParse(session.Metadata["packageId"], out var packageId) ? packageId : null,
                             HotelId = int.Parse(session.Metadata["hotelId"]),
                             CheckInDate = DateTime.Parse(session.Metadata["checkInDate"], null, DateTimeStyles.RoundtripKind),
                             CheckOutDate = DateTime.Parse(session.Metadata["checkOutDate"], null, DateTimeStyles.RoundtripKind),
@@ -148,24 +161,18 @@ namespace viaggia_server.Services.Payment
                             Status = session.Metadata.ContainsKey("status") ? session.Metadata["status"] : "Pendente",
                             CreatedAt = DateTime.UtcNow,
                             TotalPrice = decimal.Parse(session.Metadata["TotalPrice"]),
+                            ReserveRooms = reserveRooms
                         };
 
                         await _reservations.AddAsync(reservation);
                         await _reservations.SaveChangesAsync();
-
-                        _logger.LogInformation($"Reserva criada com sucesso para o usuário {reservation.UserId}");
-
-                        var user = await _userRepository.GetByIdAsync(reservation.UserId);
-                        var hotel = await _reservations.GetByIdAsync<Hotel>(Convert.ToInt32(reservation.HotelId));
-
-                        string userName = session.Metadata["userNameReservation"];
                     }
                     catch (Exception ex)
                     {
-                        _logger.LogError(ex, "Erro ao processar reserva no webhook Stripe.");
+                        _logger.LogError(ex, "Erro ao processar checkout.session.completed do Stripe");
                     }
-
                 }
+
             }
             catch (StripeException ex)
             {

@@ -16,8 +16,9 @@ namespace viaggia_server.DTOs.Commodity
         // Indica se o serviço é gratuito ou pago
         public bool IsPaid { get; set; }
 
-        public decimal Price { get; set; } // Added
-
+        // Preço do serviço
+        [Range(0, double.MaxValue, ErrorMessage = "Price must be greater than or equal to 0.")]
+        public decimal Price { get; set; }
 
         // Descrição do serviço (opcional)
         [StringLength(250, ErrorMessage = "Description cannot exceed 250 characters.")]

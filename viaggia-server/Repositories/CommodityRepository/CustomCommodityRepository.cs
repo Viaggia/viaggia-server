@@ -11,7 +11,7 @@ namespace viaggia_server.Repositories.CommodityRepository
 
         public CustomCommodityRepository(AppDbContext context)
         {
-            _context = context ?? throw new ArgumentNullException(nameof(context));
+            _context = context;
         }
 
         public async Task<IEnumerable<CustomCommodity>> GetAllAsync()
