@@ -108,6 +108,7 @@ namespace viaggia_server.Controllers
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> CreateHotel([FromForm] CreateHotelDTO createHotelDto)
         {
+            _logger.LogInformation("CreateHotelDTO recebido: {DTO}", JsonSerializer.Serialize(createHotelDto));
             try
             {
                 if (!ModelState.IsValid)
