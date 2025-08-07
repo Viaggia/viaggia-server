@@ -34,7 +34,7 @@ namespace viaggia_server.Controllers
         }
 
         [HttpGet]
-        [Authorize(Roles = "SERVICE_PROVIDER,ADMIN, ATTENDANT")]
+        [Authorize(Roles = "SERVICE_PROVIDER,ADMIN, ATTENDANT,CLIENT")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> GetPackages()

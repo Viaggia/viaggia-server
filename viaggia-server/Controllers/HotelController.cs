@@ -28,7 +28,7 @@ namespace viaggia_server.Controllers
 
         // GET: api/Hotel
         [HttpGet]
-        [Authorize(Roles = "ADMIN")] // Restrict to ADMIN
+        [Authorize(Roles = "ADMIN,CLIENT")] // Restrict to ADMIN
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
