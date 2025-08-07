@@ -44,6 +44,7 @@ namespace viaggia_server.Controllers
                 var packageDTOs = new List<PackageDTO>();
                 foreach (var p in packages)
                 {
+                    // Load related data (Medias and PackageDates)
                     p.Medias = (await _packageRepository.GetPackageMediasAsync(p.PackageId)).ToList();
                     p.PackageDates = (await _packageRepository.GetPackageDatesAsync(p.PackageId)).ToList();
                     var hotel = await _genericRepository.GetByIdAsync<Hotel>(p.HotelId);
