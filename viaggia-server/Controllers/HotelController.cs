@@ -8,7 +8,6 @@ using viaggia_server.DTOs.Hotel;
 using viaggia_server.DTOs.Packages;
 using viaggia_server.DTOs.Reserves;
 using viaggia_server.DTOs.Reviews;
-using viaggia_server.Models.Hotels;
 using viaggia_server.Services.HotelServices;
 
 namespace viaggia_server.Controllers
@@ -26,9 +25,9 @@ namespace viaggia_server.Controllers
             _logger = logger;
         }
 
+
         // GET: api/Hotel
         [HttpGet]
-        [Authorize(Roles = "ADMIN,CLIENT")] // Restrict to ADMIN
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
@@ -64,7 +63,6 @@ namespace viaggia_server.Controllers
 
         // GET: api/Hotel/{id}
         [HttpGet("{id}")]
-        [Authorize(Roles = "ADMIN,SERVICE_PROVIDER")] // Restrict to ADMIN and SERVICE_PROVIDER
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
@@ -87,7 +85,7 @@ namespace viaggia_server.Controllers
                     return NotFound(new ApiResponse<HotelDTO>(false, response.Message));
                 }
 
-                _logger.LogInformation("Hotel ID {HotelId} retrieved by {Role}", id, User.IsInRole("ADMIN") ? "Admin" : "Service Provider");
+                _logger.LogInformation("Hotel ID {HotelId} retrieved", id); // Removido o log de role
                 return Ok(response);
             }
             catch (Exception ex)

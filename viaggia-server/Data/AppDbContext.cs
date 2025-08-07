@@ -95,7 +95,7 @@ namespace viaggia_server.Data
                 .HasMany(h => h.RoomTypes)
                 .WithOne(rt => rt.Hotel)
                 .HasForeignKey(rt => rt.HotelId)
-                .OnDelete(DeleteBehavior.NoAction);
+                .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<Hotel>()
                 .HasMany(h => h.Reserves)
@@ -109,14 +109,14 @@ namespace viaggia_server.Data
                 .WithOne(m => m.Hotel)
                 .HasForeignKey(m => m.HotelId)
                 .IsRequired(false)
-                .OnDelete(DeleteBehavior.NoAction);
+                .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<Hotel>()
                 .HasMany(h => h.Reviews)
                 .WithOne(r => r.Hotel)
                 .HasForeignKey(r => r.HotelId)
                 .IsRequired(false)
-                .OnDelete(DeleteBehavior.NoAction);
+                .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<Hotel>()
                 .HasMany(h => h.Commodities)
@@ -128,7 +128,7 @@ namespace viaggia_server.Data
                 .HasMany(h => h.CustomCommodities)
                 .WithOne(cs => cs.Hotel)
                 .HasForeignKey(cs => cs.HotelId)
-                .OnDelete(DeleteBehavior.NoAction);
+                .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<HotelRoomType>()
                 .Property(rt => rt.Name)
