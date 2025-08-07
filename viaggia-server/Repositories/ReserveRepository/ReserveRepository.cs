@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using viaggia_server.Data;
 using viaggia_server.DTOs.Reserves;
+using viaggia_server.Models.Users;
 using viaggia_server.Models.Hotels;
 using viaggia_server.Models.Reserves;
 
@@ -89,6 +90,22 @@ namespace viaggia_server.Repositories.ReserveRepository
             }
         }
 
+        public async Task<IEnumerable<Reserve>> GetReserveByUser(int userId)
+        {
+            try
+            {
+                var result = await _context.Reserves
+                    .Where(r => r.UserId == userId && r.IsActive)
+                    .Include(r => r.User)
+                    .ToListAsync();
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message);
+            }
+        }
         public async Task<IEnumerable<Reserve>> GetByUserIdAsync(int userId)
         {
             try
@@ -109,7 +126,5 @@ namespace viaggia_server.Repositories.ReserveRepository
                 throw;
             }
         }
-
     }
 }
-

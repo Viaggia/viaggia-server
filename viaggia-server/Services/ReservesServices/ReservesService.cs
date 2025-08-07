@@ -1,4 +1,5 @@
 ﻿using Stripe;
+using viaggia_server.DTOs.Reserve;
 using viaggia_server.DTOs.Reserves;
 using viaggia_server.Models.Reserves;
 using viaggia_server.Repositories;
@@ -36,19 +37,25 @@ namespace viaggia_server.Services.Reserves
             try
             {
                 var reservations = await _repository.GetAllAsync();
+
                 return reservations.Select(r => new ReserveDTO
                 {
                     ReserveId = r.ReserveId,
                     UserId = r.UserId,
                     PackageId = r.PackageId,
-                    RoomTypeId = r.RoomTypeId,
                     HotelId = r.HotelId,
                     CheckInDate = r.CheckInDate,
                     CheckOutDate = r.CheckOutDate,
                     TotalPrice = r.TotalPrice,
                     NumberOfPeople = r.NumberOfGuests,
                     Status = r.Status,
-                    IsActive = r.IsActive
+                    IsActive = r.IsActive,
+                    ReserveRooms = r.ReserveRooms.Select(rr => new ReserveRoomDTO
+                    {
+                        RoomTypeId = rr.RoomTypeId,
+                        RoomTypeName = rr.RoomType.Name.ToString(), // ou outro campo que prefira
+                        Quantity = rr.Quantity
+                    }).ToList()
                 }).ToList();
             }
             catch (Exception ex)
@@ -56,33 +63,32 @@ namespace viaggia_server.Services.Reserves
                 throw new Exception(ex.Message);
             }
         }
-
         public async Task<ReserveDTO?> GetByIdAsync(int id)
         {
-            try
-            {
-                var r = await _reserveRepository.GetByIdAsync(id);
-                if (r == null) return null;
+            var reservation = await _reserveRepository.GetByIdAsync(id);
+            if (reservation == null) return null;
 
-                return new ReserveDTO
-                {
-                    UserId = r.UserId,
-                    PackageId = r.PackageId,
-                    RoomTypeId = r.RoomTypeId,
-                    HotelId = r.HotelId,
-                    CheckInDate = r.CheckInDate,
-                    CheckOutDate = r.CheckOutDate,
-                    TotalPrice = r.TotalPrice,
-                    NumberOfPeople = r.NumberOfGuests,
-                    Status = r.Status,
-                    IsActive = r.IsActive
-                };
-            }
-            catch (Exception ex)
+            return new ReserveDTO
             {
-                throw new Exception(ex.Message);
-            }
+                ReserveId = reservation.ReserveId,
+                UserId = reservation.UserId,
+                PackageId = reservation.PackageId,
+                HotelId = reservation.HotelId,
+                CheckInDate = reservation.CheckInDate,
+                CheckOutDate = reservation.CheckOutDate,
+                TotalPrice = reservation.TotalPrice,
+                NumberOfPeople = reservation.NumberOfGuests,
+                Status = reservation.Status,
+                IsActive = reservation.IsActive,
+                ReserveRooms = reservation.ReserveRooms.Select(rr => new ReserveRoomDTO
+                {
+                    RoomTypeId = rr.RoomTypeId,
+                    RoomTypeName = rr.RoomType.Name.ToString()  ,  // Caso RoomType seja carregado
+                    Quantity = rr.Quantity
+                }).ToList()
+            };
         }
+
 
         public async Task<IEnumerable<ReserveDTO>> GetByUserIdAsync(int userId)
         {
@@ -94,7 +100,6 @@ namespace viaggia_server.Services.Reserves
                     ReserveId = r.ReserveId,
                     UserId = r.UserId,
                     PackageId = r.PackageId,
-                    RoomTypeId = r.RoomTypeId,
                     HotelId = r.HotelId,
                     CheckInDate = r.CheckInDate,
                     CheckOutDate = r.CheckOutDate,
@@ -117,61 +122,148 @@ namespace viaggia_server.Services.Reserves
         {
             try
             {
-                var userId = _userRepository.GetByIdAsync(dto.UserId);
-                if (userId == null) throw new Exception("Cliente não encontrado");
+                var user = await _userRepository.GetByIdAsync(dto.UserId);
+                if (user == null) throw new Exception("Cliente não encontrado");
 
-                var CheckIn = dto.CheckInDate;
-                var CheckOut = dto.CheckOutDate;
+                if (dto.ReserveRooms == null || !dto.ReserveRooms.Any())
+                    throw new Exception("Nenhum quarto foi selecionado para a reserva.");
 
-                int tempo = (CheckOut - CheckIn).Days;
-                var totalPrice = dto.TotalPrice * tempo;
+                var stayDays = (dto.CheckOutDate - dto.CheckInDate).Days;
+                if (stayDays <= 0)
+                    throw new Exception("A data de check-out deve ser posterior à data de check-in.");
 
+                decimal totalPrice = 0;
+                var reserveRooms = new List<ReserveRoom>();
+
+                foreach (var rr in dto.ReserveRooms)
+                {
+                    var roomType = await _hotelRepository.GetRoomTypeByIdAsync(rr.RoomTypeId);
+                    if (roomType == null)
+                        throw new Exception($"Tipo de quarto com ID {rr.RoomTypeId} não encontrado.");
+
+                    if (roomType. AvailableRooms < rr.Quantity)
+                        throw new Exception($"Quartos insuficientes disponíveis para o tipo {roomType.Name}.");
+
+                    // Atualiza disponibilidade
+                    roomType.AvailableRooms -= rr.Quantity;
+                    await _hotelRepository.UpdateRoomTypeAsync(roomType);
+
+                    // Calcula preço
+                    totalPrice += roomType.Price * rr.Quantity * stayDays;
+
+                    reserveRooms.Add(new ReserveRoom
+                    {
+                        RoomTypeId = rr.RoomTypeId,
+                        Quantity = rr.Quantity
+                    });
+                }
 
                 var reservation = new Reserve
                 {
                     UserId = dto.UserId,
-                    PackageId = dto.PackageId,
-                    RoomTypeId = dto.RoomTypeId,
                     HotelId = dto.HotelId,
-                    TotalPrice = totalPrice,
+                    PackageId = dto.PackageId,
+                    CheckInDate = dto.CheckInDate,
+                    CheckOutDate = dto.CheckOutDate,
                     NumberOfGuests = dto.NumberOfGuests,
-                    Status = dto.Status
+                    Status = dto.Status,
+                    TotalPrice = totalPrice,
+                    IsActive = true,
+                    ReserveRooms = reserveRooms
                 };
 
                 await _repository.AddAsync(reservation);
                 await _repository.SaveChangesAsync();
 
-                return await GetByIdAsync(reservation.ReserveId) ?? throw new Exception("Erro ao criar reserva.");
-
+                return await GetByIdAsync(reservation.ReserveId)
+                    ?? throw new Exception("Erro ao criar reserva.");
             }
             catch (Exception ex)
             {
-                throw new Exception(ex.Message);
+                throw new Exception($"Erro ao criar reserva: {ex.Message}");
             }
-
         }
+
 
         public async Task<ReserveDTO> UpdateAsync(int id, ReserveUpdateDTO dto)
         {
             var reservation = await _reserveRepository.GetByIdAsync(id);
             if (reservation == null) throw new ArgumentException("Reserva não encontrada.");
 
+            // Atualiza os dados básicos da reserva
             reservation.UserId = dto.UserId;
             reservation.PackageId = dto.PackageId;
-            reservation.RoomTypeId = dto.RoomTypeId;
             reservation.HotelId = dto.HotelId;
             reservation.CheckInDate = dto.CheckInDate;
             reservation.CheckOutDate = dto.CheckOutDate;
-            reservation.TotalPrice = dto.TotalPrice;
-            reservation.NumberOfGuests = dto.NumberOfPeople;
+            reservation.NumberOfGuests = dto.NumberOfGuests;
             reservation.Status = dto.Status;
             reservation.IsActive = dto.IsActive;
 
+            // Calcula os dias de estadia
+            var stayDays = (dto.CheckOutDate - dto.CheckInDate).Days;
+            if (stayDays <= 0)
+                throw new Exception("A data de check-out deve ser posterior à data de check-in.");
+
+            // Atualizar ReserveRooms e ajustar disponibilidade
+            if (dto.ReserveRooms == null || !dto.ReserveRooms.Any())
+                throw new Exception("Nenhum quarto foi selecionado para a reserva.");
+
+            // Restaurar disponibilidade dos quartos atuais (liberar os quartos reservados antes)
+            foreach (var existingRoom in reservation.ReserveRooms)
+            {
+                var currentRoomType = await _hotelRepository.GetRoomTypeByIdAsync(existingRoom.RoomTypeId);
+                if (currentRoomType != null)
+                {
+                    currentRoomType.AvailableRooms += existingRoom.Quantity;
+                    await _hotelRepository.UpdateRoomTypeAsync(currentRoomType);
+                }
+            }
+
+            // Remover os ReserveRooms antigos da reserva
+            reservation.ReserveRooms.Clear();
+
+            decimal totalPrice = 0;
+            var newReserveRooms = new List<ReserveRoom>();
+
+            // Para cada quarto no DTO, verificar disponibilidade e atualizar
+            foreach (var rr in dto.ReserveRooms)
+            {
+                var roomType = await _hotelRepository.GetRoomTypeByIdAsync(rr.RoomTypeId);
+                if (roomType == null)
+                    throw new Exception($"Tipo de quarto com ID {rr.RoomTypeId} não encontrado.");
+
+                if (roomType.AvailableRooms < rr.Quantity)
+                    throw new Exception($"Quartos insuficientes disponíveis para o tipo {roomType.Name}.");
+
+                // Atualiza disponibilidade (deduz)
+                roomType.AvailableRooms -= rr.Quantity;
+                await _hotelRepository.UpdateRoomTypeAsync(roomType);
+
+                // Calcula preço
+                totalPrice += roomType.Price * rr.Quantity * stayDays;
+
+                // Cria nova reserva de quartos
+                newReserveRooms.Add(new ReserveRoom
+                {
+                    RoomTypeId = rr.RoomTypeId,
+                    Quantity = rr.Quantity,
+                    ReserveId = reservation.ReserveId
+                });
+            }
+
+            // Atualiza os quartos da reserva e preço total
+            reservation.ReserveRooms = newReserveRooms;
+            reservation.TotalPrice = totalPrice;
+
+            // Atualiza a reserva
             await _repository.UpdateAsync(reservation);
             await _repository.SaveChangesAsync();
 
             return await GetByIdAsync(id) ?? throw new Exception("Erro ao atualizar reserva.");
         }
+
+
 
         public async Task<bool> SoftDeleteAsync(int id)
         {

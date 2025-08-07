@@ -1,9 +1,10 @@
-﻿using System.Text.Json;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
+using System.Text.Json;
 using viaggia_server.DTOs;
 using viaggia_server.DTOs.Commodity;
 using viaggia_server.DTOs.Hotel;
 using viaggia_server.DTOs.Packages;
+using viaggia_server.DTOs.Reserve;
 using viaggia_server.DTOs.Reserves;
 using viaggia_server.DTOs.Reviews;
 using viaggia_server.Models.Hotels;
@@ -1590,14 +1591,19 @@ namespace viaggia_server.Services.HotelServices
                     ReserveId = r.ReserveId,
                     UserId = r.UserId,
                     HotelId = r.HotelId,
-                    RoomTypeId = r.RoomTypeId,
                     CheckInDate = r.CheckInDate,
                     CheckOutDate = r.CheckOutDate,
                     NumberOfPeople= r.NumberOfGuests,
                     TotalPrice = r.TotalPrice,
                     Status = r.Status,
                     CreatedAt = r.CreatedAt,
-                    IsActive = r.IsActive
+                    IsActive = r.IsActive,
+                    ReserveRooms = r.ReserveRooms.Select(rr => new ReserveRoomDTO
+                    {
+                        RoomTypeId = rr.RoomTypeId,
+                        Quantity = rr.Quantity,
+                        // Adicione mais campos se necessário, como RoomTypeName se carregar o RoomType
+                    }).ToList()
                 }).ToList();
 
                 if (!reserveDTOs.Any())

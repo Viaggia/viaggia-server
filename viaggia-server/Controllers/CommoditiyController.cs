@@ -87,7 +87,7 @@ namespace viaggia_server.Controllers
                     IsActive = cs.IsActive,
                     HotelName = c.Hotel?.Name ?? string.Empty,
                     HotelId = cs.HotelId,
-                    CommoditieId = cs.CommodityId
+                    CommodityId = cs.CommodityId
                 }).ToList()
             });
             return Ok(new ApiResponse<IEnumerable<CommodityReadDTO>>(true, "Commodities recuperadas com sucesso.", response));
@@ -150,7 +150,7 @@ namespace viaggia_server.Controllers
                     IsActive = cs.IsActive,
                     HotelName = commodity.Hotel?.Name ?? string.Empty,
                     HotelId = cs.HotelId,
-                    CommoditieId = cs.CommodityId
+                    CommodityId = cs.CommodityId
                 }).ToList()
             };
             return Ok(new ApiResponse<CommodityReadDTO>(true, "Commodity encontrada.", response));
@@ -213,7 +213,7 @@ namespace viaggia_server.Controllers
                     IsActive = cs.IsActive,
                     HotelName = commodity.Hotel?.Name ?? string.Empty,
                     HotelId = cs.HotelId,
-                    CommoditieId = cs.CommodityId
+                    CommodityId = cs.CommodityId
                 }).ToList()
             };
             return Ok(new ApiResponse<CommodityReadDTO>(true, "Commodity do hotel encontrada.", response));
@@ -357,7 +357,7 @@ namespace viaggia_server.Controllers
                     IsActive = cs.IsActive,
                     HotelName = hotel.Name,
                     HotelId = cs.HotelId,
-                    CommoditieId = cs.CommodityId
+                    CommodityId = cs.CommodityId
                 }).ToList()
             };
 
@@ -477,7 +477,7 @@ namespace viaggia_server.Controllers
                     IsActive = cs.IsActive,
                     HotelName = hotel.Name,
                     HotelId = cs.HotelId,
-                    CommoditieId = cs.CommodityId
+                    CommodityId = cs.CommodityId
                 }).ToList()
             };
 

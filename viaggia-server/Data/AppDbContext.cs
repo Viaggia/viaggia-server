@@ -34,7 +34,6 @@ namespace viaggia_server.Data
         {
             base.OnModelCreating(modelBuilder);
 
-            // User to Hotel relationship
             modelBuilder.Entity<User>()
                 .HasOne(u => u.Hotel)
                 .WithOne(h => h.User)
@@ -136,6 +135,18 @@ namespace viaggia_server.Data
                     v => v.ToString(),
                     v => (RoomTypeEnum)Enum.Parse(typeof(RoomTypeEnum), v));
 
+
+            modelBuilder.Entity<Commodity>()
+              .HasMany(c => c.CustomCommodities)
+              .WithOne(cs => cs.Commodity)
+              .HasForeignKey(cs => cs.CommodityId)
+              .OnDelete(DeleteBehavior.NoAction);
+
+            // CommoditieServices 1:N Hotel
+            modelBuilder.Entity<CustomCommodity>()
+                .HasOne(cs => cs.Hotel)
+                .WithMany(h => h.CustomCommodities)
+                .HasForeignKey(cs => cs.HotelId);
             
             // Commodity
             modelBuilder.Entity<Commodity>()
@@ -144,19 +155,15 @@ namespace viaggia_server.Data
                 .HasForeignKey(cs => cs.CommodityId)
                 .OnDelete(DeleteBehavior.NoAction);
 
-            // Reservations
-            modelBuilder.Entity<Reserve>()
-                .HasOne(r => r.User)
-                .WithMany(u => u.Reserves)
-                .HasForeignKey(r => r.UserId)
-                .OnDelete(DeleteBehavior.NoAction);
+            modelBuilder.Entity<ReserveRoom>()
+                .HasOne(rr => rr.Reserve)
+                .WithMany(r => r.ReserveRooms)
+                .HasForeignKey(rr => rr.ReserveId);
 
-            modelBuilder.Entity<Reserve>()
-                .HasOne(r => r.HotelRoomType)
+            modelBuilder.Entity<ReserveRoom>()
+                .HasOne(rr => rr.RoomType)
                 .WithMany()
-                .HasForeignKey(r => r.RoomTypeId)
-                .IsRequired(false)
-                .OnDelete(DeleteBehavior.NoAction);
+                .HasForeignKey(rr => rr.RoomTypeId);
 
             // Review
             modelBuilder.Entity<Review>()
@@ -197,8 +204,6 @@ namespace viaggia_server.Data
             );
 
             // Global query filters
-            modelBuilder.Entity<User>().HasQueryFilter(u => u.IsActive);
-            modelBuilder.Entity<Package>().HasQueryFilter(p => p.IsActive);
             modelBuilder.Entity<PackageDate>().HasQueryFilter(pd => pd.IsActive);
             modelBuilder.Entity<Hotel>().HasQueryFilter(h => h.IsActive);
             modelBuilder.Entity<HotelRoomType>().HasQueryFilter(rt => rt.IsActive);

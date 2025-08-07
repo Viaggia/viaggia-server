@@ -7,13 +7,13 @@ namespace viaggia_server.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class ReservationsController : ControllerBase
+    public class ReservesController : ControllerBase
     {
-        private readonly IReservesService _reservationService;
+        private readonly IReservesService _reservesService;
 
-        public ReservationsController(IReservesService reservationService)
+        public ReservesController(IReservesService reservationService)
         {
-            _reservationService = reservationService;
+            _reservesService = reservationService;
         }
 
         [HttpGet]
@@ -21,14 +21,14 @@ namespace viaggia_server.Controllers
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> GetReservations()
         {
-            var result = await _reservationService.GetAllAsync();
+            var result = await _reservesService.GetAllAsync();
             return Ok(result);
         }
 
         [HttpGet("{id}")]
         public async Task<IActionResult> GetReservationById(int id)
         {
-            var result = await _reservationService.GetByIdAsync(id);
+            var result = await _reservesService.GetByIdAsync(id);
             if (result == null) return NotFound();
             return Ok(result);
         }
@@ -38,7 +38,7 @@ namespace viaggia_server.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> GetReservationsByUserId(int userId)
         {
-            var result = await _reservationService.GetByUserIdAsync(userId);
+            var result = await _reservesService.GetByUserIdAsync(userId);
             if (result == null || !result.Any()) return NotFound();
             return Ok(result);
         }
@@ -48,7 +48,7 @@ namespace viaggia_server.Controllers
         public async Task<IActionResult> CreateReservation([FromBody] ReserveCreateDTO dto)
         {
             if(!ModelState.IsValid) return BadRequest(ModelState);
-            var result = await _reservationService.CreateAsync(dto);
+            var result = await _reservesService.CreateAsync(dto);
             return CreatedAtAction(nameof(GetReservationById), new { id = result.ReserveId }, result);
         }
 
@@ -56,7 +56,7 @@ namespace viaggia_server.Controllers
         public async Task<IActionResult> UpdateReservation(int id, [FromBody] ReserveUpdateDTO dto)
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
-            var result = await _reservationService.UpdateAsync(id, dto);
+            var result = await _reservesService.UpdateAsync(id, dto);
             if (result == null) return NotFound();
             return Ok(result);
         }
@@ -64,7 +64,7 @@ namespace viaggia_server.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> SoftDeleteReservation(int id)
         {
-            var deleted = await _reservationService.SoftDeleteAsync(id);
+            var deleted = await _reservesService.SoftDeleteAsync(id);
             if(!deleted) return NotFound();
             return Ok(deleted);
         }
