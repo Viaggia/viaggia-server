@@ -1,5 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Stripe;
 using viaggia_server.Data;
+using viaggia_server.DTOs.Hotel;
 using viaggia_server.Models.Commodities;
 using viaggia_server.Models.CustomCommodities;
 using viaggia_server.Models.Hotels;
@@ -149,21 +151,21 @@ namespace viaggia_server.Repositories.HotelRepository
             return false;
         }
 
-        public async Task<Review> AddReviewAsync(Review review)
+        public async Task<Models.Reviews.Review> AddReviewAsync(Models.Reviews.Review review)
         {
             await _context.Reviews.AddAsync(review);
             await _context.SaveChangesAsync();
             return review;
         }
 
-        public async Task<IEnumerable<Review>> GetReviewsByHotelIdAsync(int hotelId)
+        public async Task<IEnumerable<Models.Reviews.Review>> GetReviewsByHotelIdAsync(int hotelId)
         {
             return await _context.Reviews
                 .Where(r => r.HotelId == hotelId && r.IsActive)
                 .ToListAsync();
         }
 
-        public async Task<Review?> GetReviewByIdAsync(int reviewId)
+        public async Task<Models.Reviews.Review?> GetReviewByIdAsync(int reviewId)
         {
             return await _context.Reviews
                 .FirstOrDefaultAsync(r => r.ReviewId == reviewId && r.IsActive);
@@ -388,7 +390,6 @@ namespace viaggia_server.Repositories.HotelRepository
         {
             return await _context.Hotels
                 .Include(h => h.RoomTypes)
-                .Include(h => h.HotelDates)
                 .Include(h => h.Medias)
                 .Include(h => h.Reviews)
                 .Include(h => h.Packages)
@@ -433,6 +434,48 @@ namespace viaggia_server.Repositories.HotelRepository
                 .ToListAsync();
         }
 
-    }
+        public async Task<List<HotelBalanceDTO>> GetBalancesHotelsAsync()
+        {
+            try
+            {
+                var chargeService = new ChargeService();
+                var options = new ChargeListOptions
+                {
+                    Limit = 100
+                };
 
+                var charges = await chargeService.ListAsync(options);
+
+                var hotelPayments = charges.Data
+                    .Where(c => c.Paid && c.Metadata.ContainsKey("hotelId"))
+                    .Select(c =>
+                    {
+                        var success = int.TryParse(c.Metadata["hotelId"], out var id);
+                        return new { Success = success, Id = id, Amount = c.Amount };
+                    })
+                    .Where(x => x.Success)
+                    .GroupBy(x => x.Id)
+                    .ToDictionary(g => g.Key, g => g.Sum(x => x.Amount));
+
+                var hotelIds = hotelPayments.Keys.ToList();
+
+                var hoteis = await _context.Hotels
+                    .Where(h => hotelIds.Contains(h.HotelId))
+                    .ToListAsync();
+
+                var resultado = hoteis.Select(h => new HotelBalanceDTO
+                {
+                    HotelName = h.Name,
+                    TotalBalance = hotelPayments[h.HotelId] / 100.0
+                }).ToList();
+
+                return resultado;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message);
+            }
+        }
+
+    }
 }

@@ -3,11 +3,13 @@ using Stripe;
 using Stripe.Checkout;
 using System.Globalization;
 using System.Text.Json;
+using viaggia_server.DTOs.Hotel;
 using viaggia_server.DTOs.Reserves;
 using viaggia_server.Models.Hotels;
 using viaggia_server.Models.Reserves;
 using viaggia_server.Models.Users;
 using viaggia_server.Repositories;
+using viaggia_server.Repositories.HotelRepository;
 using viaggia_server.Repositories.Users;
 using viaggia_server.Services.Email;
 
@@ -16,6 +18,7 @@ namespace viaggia_server.Services.Payment
     public class StripePaymentService : IStripePaymentService
     {
         private readonly IConfiguration _configuration;
+        private readonly IHotelRepository _hotelRepository;
         private readonly IUserRepository _userRepository;
         private readonly IRepository<Reserve> _reservations;
         private readonly ILogger<StripePaymentService> _logger;
@@ -25,12 +28,14 @@ namespace viaggia_server.Services.Payment
         public StripePaymentService(
             IConfiguration configuration,
             IUserRepository userRepository,
+            IHotelRepository hotelRepository,
             IRepository<Reserve> reservations,
             ILogger<StripePaymentService> logger
         )
         {
             _configuration = configuration;
             _reservations = reservations;
+            _hotelRepository = hotelRepository;
             _userRepository = userRepository;
             _logger = logger;
             _stripeSecretKey = _configuration["Stripe:SecretKey"];
@@ -118,6 +123,23 @@ namespace viaggia_server.Services.Payment
             }
         }
 
+        public async Task<Balance> GetBalanceAsync()
+        {
+            var service = new Stripe.BalanceService();
+            var balance = service.Get();
+            return balance;
+        }
+
+        public async Task<List<HotelBalanceDTO>> GetBalanceByHotelAsync()
+        {
+            try
+            {
+                return await _hotelRepository.GetBalancesHotelsAsync();
+            } catch( Exception ex)
+            {
+                throw new Exception(ex.Message);
+            }
+        }
 
 
         public async Task HandleStripeWebhookAsync(HttpRequest request)

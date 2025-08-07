@@ -49,6 +49,41 @@ namespace viaggia_server.Controllers
             }
         }
 
+        [HttpGet("Balance")]
+        public async Task<IActionResult> GetBalance()
+        {
+            var balance = await _stripePaymentService.GetBalanceAsync();
+            var result = new
+            {
+                Avaliable = balance.Available.Select(a => new
+                {
+                    Amount = a.Amount,
+                    Currency = a.Currency,
+                }),
+                Pending = balance.Pending.Select(p => new
+                {
+                    Amount = p.Amount,
+                    Currency = p.Currency,
+                })
+            };
+            return Ok(result);
+        }
+
+        [HttpGet("balance/hotels")]
+        public async Task<IActionResult> GetBalanceByHtel()
+        {
+            try
+            {
+                var result = await _stripePaymentService.GetBalanceByHotelAsync();
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+
+        }
+
         [AllowAnonymous]
         [HttpPost("/webhook")]
         
