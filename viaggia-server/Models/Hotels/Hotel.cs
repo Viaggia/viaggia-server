@@ -75,5 +75,6 @@ namespace viaggia_server.Models.Hotels
         public virtual ICollection<Package> Packages { get; set; } = new List<Package>();
         public virtual ICollection<Commodity> Commodities { get; set; } = new List<Commodity>();
         public virtual ICollection<CustomCommodity> CustomCommodities { get; set; } = new List<CustomCommodity>();
+        public List<Complaint> Complaints { get; set; } = new List<Complaint>();
     }
 }

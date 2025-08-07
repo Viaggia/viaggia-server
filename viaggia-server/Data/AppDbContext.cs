@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using viaggia_server.Models;
 using viaggia_server.Models.Commodities;
 using viaggia_server.Models.CustomCommodities;
 using viaggia_server.Models.Hotels;
@@ -30,6 +31,7 @@ namespace viaggia_server.Data
         public DbSet<Review> Reviews { get; set; } = null!;
         public DbSet<RevokedToken> RevokedTokens { get; set; } = null!;
         public DbSet<PasswordResetToken> PasswordResetTokens { get; set; } = null!;
+        public DbSet<Complaint> Complaints { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

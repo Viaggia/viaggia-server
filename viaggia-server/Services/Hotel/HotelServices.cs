@@ -2,10 +2,12 @@
 using Microsoft.EntityFrameworkCore;
 using viaggia_server.DTOs;
 using viaggia_server.DTOs.Commodity;
+using viaggia_server.DTOs.Complaint;
 using viaggia_server.DTOs.Hotel;
 using viaggia_server.DTOs.Packages;
 using viaggia_server.DTOs.Reserve;
 using viaggia_server.DTOs.Reviews;
+using viaggia_server.Models;
 using viaggia_server.Models.Hotels;
 using viaggia_server.Models.Medias;
 using viaggia_server.Models.Reviews;
@@ -19,6 +21,7 @@ namespace viaggia_server.Services.HotelServices
     {
         private readonly IRepository<Hotel> _genericRepository;
         private readonly IHotelRepository _hotelRepository;
+        private readonly IComplaintRepository _complaintRepository;
         private readonly IReviewRepository _reviewRepository;
         private readonly IWebHostEnvironment _environment;
         private readonly ILogger<HotelServices> _logger;
@@ -26,6 +29,7 @@ namespace viaggia_server.Services.HotelServices
         public HotelServices(
             IRepository<Hotel> genericRepository,
             IHotelRepository hotelRepository,
+            IComplaintRepository complaintRepository, 
             IReviewRepository reviewRepository,
             IWebHostEnvironment environment,
             ILogger<HotelServices> logger)
@@ -33,6 +37,7 @@ namespace viaggia_server.Services.HotelServices
             _genericRepository = genericRepository;
             _hotelRepository = hotelRepository;
             _reviewRepository = reviewRepository;
+            _complaintRepository = complaintRepository;
             _environment = environment;
             _logger = logger;
         }
@@ -1610,6 +1615,91 @@ namespace viaggia_server.Services.HotelServices
                 var innerMessage = ex.InnerException != null ? ex.InnerException.Message : ex.Message;
                 _logger.LogError(ex, "Error retrieving reservations for HotelId {HotelId}: {Message}", hotelId, innerMessage);
                 return new ApiResponse<List<ReserveDTO>>(false, $"Error retrieving reservations: {innerMessage}");
+            }
+        }
+
+        public async Task<ApiResponse<ComplaintDTO>> AddHotelComplaintAsync(CreateComplaintDTO complaintDto)
+        {
+            try
+            {
+                if (complaintDto.HotelId <= 0)
+                {
+                    _logger.LogWarning("Invalid hotel ID: {HotelId}", complaintDto.HotelId);
+                    return new ApiResponse<ComplaintDTO>(false, "Invalid hotel ID.");
+                }
+
+                if (complaintDto.UserId <= 0)
+                {
+                    _logger.LogWarning("Invalid user ID: {UserId}", complaintDto.UserId);
+                    return new ApiResponse<ComplaintDTO>(false, "Invalid user ID.");
+                }
+
+                var hotel = await _genericRepository.GetByIdAsync(complaintDto.HotelId);
+                if (hotel == null || !hotel.IsActive)
+                {
+                    _logger.LogWarning("Hotel not found or inactive for HotelId: {HotelId}", complaintDto.HotelId);
+                    return new ApiResponse<ComplaintDTO>(false, "Hotel not found or inactive.");
+                }
+
+                var complaint = new Complaint
+                {
+                    UserId = complaintDto.UserId,
+                    HotelId = complaintDto.HotelId,
+                    Comment = complaintDto.Comment,
+                    CreatedAt = DateTime.UtcNow,
+                    IsActive = true
+                };
+
+                var createdComplaint = await _complaintRepository.CreateComplaintAsync(complaint);
+
+                var complaintDtoResult = new ComplaintDTO
+                {
+                    ComplaintId = createdComplaint.ComplaintId,
+                    UserId = createdComplaint.UserId,
+                    HotelId = createdComplaint.HotelId,
+                    Comment = createdComplaint.Comment,
+                    CreatedAt = createdComplaint.CreatedAt,
+                    IsActive = createdComplaint.IsActive
+                };
+
+                return new ApiResponse<ComplaintDTO>(true, "Complaint created successfully.", complaintDtoResult);
+            }
+            catch (Exception ex)
+            {
+                var innerMessage = ex.InnerException != null ? ex.InnerException.Message : ex.Message;
+                _logger.LogError(ex, "Error creating complaint for HotelId {HotelId}: {Message}", complaintDto.HotelId, innerMessage);
+                return new ApiResponse<ComplaintDTO>(false, $"Error creating complaint: {innerMessage}");
+            }
+        }
+
+        public async Task<ApiResponse<List<ComplaintDTO>>> GetHotelComplaintsAsync(int hotelId)
+        {
+            try
+            {
+                if (hotelId <= 0)
+                {
+                    _logger.LogWarning("Invalid hotel ID: {HotelId}", hotelId);
+                    return new ApiResponse<List<ComplaintDTO>>(false, "Invalid hotel ID.");
+                }
+
+                var complaints = await _complaintRepository.GetComplaintsByHotelIdAsync(hotelId);
+                var complaintDTOs = complaints.Select(c => new ComplaintDTO
+                {
+                    ComplaintId = c.ComplaintId,
+                    UserId = c.UserId,
+                    HotelId = c.HotelId,
+                    Comment = c.Comment,
+                    CreatedAt = c.CreatedAt,
+                    IsActive = c.IsActive
+                }).ToList();
+
+                return new ApiResponse<List<ComplaintDTO>>(true, "Complaints retrieved successfully.", complaintDTOs);
+            }
+            catch (Exception ex)
+            {
+                var innerMessage = ex.InnerException != null ? ex.InnerException.Message : ex.Message;
+                _logger.LogError(ex, "Error retrieving complaints for HotelId {HotelId}: {Message}", hotelId, innerMessage);
+                return new ApiResponse<List<ComplaintDTO>>(false, $"Error retrieving complaints: {innerMessage}");
             }
         }
     }

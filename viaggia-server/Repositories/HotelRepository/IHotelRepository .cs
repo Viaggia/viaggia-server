@@ -1,4 +1,6 @@
-﻿using viaggia_server.Models.Commodities;
+﻿using viaggia_server.DTOs;
+using viaggia_server.DTOs.Complaint;
+using viaggia_server.Models.Commodities;
 using viaggia_server.Models.CustomCommodities;
 using viaggia_server.Models.Hotels;
 using viaggia_server.Models.Medias;
@@ -34,6 +36,7 @@ namespace viaggia_server.Repositories.HotelRepository
               int numberOfRooms,
               DateTime checkInDate,
               DateTime checkOutDate);
+
 
     }
 }

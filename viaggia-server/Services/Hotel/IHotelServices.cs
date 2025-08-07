@@ -1,4 +1,5 @@
 ﻿using viaggia_server.DTOs;
+using viaggia_server.DTOs.Complaint;
 using viaggia_server.DTOs.Hotel;
 using viaggia_server.DTOs.Packages;
 using viaggia_server.DTOs.Reserve;
@@ -36,6 +37,9 @@ namespace viaggia_server.Services.HotelServices
         Task<ApiResponse<List<ReviewDTO>>> GetHotelReviewsAsync(int hotelId);
         Task<ApiResponse<ReviewDTO>> UpdateHotelReviewAsync(int reviewId, CreateReviewDTO reviewDto);
         Task<ApiResponse<bool>> RemoveHotelReviewAsync(int reviewId);
+
+        Task<ApiResponse<ComplaintDTO>> AddHotelComplaintAsync(CreateComplaintDTO complaintDto);
+        Task<ApiResponse<List<ComplaintDTO>>> GetHotelComplaintsAsync(int hotelId);
 
 
     }
