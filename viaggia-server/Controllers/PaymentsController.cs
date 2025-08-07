@@ -55,7 +55,7 @@ namespace viaggia_server.Controllers
             var balance = await _stripePaymentService.GetBalanceAsync();
             var result = new
             {
-                Avaliable = balance.Available.Select(a => new
+                Available = balance.Available.Select(a => new
                 {
                     Amount = a.Amount,
                     Currency = a.Currency,

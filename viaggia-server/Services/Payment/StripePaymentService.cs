@@ -53,30 +53,50 @@ namespace viaggia_server.Services.Payment
         public async Task<Session> CreatePaymentIntentAsync(ReserveCreateDTO createReserve)
         {
             decimal total = createReserve.TotalPrice;
+
             try
             {
                 StripeConfiguration.ApiKey = _stripeSecretKey;
 
-                _logger.LogInformation("Iniciando cria��o de pagamento no Stripe");
-                _logger.LogInformation("Stripe Secret Key: {Key}", _stripeSecretKey);
+                _logger.LogInformation("Iniciando criação de pagamento no Stripe");
                 _logger.LogInformation("DTO recebido: {@DTO}", createReserve);
                 _logger.LogInformation("Valor total: {Total}", total);
 
                 if (total <= 0)
                 {
-                    _logger.LogError("Valor total inv�lido: {Total}", total);
+                    _logger.LogError("Valor total inválido: {Total}", total);
                     throw new ArgumentException("TotalPrice deve ser maior que zero.");
                 }
 
-                var name = await _userRepository.GetByIdAsync(createReserve.UserId);
-                var package = await _package.GetByIdAsync(Convert.ToInt32(createReserve.PackageId));
-                var description = package?.Description ?? "Descrição não disponível";
+                // Buscar dados do usuário
+                var user = await _userRepository.GetByIdAsync(createReserve.UserId);
+                string productName = $"Reserva para o cliente: {user?.Name ?? "Cliente"}";
 
-                var productName = $"Reserva para o cliente: {name}";
+                string description;
+
+                // Definir descrição com base no tipo de reserva
+                if (createReserve.PackageId.HasValue)
+                {
+                    var package = await _package.GetByIdAsync(createReserve.PackageId.Value);
+                    description = package != null
+                        ? $"Pacote: {package.Name} - {package.Description}"
+                        : "Reserva de pacote";
+                }
+                else
+                {
+                    var hotel = await _hotelRepository.GetByIdAsync(createReserve.HotelId);
+                    description = hotel != null
+                        ? $"Hotel: {hotel.Name} - {hotel.City}, {hotel.State}"
+                        : "Reserva de hotel";
+                }
+
                 _logger.LogInformation("Nome do produto: {ProductName}", productName);
-                var amount = (long)(total * 100);
-                _logger.LogInformation("Valor que vai para priceOptions {Amount}", amount);
+                _logger.LogInformation("Descrição: {Description}", description);
 
+                long amount = (long)(total * 100); // valor em centavos (reais -> centavos)
+                _logger.LogInformation("Valor em centavos (amount): {Amount}", amount);
+
+                // Criar preço do produto
                 var priceOptions = new PriceCreateOptions
                 {
                     UnitAmount = amount,
@@ -84,7 +104,10 @@ namespace viaggia_server.Services.Payment
                     ProductData = new PriceProductDataOptions
                     {
                         Name = productName,
-                        StatementDescriptor = description,
+                        // Stripe exige no máximo 22 caracteres
+                        StatementDescriptor = description.Length > 22
+                            ? description.Substring(0, 22)
+                            : description, 
                     }
                 };
 
@@ -92,48 +115,51 @@ namespace viaggia_server.Services.Payment
                 var price = await priceService.CreateAsync(priceOptions);
                 _logger.LogInformation("Preço criado: {PriceId}", price.Id);
 
-                // Serializa a lista de quartos (ReserveRooms) para JSON
-                var reserveRoomsJson = JsonSerializer.Serialize(createReserve.ReserveRooms);
+                // Serializar os quartos
+                var reserveRoomsJson = JsonSerializer.Serialize(createReserve.ReserveRooms ?? new List<ReserveRoomCreateDTO>());
 
+                // Criar sessão de pagamento
                 var sessionOptions = new SessionCreateOptions
                 {
                     LineItems = new List<SessionLineItemOptions>
-    {
-        new SessionLineItemOptions
-        {
-            Price = price.Id,
-            Quantity = 1,
-        }
-    },
+            {
+                new SessionLineItemOptions
+                {
+                    Price = price.Id,
+                    Quantity = 1,
+                }
+            },
                     Mode = "payment",
-                    SuccessUrl = $"http://localhost:5173/paymentconfirmed",
+                    SuccessUrl = "http://localhost:5173/paymentconfirmed",
                     CancelUrl = "http://localhost:5173/paymentcanceled",
                     Metadata = new Dictionary<string, string>
-    {
-        { "userId", createReserve.UserId.ToString() },
-        { "packageId", createReserve.PackageId?.ToString() ?? "" },
-        { "hotelId", createReserve.HotelId.ToString() },
-        { "checkInDate", createReserve.CheckInDate.ToString("o") },
-        { "checkOutDate", createReserve.CheckOutDate.ToString("o") },
-        { "numberOfGuests", createReserve.NumberOfGuests.ToString() },
-        { "status", createReserve.Status.ToString() },
-        { "TotalPrice", total.ToString(CultureInfo.InvariantCulture) },
-        { "reserveRooms", reserveRoomsJson }
-    }
+            {
+                { "userId", createReserve.UserId.ToString() },
+                { "packageId", createReserve.PackageId?.ToString() ?? "" },
+                { "hotelId", createReserve.HotelId.ToString() },
+                { "checkInDate", createReserve.CheckInDate.ToString("o") },
+                { "checkOutDate", createReserve.CheckOutDate.ToString("o") },
+                { "numberOfGuests", createReserve.NumberOfGuests.ToString() },
+                { "status", createReserve.Status },
+                { "TotalPrice", total.ToString(CultureInfo.InvariantCulture) },
+                { "reserveRooms", reserveRoomsJson }
+            }
                 };
-
 
                 var sessionService = new SessionService();
                 var session = await sessionService.CreateAsync(sessionOptions);
-                _logger.LogInformation("Sess�o de pagamento criada com sucesso: {SessionUrl}", session.Url);
+
+                _logger.LogInformation("Sessão de pagamento criada com sucesso: {SessionUrl}", session.Url);
+
                 return session;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Erro ao criar sess�o de pagamento no Stripe");
-                throw; // ou return null, se preferir capturar no controller
+                _logger.LogError(ex, "Erro ao criar sessão de pagamento no Stripe");
+                throw;
             }
         }
+
 
         public async Task<Balance> GetBalanceAsync()
         {
