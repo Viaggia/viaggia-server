@@ -34,7 +34,6 @@ Este repositório contém o **back-end** do sistema **Viaggia**, desenvolvido co
 ### Modelo do Banco de Dados
 ```mermaid
 erDiagram
-
     User {
         int Id
         string Name
@@ -187,6 +186,13 @@ erDiagram
         int HotelId
     }
 
+    ReserveRoom {
+        int Id
+        int ReserveId
+        int RoomTypeId
+        int Quantity
+    }
+
     %% Relationships
     User ||--o{ Reserve : makes
     User ||--o{ Package : creates
@@ -202,12 +208,16 @@ erDiagram
     Hotel ||--o{ Reserve : receives
 
     HotelRoomType ||--o{ Reserve : booked_in
+    HotelRoomType ||--o{ ReserveRoom : linked_to
 
     Package ||--o{ PackageDate : schedules
     Package ||--o{ Media : contains
     Package ||--o{ Reserve : reserved_in
 
     Commodity ||--o{ CustomCommodity : expands
+
+    Reserve ||--o{ ReserveRoom : contains
+
 ```
 
 ---
@@ -264,5 +274,6 @@ erDiagram
 dotnet test Viaggia.Tests
 ```
 ---
+
 
 
