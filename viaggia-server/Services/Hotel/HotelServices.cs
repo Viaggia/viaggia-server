@@ -1255,10 +1255,32 @@ namespace viaggia_server.Services.HotelServices
                 return new ApiResponse<bool>(false, $"Error deleting review: {innerMessage}");
             }
         }
-
-        public Task<bool> SoftDeleteHotelAsync(int id)
+        public async Task<bool> SoftDeleteHotelAsync(int id)
         {
-            throw new NotImplementedException();
+            try
+            {
+                if (id <= 0)
+                {
+                    _logger.LogWarning("Invalid hotel ID: {Id}", id);
+                    return false;
+                }
+
+                var result = await _genericRepository.SoftDeleteAsync(id);
+                if (!result)
+                {
+                    _logger.LogWarning("Hotel not found or already deleted for ID: {Id}", id);
+                }
+                else
+                {
+                    _logger.LogInformation("Hotel ID {Id} soft deleted successfully", id);
+                }
+                return result;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error soft deleting hotel with ID: {Id}", id);
+                throw; 
+            }
         }
 
         public async Task<ApiResponse<List<HotelDTO>>> SearchHotelsByDestinationAsync(HotelSearchDTO searchDto)

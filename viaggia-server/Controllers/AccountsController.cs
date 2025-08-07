@@ -69,66 +69,11 @@ namespace viaggia_server.Controllers
             var user = await _repository.CreateOrLoginOAuth(oauthRequest);
             var token = await _authRepository.GenerateJwtTokenAsync(user);
 
-            // Redirect to frontend
-            var frontendUrl = "http://localhost:5173/auth-success"; // Adjust to your frontend URL
+            var frontendUrl = "http://localhost:5173/auth-success"; 
             var redirectUrl = $"{frontendUrl}?token={Uri.EscapeDataString(token)}&name={Uri.EscapeDataString(user.Name)}&email={Uri.EscapeDataString(user.Email)}&needsProfileCompletion={string.IsNullOrEmpty(user.PhoneNumber)}";
 
             return Redirect(redirectUrl);
         }
-
-        //[HttpPost("complete-profile")]
-        //[Authorize]
-        //public async Task<IActionResult> CompleteProfile([FromBody] CompleteProfileDTO dto)
-        //{
-        //    try
-        //    {
-        //        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        //        if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
-        //        {
-        //            return Unauthorized(new { Message = "User not authenticated." });
-        //        }
-
-        //        var user = await _context.Users
-        //            .Include(u => u.UserRoles)
-        //            .FirstOrDefaultAsync(u => u.Id == userId && u.IsActive);
-        //        if (user == null)
-        //        {
-        //            return NotFound(new { Message = "User not found." });
-        //        }
-
-        //        // Update user details
-        //        user.PhoneNumber = dto.PhoneNumber;
-
-        //        // Assign role
-        //        var role = await _context.Roles.FirstOrDefaultAsync(r => r.Name == dto.Role);
-        //        if (role == null)
-        //        {
-        //            return BadRequest(new { Message = "Invalid role specified." });
-        //        }
-
-        //        user.UserRoles.Clear(); // Remove existing roles (e.g., default CLIENT)
-        //        user.UserRoles.Add(new UserRole { RoleId = role.Id });
-
-        //        await _context.SaveChangesAsync();
-
-        //        // Generate new token with updated roles
-        //        var token = await _authRepository.GenerateJwtTokenAsync(user);
-        //        return Ok(new LoginResponseDTO
-        //        {
-        //            Token = token,
-        //            Name = user.Name,
-        //            Email = user.Email,
-        //            PhoneNumber = user.PhoneNumber,
-        //            Picture = user.AvatarUrl,
-        //            NeedsProfileCompletion = false
-        //        });
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        return StatusCode(500, new { Message = $"Error completing profile: {ex.Message}" });
-        //    }
-        //}
-
 
         [HttpPost("logout-google")]
         public async Task<IActionResult> Logout()

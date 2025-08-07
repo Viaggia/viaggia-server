@@ -34,7 +34,6 @@ namespace viaggia_server.Controllers
         }
 
         [HttpGet]
-        [Authorize(Roles = "SERVICE_PROVIDER,ADMIN, ATTENDANT")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> GetPackages()
@@ -45,7 +44,6 @@ namespace viaggia_server.Controllers
                 var packageDTOs = new List<PackageDTO>();
                 foreach (var p in packages)
                 {
-                    // Load related data (Medias and PackageDates)
                     p.Medias = (await _packageRepository.GetPackageMediasAsync(p.PackageId)).ToList();
                     p.PackageDates = (await _packageRepository.GetPackageDatesAsync(p.PackageId)).ToList();
                     var hotel = await _genericRepository.GetByIdAsync<Hotel>(p.HotelId);
@@ -84,7 +82,6 @@ namespace viaggia_server.Controllers
         }
 
         [HttpGet("{id}")]
-        [Authorize(Roles = "SERVICE_PROVIDER,ADMIN, ATTENDANT")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
