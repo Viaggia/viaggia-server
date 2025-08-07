@@ -61,7 +61,20 @@ namespace viaggia_server.Services.ImageService
                 // Upload file
                 using var stream = file.OpenReadStream();
                 var blobHttpHeaders = new BlobHttpHeaders { ContentType = contentType };
-                await blobClient.UploadAsync(stream, blobHttpHeaders, overwrite: true);
+                
+                // Check if blob exists and delete if we want to overwrite
+                if (await blobClient.ExistsAsync())
+                {
+                    await blobClient.DeleteAsync();
+                }
+
+                // Upload with proper parameters
+                var uploadOptions = new BlobUploadOptions
+                {
+                    HttpHeaders = blobHttpHeaders
+                };
+                
+                await blobClient.UploadAsync(stream, uploadOptions, cancellationToken: CancellationToken.None);
 
                 _logger.LogInformation("Successfully uploaded image to blob: {BlobName}", blobName);
 
