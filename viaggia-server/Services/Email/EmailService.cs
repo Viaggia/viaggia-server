@@ -146,8 +146,6 @@ namespace viaggia_server.Services.Email
 
         public async Task SendApprovedReserve(Reserve reserve)
         {
-            var email = reserve.User.Email;
-            _logger.LogInformation("{email}",email);
             // Verificação de integridade do objeto antes de enviar o e-mail
             if (reserve.User == null)
             {

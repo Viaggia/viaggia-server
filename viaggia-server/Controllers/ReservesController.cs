@@ -39,8 +39,8 @@ namespace viaggia_server.Controllers
         public async Task<IActionResult> GetReservationsByUserId(int userId)
         {
             var result = await _reservesService.GetByUserIdAsync(userId);
-            if (result == null || !result.Any()) return NotFound();
             return Ok(result);
+            if (result == null || !result.Any()) return NotFound();
         }
 
 
