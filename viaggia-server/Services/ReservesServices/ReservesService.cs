@@ -175,6 +175,8 @@ namespace viaggia_server.Services.Reserves
                 await _repository.AddAsync(reservation);
                 await _repository.SaveChangesAsync();
 
+                await _emailService.SendApprovedReserve(reservation);
+
                 return await GetByIdAsync(reservation.ReserveId)
                     ?? throw new Exception("Erro ao criar reserva.");
             }
