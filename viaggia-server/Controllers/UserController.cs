@@ -225,11 +225,9 @@ namespace viaggia_server.Controllers
         }
 
         [HttpGet("{id}")]
-        [Authorize(Roles = "ADMIN,CLIENT,SERVICE_PROVIDER,ATTENDANT")] 
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> GetById(int id)
@@ -238,13 +236,6 @@ namespace viaggia_server.Controllers
             {
                 _logger.LogWarning("Tentativa de recuperar usuário com ID inválido: {Id}", id);
                 return BadRequest(new ApiResponse<UserDTO>(false, "Invalid user ID."));
-            }
-
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (!User.IsInRole("ADMIN") && (userIdClaim == null || userIdClaim != id.ToString()))
-            {
-                _logger.LogWarning("Usuário {UserId} tentou acessar perfil de outro usuário: {TargetId}", userIdClaim, id);
-                return StatusCode(StatusCodes.Status403Forbidden, new ApiResponse<UserDTO>(false, "You can only access your own profile unless you are an Admin."));
             }
 
             try

@@ -4,6 +4,7 @@ using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using viaggia_server.DTOs;
+using viaggia_server.DTOs.Complaint;
 using viaggia_server.DTOs.Hotel;
 using viaggia_server.DTOs.Packages;
 using viaggia_server.DTOs.Reserves;
@@ -162,7 +163,6 @@ namespace viaggia_server.Controllers
             }
         }
 
-        // PUT: api/Hotel/{id}
         [HttpPut("{id}")]
         [Authorize(Roles = "ADMIN,SERVICE_PROVIDER,ATTENDANT")]
         [Consumes("multipart/form-data")]
@@ -441,7 +441,95 @@ namespace viaggia_server.Controllers
                     new ApiResponse<bool>(false, $"Error deleting review: {ex.Message}"));
             }
         }
+        // POST: api/Hotel/{hotelId}/complaints
+        [HttpPost("{hotelId}/complaints")]
+        [ProducesResponseType(StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> CreateComplaint(int hotelId, [FromBody] CreateComplaintDTO complaintDto)
+        {
+            try
+            {
+                if (!ModelState.IsValid)
+                {
+                    _logger.LogError("ModelState is invalid: {Errors}", ModelState);
+                    return BadRequest(ModelState);
+                }
 
+                if (complaintDto.HotelId != hotelId)
+                {
+                    _logger.LogWarning("HotelId mismatch: URL HotelId {UrlHotelId}, DTO HotelId {DtoHotelId}", hotelId, complaintDto.HotelId);
+                    return BadRequest(new ApiResponse<ComplaintDTO>(false, "HotelId in URL must match HotelId in request body."));
+                }
+
+                var response = await _hotelServices.AddHotelComplaintAsync(complaintDto);
+                if (!response.Success)
+                {
+                    _logger.LogError("Failed to create complaint: {Message}", response.Message);
+                    return BadRequest(new ApiResponse<ComplaintDTO>(false, response.Message));
+                }
+
+                return CreatedAtAction(nameof(GetHotelComplaints), new { hotelId = response.Data.HotelId }, response);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error creating complaint for HotelId: {HotelId}", hotelId);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    new ApiResponse<ComplaintDTO>(false, $"Error creating complaint: {ex.Message}"));
+            }
+        }
+
+        // GET: api/Hotel/complaints
+        [HttpGet("complaints")]
+        [Authorize(Roles = "SERVICE_PROVIDER,ATTENDANT,ADMIN")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> GetAllComplaints()
+        {
+            var response = await _hotelServices.GetAllComplaintsAsync();
+            if (!response.Success)
+                return BadRequest(response);
+            return Ok(response);
+        }
+
+        // GET: api/Hotel/{hotelId}/complaints
+        [HttpGet("{hotelId}/complaints")]
+        [Authorize(Roles = "SERVICE_PROVIDER,ATTENDANT,ADMIN")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> GetHotelComplaints(int hotelId)
+        {
+            try
+            {
+                var response = await _hotelServices.GetHotelComplaintsAsync(hotelId);
+                if (!response.Success)
+                {
+                    _logger.LogWarning("Failed to retrieve complaints: {Message}", response.Message);
+                    return BadRequest(new ApiResponse<List<ComplaintDTO>>(false, response.Message));
+                }
+
+                if (!response.Data.Any())
+                {
+                    _logger.LogInformation("No complaints found for HotelId: {HotelId}", hotelId);
+                    return NotFound(new ApiResponse<List<ComplaintDTO>>(false, "No complaints found."));
+                }
+
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving complaints for HotelId: {HotelId}", hotelId);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    new ApiResponse<List<ComplaintDTO>>(false, $"Error retrieving complaints: {ex.Message}"));
+            }
+        }
         // GET: api/Hotel/{hotelId}/packages
         [HttpGet("{hotelId}/packages")]
         [ProducesResponseType(StatusCodes.Status200OK)]
