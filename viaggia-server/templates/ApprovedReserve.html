@@ -1,6 +1,7 @@
 ﻿<!DOCTYPE html>
 <html>
 <head>
+    <meta charset="UTF-8">
     <title>Reserva Aprovada</title>
     <style>
         body {
@@ -77,23 +78,19 @@
             <p>Sua reserva no hotel <strong>{{NomeHotel}}</strong> foi aprovada com sucesso! Abaixo estão os detalhes da sua estadia:</p>
 
             <div class='info-box'>
-                <div class='info-item'><strong>Check-in:</strong> {{CheckInDate}} às {{CheckIn}}</div>
-                <div class='info-item'><strong>Check-out:</strong> {{CheckOutDate}} às {{CheckOut}}</div>
-                <div class='info-item'><strong>Endereço do Hotel:</strong> {{HotelEndereco}}</div>
+                <div class='info-item'><strong>Check-in:</strong> {{CheckInDate}} às {{CheckInTime}}</div>
+                <div class='info-item'><strong>Check-out:</strong> {{CheckOutDate}} às {{CheckOutTime}}</div>
                 <div class='info-item'><strong>Email:</strong> {{HotelEmail}}</div>
                 <div class='info-item'><strong>Telefone:</strong> {{HotelPhone}}</div>
                 <div>
-                    <p>O código da sua reserva é: <strong>{{ReservaId}}</strong>
-                        <br />
-                     
-                    </p>
+                    <p>O código da sua reserva é: <strong>{{ReservaId}}</strong></p>
                 </div>
             </div>
 
             <div class='warning'>
                 <strong>Política de Cancelamento:</strong>
                 <ul>
-                    <li>Cancelando até <strong>15 dias antes </strong> da reserva: reembolso de <strong>60%</strong>.</li>
+                    <li>Cancelando até <strong>15 dias antes</strong> da reserva: reembolso de <strong>60%</strong>.</li>
                     <li>Cancelando com menos de <strong>15 dias</strong>: reembolso de 15%</li>
                 </ul>
                 <strong>Política de Alteração de Data:</strong>
