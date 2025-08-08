@@ -1,10 +1,19 @@
-﻿namespace viaggia_server.Models.User
-{
-    public class Role
-    {
-        public int Id { get; set; }
-        public string Name { get; set; } = null!; // ADMIN, CLIENTE, etc
+﻿using System.ComponentModel.DataAnnotations;
+using viaggia_server.Repositories;
 
-        public ICollection<UserRole> UserRoles { get; set; } = new List<UsuarioRole>();
+namespace viaggia_server.Models.Users
+{
+    public class Role : ISoftDeletable
+    {
+        [Key]
+        public int Id { get; set; }
+
+        [StringLength(50, ErrorMessage = "Role name cannot exceed 50 characters.")]
+        public string Name { get; set; } = null!;
+
+        public bool IsActive { get; set; } = true;
+
+        // Relationships
+        public virtual ICollection<UserRole> UserRoles { get; set; } = new List<UserRole>();
     }
 }

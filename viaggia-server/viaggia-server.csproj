@@ -9,6 +9,10 @@
 
   <ItemGroup>
     <PackageReference Include="BCrypt.Net-Next" Version="4.0.2" />
+    <PackageReference Include="FluentValidation" Version="12.0.0" />
+    <PackageReference Include="FluentValidation.AspNetCore" Version="11.3.1" />
+    <PackageReference Include="MailKit" Version="4.13.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.Google" Version="8.0.18" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.18" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.18" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.18" />
@@ -16,11 +20,22 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="SendGrid" Version="9.29.3" />
+    <PackageReference Include="Stripe.net" Version="46.0.0" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
+    <PackageReference Include="Swashbuckle.AspNetCore.Annotations" Version="6.8.1" />
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="DTOs\Packages\" />
+
+    <Folder Include="Migrations\" />
+
+    <Folder Include="wwwroot\Uploads\Avatars\" />
+    <Folder Include="wwwroot\Uploads\Hotels\" />
+
+    <Folder Include="wwwroot\Uploads\Hotel\" />
+
+    <Folder Include="wwwroot\Uploads\Packages\" />
   </ItemGroup>
 
 </Project>
