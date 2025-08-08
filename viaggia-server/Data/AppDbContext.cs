@@ -204,6 +204,12 @@ namespace viaggia_server.Data
                 new Role { Id = 3, Name = "ATTENDANT", IsActive = true },
                 new Role { Id = 4, Name = "ADMIN", IsActive = true }
             );
+            modelBuilder.Entity<Reserve>()
+                .HasOne(r => r.Package)
+                .WithMany()
+                .HasForeignKey(r => r.PackageId)
+                .IsRequired(false); // << Permite nulo
+
 
             // Global query filters
             modelBuilder.Entity<PackageDate>().HasQueryFilter(pd => pd.IsActive);

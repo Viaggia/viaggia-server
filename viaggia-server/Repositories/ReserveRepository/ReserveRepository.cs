@@ -4,6 +4,7 @@ using viaggia_server.DTOs.Reserves;
 using viaggia_server.Models.Users;
 using viaggia_server.Models.Hotels;
 using viaggia_server.Models.Reserves;
+using viaggia_server.Services.Email;
 
 namespace viaggia_server.Repositories.ReserveRepository
 {
@@ -11,6 +12,7 @@ namespace viaggia_server.Repositories.ReserveRepository
     {
         private readonly AppDbContext _context;
         private readonly ILogger<ReserveRepository> _logger;
+        private readonly IEmailService _emailService;
         public ReserveRepository(AppDbContext context, ILogger<ReserveRepository> logger)
         {
             _context = context;
@@ -23,6 +25,7 @@ namespace viaggia_server.Repositories.ReserveRepository
             {
                 var result = await _context.Reserves.AddAsync(reserve);
                 await _context.SaveChangesAsync();
+                await _emailService.SendApprovedReserve(reserve);
                 return result.Entity;
             }
             catch (Exception ex)
@@ -73,6 +76,7 @@ namespace viaggia_server.Repositories.ReserveRepository
                 throw;
             }
         }
+
         public async Task<Reserve> UpdateAsync(Reserve reserve)
         {
             try

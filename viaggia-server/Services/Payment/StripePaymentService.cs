@@ -6,10 +6,8 @@ using System.Globalization;
 using System.Text.Json;
 using viaggia_server.DTOs.Hotel;
 using viaggia_server.DTOs.Reserves;
-using viaggia_server.Models.Hotels;
 using viaggia_server.Models.Packages;
 using viaggia_server.Models.Reserves;
-using viaggia_server.Models.Users;
 using viaggia_server.Repositories;
 using viaggia_server.Repositories.HotelRepository;
 using viaggia_server.Repositories.Users;
@@ -179,7 +177,6 @@ namespace viaggia_server.Services.Payment
             }
         }
 
-
         public async Task HandleStripeWebhookAsync(HttpRequest request)
         {
             var json = await new StreamReader(request.Body).ReadToEndAsync();
@@ -224,10 +221,10 @@ namespace viaggia_server.Services.Payment
                             ReserveRooms = reserveRooms
                         };
 
-                        await _emailService.SendApprovedReserve(reservation);
-
                         await _reservations.AddAsync(reservation);
                         await _reservations.SaveChangesAsync();
+
+                        await _emailService.SendApprovedReserve(reservation);
                     }
                     catch (Exception ex)
                     {

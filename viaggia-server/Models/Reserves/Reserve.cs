@@ -40,7 +40,7 @@ namespace viaggia_server.Models.Reserves
         [Required]
         [Column(TypeName = "decimal(10,2)")]
         public decimal TotalPrice { get; set; }
-        public decimal TotalDiscount { get; set; }
+        public decimal TotalDiscount { get; set; }  
 
         public int NumberOfRooms
         {
