@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # 🌍 Viaggia - Sistema de Gerenciamento de Pacotes de Viagem
 
 Este repositório contém o **back-end** do sistema **Viaggia**, desenvolvido com **ASP.NET Core 8**, utilizando o **Entity Framework Core**, autenticação com JWT, integração com APIs externas, e arquitetura limpa baseada em **camadas**.
@@ -277,8 +276,6 @@ dotnet test Viaggia.Tests
 ---
 
 
-
-=======
 # 🌍 Viaggia - Sistema de Gerenciamento de Pacotes de Viagem
 
 Este repositório contém o **back-end** do sistema **Viaggia**, desenvolvido com **ASP.NET Core 8**, utilizando o **Entity Framework Core**, autenticação com JWT, integração com APIs externas, e arquitetura limpa baseada em **camadas**.
@@ -597,4 +594,4 @@ REVIEW ||--o{ HOTEL : avalia
 dotnet test Viaggia.Tests
 ```
 ---
->>>>>>> 470ff5809697e97894dc385468f9e9de36070d58
+
